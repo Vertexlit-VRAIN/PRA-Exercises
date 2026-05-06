@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>03 · Hijo Izq – Hermano Der — Árboles · PRA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --amber:      #b35c00;
+      --amber-dark: #7c3f00;
+      --amber-lt:   #ffe0b2;
+      --bg:         #fffde7;
+      --panel:      #fff8e1;
+      --text:       #3e2000;
+      --ok:         #2e7d32;
+      --bad:        #c62828;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 18px; }
+
+    body {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    .ex-header {
+      background: linear-gradient(135deg, #3e2000, #5d3a00);
+      color: #fff;
+      padding: 1rem 1.5rem 1.1rem;
+      border-bottom: 4px solid var(--amber);
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .back-link {
+      color: var(--amber-lt);
+      text-decoration: none;
+      font-size: 0.78rem;
+      font-weight: 700;
+      transition: opacity 0.15s;
+    }
+    .back-link:hover { opacity: 0.7; }
+    .ex-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(0.52rem, 2vw, 0.78rem);
+      color: #ffe082;
+      line-height: 1.8;
+    }
+    .ex-desc {
+      font-size: 0.82rem;
+      color: #ffcc80;
+      line-height: 1.5;
+      max-width: 64ch;
+    }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    .ex-main {
+      flex: 1;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    /* ── Panels ─────────────────────────────────────────────── */
+    .tree-panel,
+    .table-panel,
+    .array-panel {
+      background: var(--panel);
+      border: 2px solid rgba(179,92,0,0.2);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: 0 2px 12px rgba(179,92,0,0.07);
+    }
+
+    #right-panel {
+      position: sticky;
+      top: 1.25rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+    }
+
+    .panel-label {
+      font-size: 0.7rem;
+      color: #9e6a2a;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    #tree-svg {
+      width: 100%;
+      border-radius: 8px;
+      background: #fffef5;
+      border: 1px solid rgba(179,92,0,0.1);
+    }
+
+    /* ── Mode tabs ──────────────────────────────────────────── */
+    .mode-tabs {
+      display: flex;
+      gap: 0.4rem;
+    }
+    .mode-tab {
+      flex: 1;
+      padding: 0.4rem 0.6rem;
+      border: 1.5px solid rgba(179,92,0,0.25);
+      border-radius: 8px;
+      background: rgba(179,92,0,0.05);
+      color: var(--amber-dark);
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .mode-tab.active {
+      background: var(--amber);
+      border-color: var(--amber);
+      color: #fff;
+    }
+    .mode-tab:hover:not(.active) {
+      background: var(--amber-lt);
+      border-color: var(--amber);
+    }
+
+    /* ── Root info badge ────────────────────────────────────── */
+    .root-info {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--amber-dark);
+      background: rgba(179,92,0,0.08);
+      border: 1.5px solid rgba(179,92,0,0.2);
+      border-radius: 6px;
+      padding: 0.4rem 0.75rem;
+    }
+    .root-info strong { color: var(--amber); }
+
+    /* ── LCRS Table ─────────────────────────────────────────── */
+    .lcrs-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .lcrs-table th {
+      color: var(--amber-dark);
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0.35rem 0.4rem;
+      text-align: center;
+      border-bottom: 2px solid rgba(179,92,0,0.2);
+    }
+    .lcrs-table td {
+      padding: 0.28rem 0.4rem;
+      text-align: center;
+      border-bottom: 1px solid rgba(179,92,0,0.07);
+      vertical-align: middle;
+    }
+    .lcrs-row.row-ok  { background: rgba(46,125,50,0.06); }
+    .lcrs-row.row-bad { background: rgba(198,40,40,0.06); }
+
+    .pos-cell {
+      font-weight: 700;
+      font-size: 0.82rem;
+      color: #9e7352;
+      width: 2.2rem;
+    }
+    .clave-cell {
+      background: rgba(179,92,0,0.1);
+      font-weight: 700;
+      font-size: 0.95rem;
+      width: 2.2rem;
+    }
+    .val-cell {
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    /* ── Selects ────────────────────────────────────────────── */
+    .lcrs-select {
+      width: 100%;
+      min-width: 3.2rem;
+      padding: 0.18rem 0.2rem;
+      border: 1.5px solid rgba(179,92,0,0.3);
+      border-radius: 4px;
+      background: #fff;
+      color: var(--text);
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: border-color 0.12s;
+      text-align: center;
+    }
+    .lcrs-select:focus { outline: none; border-color: var(--amber); }
+    .lcrs-select.sel-ok  { border-color: var(--ok);  background: rgba(46,125,50,0.06); }
+    .lcrs-select.sel-bad { border-color: var(--bad); background: rgba(198,40,40,0.06); }
+
+    /* ── Chip pool (Mode 2) ─────────────────────────────────── */
+    .pool-area { display: flex; flex-direction: column; gap: 0.4rem; }
+
+    .chips-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      min-height: 2.4rem;
+      padding: 0.5rem 0.6rem;
+      border: 1.5px dashed rgba(179,92,0,0.3);
+      border-radius: 8px;
+      background: rgba(179,92,0,0.03);
+      transition: border-color 0.12s, background 0.12s;
+    }
+    .chips-container.drag-over {
+      border-color: var(--amber);
+      background: rgba(179,92,0,0.08);
+    }
+
+    .instr-text {
+      font-size: 0.8rem;
+      color: #7a4f1a;
+      line-height: 1.55;
+    }
+
+    /* ── Array rows (Mode 2) ────────────────────────────────── */
+    .array-table {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .array-row {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.15rem 0.35rem;
+      border-left: 3px solid transparent;
+      border-radius: 0 4px 4px 0;
+      min-height: 2.3rem;
+      border-bottom: 1px solid rgba(179,92,0,0.07);
+      transition: border-left-color 0.2s, background 0.2s;
+    }
+    .array-row.row-ok  { border-left-color: var(--ok);  background: rgba(46,125,50,0.05); }
+    .array-row.row-bad { border-left-color: var(--bad); background: rgba(198,40,40,0.05); }
+
+    .row-index {
+      min-width: 3rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.15rem;
+      flex-shrink: 0;
+    }
+    .index-num {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--amber);
+      line-height: 1;
+    }
+    .root-badge {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.38rem;
+      background: var(--amber);
+      color: #fff;
+      padding: 0.15rem 0.35rem;
+      border-radius: 3px;
+      white-space: nowrap;
+      line-height: 1.5;
+    }
+
+    .row-drop-zone {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      min-height: 2rem;
+      padding: 0.2rem 0.4rem;
+      border: 1.5px dashed rgba(179,92,0,0.2);
+      border-radius: 6px;
+      transition: border-color 0.12s, background 0.12s;
+    }
+    .row-drop-zone.drag-over {
+      border-color: var(--amber);
+      background: rgba(179,92,0,0.06);
+    }
+
+    .null-marker { color: #9e7352; font-weight: 700; font-size: 0.85rem; }
+    .ll-arrow    { color: var(--amber); font-weight: 700; font-size: 0.85rem; }
+
+    /* ── Chips ──────────────────────────────────────────────── */
+    .chip {
+      background: var(--amber);
+      color: #fff;
+      border: 2px solid transparent;
+      border-radius: 20px;
+      padding: 0.18rem 0.65rem;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: grab;
+      user-select: none;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+      line-height: 1.4;
+    }
+    .chip:hover:not(.chip-ok):not(.chip-bad) { opacity: 0.82; }
+    .chip.dragging { opacity: 0.35; }
+    .chip.chip-ok  { background: #e8f5e9; color: var(--ok);  border-color: var(--ok);  cursor: default; }
+    .chip.chip-bad { background: #ffebee; color: var(--bad); border-color: var(--bad); animation: shake 0.4s ease-in-out; }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0);    }
+      20%,60% { transform: translateX(-5px); }
+      40%,80% { transform: translateX(5px);  }
+    }
+
+    /* ── Buttons ────────────────────────────────────────────── */
+    .action-row { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+    .btn {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:hover  { opacity: 0.85; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary { background: var(--amber); color: #fff; }
+    .btn-outline {
+      background: rgba(179,92,0,0.08);
+      color: var(--amber-dark);
+      border: 1.5px solid rgba(179,92,0,0.3);
+    }
+    .btn-sm { padding: 0.45rem 0.9rem; font-size: 0.82rem; }
+
+    .feedback { font-size: 0.9rem; font-weight: 700; min-height: 1.4em; }
+    .feedback.ok  { color: var(--ok); }
+    .feedback.bad { color: var(--bad); }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 700px) {
+      .ex-main { grid-template-columns: 1fr; padding: 1rem; }
+      #right-panel { position: static; max-height: none; overflow-y: visible; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="ex-header">
+  <a class="back-link" href="../index.html#arboles">← Árboles</a>
+  <h1 class="ex-title">03 — Hijo Izquierdo · Hermano Derecho</h1>
+  <p class="ex-desc">Traduce entre árbol y tabla de tripletas (izq, clave, der). Cada nodo usa solo dos punteros: primer hijo y siguiente hermano.</p>
+</header>
+
+<main class="ex-main" id="ex-main">
+  <section id="left-panel" aria-label="Panel izquierdo"></section>
+  <section id="right-panel" aria-label="Panel derecho"></section>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var SVG_W = 560, SVG_H = 300, R = 18;
+  var NS = 'http://www.w3.org/2000/svg';
+  var TABLE_SIZE = 15;
+
+  /* ── State ────────────────────────────────────────────────── */
+  var nodeArr = [];
+  var lcrsTable = {};     // pos → { izq: pos|null, clave: str, der: pos|null }
+  var positions = [];     // sorted occupied positions
+  var activeMode = 'a2t'; // 'a2t' | 't2a'
+  var selValues = {};     // pos → { izq: str, der: str }
+  var placements = {};    // nodeId → parentId | null
+  var ddReady = false;
+
+  /* ── Util ─────────────────────────────────────────────────── */
+  function rand(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = rand(0, i), t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  /* ── Tree generation ──────────────────────────────────────── */
+  function nodeDepth(nodes, id) {
+    var d = 0, cur = id;
+    while (nodes[cur].parent !== null) { cur = nodes[cur].parent; d++; }
+    return d;
+  }
+
+  function treeHeight(nodes) {
+    var max = 0;
+    for (var i = 0; i < nodes.length; i++) {
+      var d = nodeDepth(nodes, i);
+      if (d > max) max = d;
+    }
+    return max;
+  }
+
+  function generateTree() {
+    var n = rand(7, 9);
+    var nodes = [];
+    for (var i = 0; i < n; i++) {
+      nodes.push({ id: i, label: '', pos: 0, parent: null, children: [], x: 0, y: 0 });
+    }
+    var LABELS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    for (var i = 0; i < n; i++) nodes[i].label = LABELS[i];
+
+    var eligible = [0];
+    for (var i = 1; i < n; i++) {
+      if (!eligible.length) eligible = nodes.slice(0, i).map(function(nd) { return nd.id; });
+      var pid = eligible[rand(0, eligible.length - 1)];
+      nodes[i].parent = pid;
+      nodes[pid].children.push(i);
+      if (nodeDepth(nodes, i) < 3) eligible.push(i);
+      if (nodes[pid].children.length >= 3) {
+        eligible = eligible.filter(function(id) { return id !== pid; });
+      }
+    }
+
+    var allPos = [];
+    for (var p = 1; p <= TABLE_SIZE; p++) allPos.push(p);
+    shuffle(allPos);
+    for (var i = 0; i < n; i++) nodes[i].pos = allPos[i];
+
+    return nodes;
+  }
+
+  /* ── Layout ───────────────────────────────────────────────── */
+  function computeLayout(nodes) {
+    function leafW(id) {
+      return nodes[id].children.length
+        ? nodes[id].children.reduce(function(s, c) { return s + leafW(c); }, 0)
+        : 1;
+    }
+    var h = treeHeight(nodes);
+    var levelH = h ? (SVG_H - 60) / h : 0;
+    var pad = R + 12;
+
+    function assign(id, x0, x1) {
+      nodes[id].x = (x0 + x1) / 2;
+      nodes[id].y = 38 + nodeDepth(nodes, id) * levelH;
+      var total = leafW(id), xc = x0;
+      nodes[id].children.forEach(function(c) {
+        var s = (x1 - x0) * leafW(c) / total;
+        assign(c, xc, xc + s);
+        xc += s;
+      });
+    }
+    assign(0, pad, SVG_W - pad);
+  }
+
+  /* ── LCRS computation ─────────────────────────────────────── */
+  function computeLCRS() {
+    lcrsTable = {};
+    nodeArr.forEach(function(nd) {
+      var izq = nd.children.length > 0 ? nodeArr[nd.children[0]].pos : null;
+      var der = null;
+      if (nd.parent !== null) {
+        var par = nodeArr[nd.parent];
+        var si = par.children.indexOf(nd.id);
+        if (si < par.children.length - 1) {
+          der = nodeArr[par.children[si + 1]].pos;
+        }
+      }
+      lcrsTable[nd.pos] = { izq: izq, clave: nd.label, der: der };
+    });
+    positions = nodeArr.map(function(nd) { return nd.pos; }).sort(function(a, b) { return a - b; });
+  }
+
+  /* ── Mode tabs ────────────────────────────────────────────── */
+  function makeModeTabs() {
+    var tabs = document.createElement('div');
+    tabs.className = 'mode-tabs';
+    tabs.setAttribute('role', 'tablist');
+    [['a2t', 'Árbol → Tabla'], ['t2a', 'Tabla → Árbol']].forEach(function(pair) {
+      var m = pair[0], lbl = pair[1];
+      var btn = document.createElement('button');
+      btn.className = 'mode-tab' + (activeMode === m ? ' active' : '');
+      btn.dataset.mode = m;
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-selected', String(activeMode === m));
+      btn.textContent = lbl;
+      btn.addEventListener('click', function() {
+        if (activeMode === m) return;
+        activeMode = m;
+        renderCurrentMode();
+      });
+      tabs.appendChild(btn);
+    });
+    return tabs;
+  }
+
+  /* ── SVG ──────────────────────────────────────────────────── */
+  function renderTreeSVG() {
+    var svg = document.getElementById('tree-svg');
+    if (!svg) return;
+    svg.innerHTML = '';
+
+    nodeArr.forEach(function(nd) {
+      if (nd.parent === null) return;
+      var par = nodeArr[nd.parent];
+      var line = document.createElementNS(NS, 'line');
+      line.setAttribute('x1', par.x); line.setAttribute('y1', par.y);
+      line.setAttribute('x2', nd.x);  line.setAttribute('y2', nd.y);
+      line.setAttribute('stroke', '#c8b89a');
+      line.setAttribute('stroke-width', '2');
+      svg.appendChild(line);
+    });
+
+    var root = nodeArr[0];
+    var rt = document.createElementNS(NS, 'text');
+    rt.setAttribute('x', root.x);
+    rt.setAttribute('y', root.y - R - 8);
+    rt.setAttribute('text-anchor', 'middle');
+    rt.setAttribute('font-size', '8');
+    rt.setAttribute('font-family', 'Press Start 2P, monospace');
+    rt.setAttribute('fill', '#b35c00');
+    rt.textContent = 'raíz';
+    svg.appendChild(rt);
+
+    nodeArr.forEach(function(nd) {
+      var g = document.createElementNS(NS, 'g');
+
+      var c = document.createElementNS(NS, 'circle');
+      c.setAttribute('cx', nd.x); c.setAttribute('cy', nd.y); c.setAttribute('r', R);
+      c.setAttribute('fill', '#fff8e1');
+      c.setAttribute('stroke', nd.parent === null ? '#b35c00' : '#8d6e63');
+      c.setAttribute('stroke-width', nd.parent === null ? '3' : '2.5');
+      g.appendChild(c);
+
+      var t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', nd.x); t.setAttribute('y', nd.y + 5);
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('font-size', '14');
+      t.setAttribute('font-family', 'Space Grotesk, sans-serif');
+      t.setAttribute('font-weight', '700');
+      t.setAttribute('fill', '#3e2000');
+      t.setAttribute('pointer-events', 'none');
+      t.textContent = nd.label;
+      g.appendChild(t);
+
+      var bx = nd.x + 8, by = nd.y - R - 2;
+      var br = document.createElementNS(NS, 'rect');
+      br.setAttribute('x', bx); br.setAttribute('y', by);
+      br.setAttribute('width', '18'); br.setAttribute('height', '12');
+      br.setAttribute('rx', '3'); br.setAttribute('fill', '#b35c00');
+      g.appendChild(br);
+
+      var bt = document.createElementNS(NS, 'text');
+      bt.setAttribute('x', bx + 9); bt.setAttribute('y', by + 9);
+      bt.setAttribute('text-anchor', 'middle');
+      bt.setAttribute('font-size', '8');
+      bt.setAttribute('font-family', 'Space Grotesk, sans-serif');
+      bt.setAttribute('font-weight', '700');
+      bt.setAttribute('fill', '#fff');
+      bt.setAttribute('pointer-events', 'none');
+      bt.textContent = nd.pos;
+      g.appendChild(bt);
+
+      svg.appendChild(g);
+    });
+  }
+
+  /* ── Mode 1: Árbol → Tabla ────────────────────────────────── */
+  function renderMode1() {
+    var left = document.getElementById('left-panel');
+    left.innerHTML = '';
+    left.className = 'tree-panel';
+
+    var lbl = document.createElement('p');
+    lbl.className = 'panel-label';
+    lbl.textContent = 'Árbol generado';
+    left.appendChild(lbl);
+
+    var svg = document.createElementNS(NS, 'svg');
+    svg.id = 'tree-svg';
+    svg.setAttribute('viewBox', '0 0 ' + SVG_W + ' ' + SVG_H);
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', 'Árbol con letras y posiciones de tabla');
+    left.appendChild(svg);
+
+    var hint = document.createElement('p');
+    hint.className = 'instr-text';
+    hint.innerHTML = 'Cada nodo muestra su letra y, en el badge ámbar, su <strong>posición en la tabla</strong>.';
+    left.appendChild(hint);
+
+    renderTreeSVG();
+
+    var right = document.getElementById('right-panel');
+    right.innerHTML = '';
+    right.className = 'array-panel';
+
+    right.appendChild(makeModeTabs());
+
+    var rootInfo = document.createElement('div');
+    rootInfo.className = 'root-info';
+    rootInfo.innerHTML = 'Raíz en posición: <strong>' + nodeArr[0].pos + '</strong>';
+    right.appendChild(rootInfo);
+
+    var instr = document.createElement('p');
+    instr.className = 'instr-text';
+    instr.innerHTML = 'Completa la tabla: para cada nodo selecciona la posición de su <strong>primer hijo</strong> (izq) y su <strong>siguiente hermano</strong> (der). Usa <strong>/</strong> si no existe.';
+    right.appendChild(instr);
+
+    var tbl = document.createElement('table');
+    tbl.className = 'lcrs-table';
+    var thead = document.createElement('thead');
+    thead.innerHTML = '<tr><th>pos</th><th>izq</th><th>clave</th><th>der</th></tr>';
+    tbl.appendChild(thead);
+
+    var tbody = document.createElement('tbody');
+    tbody.id = 'lcrs-tbody';
+    positions.forEach(function(pos) {
+      var entry = lcrsTable[pos];
+      var tr = document.createElement('tr');
+      tr.className = 'lcrs-row';
+      tr.id = 'lcrs-row-' + pos;
+      tr.dataset.pos = pos;
+
+      var tdPos = document.createElement('td');
+      tdPos.className = 'pos-cell';
+      tdPos.textContent = pos;
+      tr.appendChild(tdPos);
+
+      var tdIzq = document.createElement('td');
+      tdIzq.appendChild(makeSelect(pos, 'izq'));
+      tr.appendChild(tdIzq);
+
+      var tdClave = document.createElement('td');
+      tdClave.className = 'clave-cell';
+      tdClave.textContent = entry.clave;
+      tr.appendChild(tdClave);
+
+      var tdDer = document.createElement('td');
+      tdDer.appendChild(makeSelect(pos, 'der'));
+      tr.appendChild(tdDer);
+
+      tbody.appendChild(tr);
+    });
+    tbl.appendChild(tbody);
+    right.appendChild(tbl);
+
+    var actionRow = document.createElement('div');
+    actionRow.className = 'action-row';
+
+    var btnCheck = document.createElement('button');
+    btnCheck.className = 'btn btn-primary btn-sm';
+    btnCheck.textContent = 'Comprobar';
+    btnCheck.addEventListener('click', checkMode1);
+
+    var btnNew = document.createElement('button');
+    btnNew.className = 'btn btn-outline btn-sm';
+    btnNew.textContent = 'Nuevo árbol';
+    btnNew.addEventListener('click', newTree);
+
+    actionRow.appendChild(btnCheck);
+    actionRow.appendChild(btnNew);
+    right.appendChild(actionRow);
+
+    var fb = document.createElement('p');
+    fb.className = 'feedback';
+    fb.id = 'feedback-1';
+    fb.setAttribute('aria-live', 'polite');
+    right.appendChild(fb);
+  }
+
+  function makeSelect(pos, col) {
+    var sel = document.createElement('select');
+    sel.className = 'lcrs-select';
+    sel.dataset.pos = pos;
+    sel.dataset.col = col;
+    sel.setAttribute('aria-label', col + ' nodo en posición ' + pos);
+
+    var opt0 = document.createElement('option');
+    opt0.value = '';
+    opt0.textContent = '/';
+    sel.appendChild(opt0);
+
+    positions.forEach(function(p) {
+      var opt = document.createElement('option');
+      opt.value = String(p);
+      opt.textContent = p;
+      sel.appendChild(opt);
+    });
+
+    sel.value = (selValues[pos] && selValues[pos][col]) ? selValues[pos][col] : '';
+
+    sel.addEventListener('change', function() {
+      if (!selValues[pos]) selValues[pos] = { izq: '', der: '' };
+      selValues[pos][col] = sel.value;
+      var rowEl = document.getElementById('lcrs-row-' + pos);
+      if (rowEl) rowEl.classList.remove('row-ok', 'row-bad');
+      sel.classList.remove('sel-ok', 'sel-bad');
+      var fb = document.getElementById('feedback-1');
+      if (fb) { fb.textContent = ''; fb.className = 'feedback'; }
+    });
+
+    return sel;
+  }
+
+  function initSelValues() {
+    selValues = {};
+    positions.forEach(function(pos) {
+      selValues[pos] = { izq: '', der: '' };
+    });
+  }
+
+  function checkMode1() {
+    var correct = 0;
+    positions.forEach(function(pos) {
+      var entry = lcrsTable[pos];
+      var correctIzq = entry.izq !== null ? String(entry.izq) : '';
+      var correctDer = entry.der !== null ? String(entry.der) : '';
+      var sv = selValues[pos] || { izq: '', der: '' };
+      var okIzq = sv.izq === correctIzq;
+      var okDer  = sv.der  === correctDer;
+
+      var rowEl = document.getElementById('lcrs-row-' + pos);
+      if (rowEl) {
+        rowEl.classList.remove('row-ok', 'row-bad');
+        rowEl.classList.add(okIzq && okDer ? 'row-ok' : 'row-bad');
+      }
+      var selIzq = document.querySelector('.lcrs-select[data-pos="' + pos + '"][data-col="izq"]');
+      var selDer  = document.querySelector('.lcrs-select[data-pos="' + pos + '"][data-col="der"]');
+      if (selIzq) { selIzq.classList.remove('sel-ok','sel-bad'); selIzq.classList.add(okIzq ? 'sel-ok' : 'sel-bad'); }
+      if (selDer)  { selDer.classList.remove('sel-ok','sel-bad');  selDer.classList.add(okDer  ? 'sel-ok' : 'sel-bad'); }
+
+      if (okIzq && okDer) correct++;
+    });
+
+    var fb = document.getElementById('feedback-1');
+    var total = positions.length;
+    fb.textContent = correct === total
+      ? '¡Perfecto! La tabla está completa. 🌴'
+      : correct + '/' + total + ' filas correctas.';
+    fb.className = 'feedback ' + (correct === total ? 'ok' : 'bad');
+  }
+
+  /* ── Mode 2: Tabla → Árbol ────────────────────────────────── */
+  function renderMode2() {
+    var left = document.getElementById('left-panel');
+    left.innerHTML = '';
+    left.className = 'table-panel';
+
+    var lbl = document.createElement('p');
+    lbl.className = 'panel-label';
+    lbl.textContent = 'Tabla hijo izquierdo – hermano derecho';
+    left.appendChild(lbl);
+
+    var rootInfo = document.createElement('div');
+    rootInfo.className = 'root-info';
+    rootInfo.innerHTML = 'Raíz en posición: <strong>' + nodeArr[0].pos + '</strong>';
+    left.appendChild(rootInfo);
+
+    var tbl = document.createElement('table');
+    tbl.className = 'lcrs-table';
+    var thead = document.createElement('thead');
+    thead.innerHTML = '<tr><th>pos</th><th>izq</th><th>clave</th><th>der</th></tr>';
+    tbl.appendChild(thead);
+
+    var tbody = document.createElement('tbody');
+    positions.forEach(function(pos) {
+      var entry = lcrsTable[pos];
+      var tr = document.createElement('tr');
+      tr.className = 'lcrs-row';
+
+      var tdPos = document.createElement('td'); tdPos.className = 'pos-cell'; tdPos.textContent = pos;
+      var tdIzq = document.createElement('td'); tdIzq.className = 'val-cell'; tdIzq.textContent = entry.izq !== null ? entry.izq : '/';
+      var tdClave = document.createElement('td'); tdClave.className = 'clave-cell'; tdClave.textContent = entry.clave;
+      var tdDer = document.createElement('td'); tdDer.className = 'val-cell'; tdDer.textContent = entry.der !== null ? entry.der : '/';
+
+      tr.appendChild(tdPos); tr.appendChild(tdIzq); tr.appendChild(tdClave); tr.appendChild(tdDer);
+      tbody.appendChild(tr);
+    });
+    tbl.appendChild(tbody);
+    left.appendChild(tbl);
+
+    var right = document.getElementById('right-panel');
+    right.innerHTML = '';
+    right.className = 'array-panel';
+
+    right.appendChild(makeModeTabs());
+
+    var instr = document.createElement('p');
+    instr.className = 'instr-text';
+    instr.innerHTML = 'Traza los punteros <strong>izq/der</strong> de la tabla y arrastra cada nodo a la fila de su padre.';
+    right.appendChild(instr);
+
+    var poolArea = document.createElement('div');
+    poolArea.className = 'pool-area';
+    var poolLbl = document.createElement('p');
+    poolLbl.className = 'panel-label';
+    poolLbl.textContent = 'Nodos — arrástralos a su fila';
+    poolArea.appendChild(poolLbl);
+    var pool = document.createElement('div');
+    pool.className = 'chips-container';
+    pool.id = 'chips-container';
+    pool.setAttribute('role', 'list');
+    pool.setAttribute('aria-label', 'Nodos disponibles');
+    poolArea.appendChild(pool);
+    right.appendChild(poolArea);
+
+    var arrLbl = document.createElement('p');
+    arrLbl.className = 'panel-label';
+    arrLbl.textContent = 'Árbol — filas de padres';
+    right.appendChild(arrLbl);
+
+    var arrTable = document.createElement('div');
+    arrTable.className = 'array-table';
+    arrTable.id = 'array-table';
+    arrTable.setAttribute('role', 'list');
+    right.appendChild(arrTable);
+
+    var actionRow = document.createElement('div');
+    actionRow.className = 'action-row';
+
+    var btnCheck = document.createElement('button');
+    btnCheck.className = 'btn btn-primary btn-sm';
+    btnCheck.textContent = 'Comprobar';
+    btnCheck.addEventListener('click', checkMode2);
+
+    var btnReset = document.createElement('button');
+    btnReset.className = 'btn btn-outline btn-sm';
+    btnReset.textContent = 'Reiniciar';
+    btnReset.addEventListener('click', function() {
+      initPlacements2();
+      clearFeedback2();
+      renderPool2();
+      renderArray2();
+    });
+
+    var btnNew = document.createElement('button');
+    btnNew.className = 'btn btn-outline btn-sm';
+    btnNew.textContent = 'Nueva tabla';
+    btnNew.addEventListener('click', newTree);
+
+    actionRow.appendChild(btnCheck);
+    actionRow.appendChild(btnReset);
+    actionRow.appendChild(btnNew);
+    right.appendChild(actionRow);
+
+    var fb = document.createElement('p');
+    fb.className = 'feedback';
+    fb.id = 'feedback-2';
+    fb.setAttribute('aria-live', 'polite');
+    right.appendChild(fb);
+
+    renderPool2();
+    renderArray2();
+  }
+
+  function initPlacements2() {
+    placements = {};
+    nodeArr.forEach(function(nd) {
+      if (nd.parent !== null) placements[nd.id] = null;
+    });
+  }
+
+  function renderPool2() {
+    var c = document.getElementById('chips-container');
+    if (!c) return;
+    c.innerHTML = '';
+    nodeArr.forEach(function(nd) {
+      if (nd.parent === null || placements[nd.id] !== null) return;
+      c.appendChild(makeChip(nd.id, nd.label));
+    });
+  }
+
+  function makeChip(id, label) {
+    var chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.setAttribute('draggable', 'true');
+    chip.dataset.nodeId = id;
+    chip.setAttribute('role', 'listitem');
+    chip.textContent = label;
+    return chip;
+  }
+
+  function renderArray2() {
+    var table = document.getElementById('array-table');
+    if (!table) return;
+    table.innerHTML = '';
+    var sorted = nodeArr.slice().sort(function(a, b) {
+      return a.label < b.label ? -1 : 1;
+    });
+    sorted.forEach(function(node) {
+      var row = document.createElement('div');
+      row.className = 'array-row';
+      row.id = 'row-' + node.id;
+      row.setAttribute('role', 'listitem');
+
+      var idx = document.createElement('div');
+      idx.className = 'row-index';
+      var num = document.createElement('span');
+      num.className = 'index-num';
+      num.textContent = node.label;
+      idx.appendChild(num);
+      if (node.parent === null) {
+        var badge = document.createElement('span');
+        badge.className = 'root-badge';
+        badge.textContent = 'raíz';
+        idx.appendChild(badge);
+      }
+      row.appendChild(idx);
+
+      var zone = document.createElement('div');
+      zone.className = 'row-drop-zone';
+      zone.dataset.rowNodeId = node.id;
+      renderDropZone2(node, zone);
+      row.appendChild(zone);
+
+      table.appendChild(row);
+    });
+  }
+
+  function renderDropZone2(node, el) {
+    el.innerHTML = '';
+    var placed = nodeArr.filter(function(n) {
+      return n.parent !== null && placements[n.id] === node.id;
+    });
+    if (!placed.length) {
+      var slash = document.createElement('span');
+      slash.className = 'null-marker';
+      slash.textContent = '/';
+      el.appendChild(slash);
+      return;
+    }
+    placed.sort(function(a, b) { return a.label < b.label ? -1 : 1; });
+    placed.forEach(function(chipNode) {
+      var arr = document.createElement('span');
+      arr.className = 'll-arrow';
+      arr.textContent = '→';
+      el.appendChild(arr);
+      var chip = makeChip(chipNode.id, chipNode.label);
+      chip.classList.add('chip-placed');
+      el.appendChild(chip);
+    });
+    var end = document.createElement('span');
+    end.className = 'null-marker';
+    end.textContent = '/';
+    el.appendChild(end);
+  }
+
+  function checkMode2() {
+    renderPool2();
+    renderArray2();
+    var correct = 0;
+    nodeArr.forEach(function(P) {
+      var exp = {};
+      P.children.forEach(function(cid) { exp[cid] = true; });
+      var placed = [];
+      Object.keys(placements).forEach(function(k) {
+        if (placements[+k] === P.id) placed.push(+k);
+      });
+      var ok = placed.length === P.children.length && placed.every(function(id) { return exp[id]; });
+      var rowEl = document.getElementById('row-' + P.id);
+      if (rowEl) { rowEl.classList.remove('row-ok','row-bad'); rowEl.classList.add(ok ? 'row-ok' : 'row-bad'); }
+      placed.forEach(function(id) {
+        var el = document.querySelector('.chip[data-node-id="' + id + '"]');
+        if (el) { el.classList.remove('chip-ok','chip-bad'); el.classList.add(exp[id] ? 'chip-ok' : 'chip-bad'); }
+      });
+      if (ok) correct++;
+    });
+    var fb = document.getElementById('feedback-2');
+    var n = nodeArr.length;
+    fb.textContent = correct === n
+      ? '¡Perfecto! Árbol reconstruido. 🌴'
+      : correct + '/' + n + ' filas correctas.';
+    fb.className = 'feedback ' + (correct === n ? 'ok' : 'bad');
+  }
+
+  function clearFeedback2() {
+    var fb = document.getElementById('feedback-2');
+    if (fb) { fb.textContent = ''; fb.className = 'feedback'; }
+  }
+
+  /* ── Drag & drop ──────────────────────────────────────────── */
+  function initDragDrop() {
+    if (ddReady) return;
+    ddReady = true;
+
+    document.body.addEventListener('dragstart', function(e) {
+      var chip = e.target.closest('.chip');
+      if (!chip) return;
+      e.dataTransfer.setData('text/plain', chip.dataset.nodeId);
+      e.dataTransfer.effectAllowed = 'move';
+      chip.classList.add('dragging');
+    });
+
+    document.body.addEventListener('dragend', function() {
+      document.querySelectorAll('.chip.dragging').forEach(function(el) { el.classList.remove('dragging'); });
+    });
+
+    document.body.addEventListener('dragenter', function(e) {
+      var el = e.target.closest('.row-drop-zone, .chips-container');
+      if (!el) return;
+      document.querySelectorAll('.drag-over').forEach(function(d) { d.classList.remove('drag-over'); });
+      el.classList.add('drag-over');
+    }, true);
+
+    document.body.addEventListener('dragover', function(e) {
+      if (e.target.closest('.row-drop-zone, .chips-container')) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      }
+    });
+
+    document.body.addEventListener('dragleave', function(e) {
+      var el = e.target.closest('.row-drop-zone, .chips-container');
+      if (el && !el.contains(e.relatedTarget)) el.classList.remove('drag-over');
+    });
+
+    document.body.addEventListener('drop', function(e) {
+      var zone = e.target.closest('.row-drop-zone');
+      var pool = e.target.closest('.chips-container');
+      if (!zone && !pool) return;
+      e.preventDefault();
+      document.querySelectorAll('.drag-over').forEach(function(el) { el.classList.remove('drag-over'); });
+      var nodeId = parseInt(e.dataTransfer.getData('text/plain'), 10);
+      if (isNaN(nodeId) || !(nodeId in placements)) return;
+      if (zone) {
+        var rowNodeId = parseInt(zone.dataset.rowNodeId, 10);
+        if (nodeId === rowNodeId) return;
+        placements[nodeId] = rowNodeId;
+      } else {
+        placements[nodeId] = null;
+      }
+      clearFeedback2();
+      renderPool2();
+      renderArray2();
+    });
+  }
+
+  /* ── Render dispatcher ────────────────────────────────────── */
+  function renderCurrentMode() {
+    if (activeMode === 'a2t') renderMode1();
+    else renderMode2();
+  }
+
+  /* ── New tree (keep current mode) ────────────────────────── */
+  function newTree() {
+    nodeArr = generateTree();
+    computeLayout(nodeArr);
+    computeLCRS();
+    initSelValues();
+    initPlacements2();
+    renderCurrentMode();
+  }
+
+  /* ── Boot ─────────────────────────────────────────────────── */
+  function boot() {
+    nodeArr = generateTree();
+    computeLayout(nodeArr);
+    computeLCRS();
+    initSelValues();
+    initPlacements2();
+    activeMode = 'a2t';
+    renderCurrentMode();
+    initDragDrop();
+  }
+
+  boot();
+
+}());
+</script>
+</body>
+</html>
