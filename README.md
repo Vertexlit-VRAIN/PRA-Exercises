@@ -42,7 +42,11 @@ Las tarjetas van dentro del `<div class="exercise-grid">` de cada sección.
 
 ## Despliegue
 
-El sitio se publica en **GitHub Pages** desde la rama `main`. Todas las rutas deben ser relativas (el repo corre en un subdirectorio, no en la raíz del dominio).
+El sitio se publica en **GitHub Pages** desde la rama `main`:
+
+**https://vertexlit-vrain.github.io/PRA-Exercises/**
+
+Todas las rutas deben ser relativas (el repo corre en un subdirectorio, no en la raíz del dominio).
 
 ## Temario
 
