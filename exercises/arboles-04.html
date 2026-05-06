@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>04 · Puntero al Padre — Árboles · PRA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --amber:      #b35c00;
+      --amber-dark: #7c3f00;
+      --amber-lt:   #ffe0b2;
+      --bg:         #fffde7;
+      --panel:      #fff8e1;
+      --text:       #3e2000;
+      --ok:         #2e7d32;
+      --bad:        #c62828;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 18px; }
+
+    body {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    .ex-header {
+      background: linear-gradient(135deg, #3e2000, #5d3a00);
+      color: #fff;
+      padding: 1rem 1.5rem 1.1rem;
+      border-bottom: 4px solid var(--amber);
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .back-link {
+      color: var(--amber-lt);
+      text-decoration: none;
+      font-size: 0.78rem;
+      font-weight: 700;
+      transition: opacity 0.15s;
+    }
+    .back-link:hover { opacity: 0.7; }
+    .ex-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(0.52rem, 2vw, 0.78rem);
+      color: #ffe082;
+      line-height: 1.8;
+    }
+    .ex-desc {
+      font-size: 0.82rem;
+      color: #ffcc80;
+      line-height: 1.5;
+      max-width: 64ch;
+    }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    .ex-main {
+      flex: 1;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    /* ── Panels ─────────────────────────────────────────────── */
+    .tree-panel,
+    .array-panel {
+      background: var(--panel);
+      border: 2px solid rgba(179,92,0,0.2);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: 0 2px 12px rgba(179,92,0,0.07);
+    }
+
+    #right-panel {
+      position: sticky;
+      top: 1.25rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+    }
+
+    .panel-label {
+      font-size: 0.7rem;
+      color: #9e6a2a;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    #tree-svg {
+      width: 100%;
+      border-radius: 8px;
+      background: #fffef5;
+      border: 1px solid rgba(179,92,0,0.1);
+    }
+
+    .instr-text {
+      font-size: 0.8rem;
+      color: #7a4f1a;
+      line-height: 1.55;
+    }
+
+    /* ── Mode tabs ──────────────────────────────────────────── */
+    .mode-tabs {
+      display: flex;
+      gap: 0.4rem;
+    }
+    .mode-tab {
+      flex: 1;
+      padding: 0.4rem 0.6rem;
+      border: 1.5px solid rgba(179,92,0,0.25);
+      border-radius: 8px;
+      background: rgba(179,92,0,0.05);
+      color: var(--amber-dark);
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .mode-tab.active {
+      background: var(--amber);
+      border-color: var(--amber);
+      color: #fff;
+    }
+    .mode-tab:hover:not(.active) {
+      background: var(--amber-lt);
+      border-color: var(--amber);
+    }
+
+    /* ── Root info badge ────────────────────────────────────── */
+    .root-info {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--amber-dark);
+      background: rgba(179,92,0,0.08);
+      border: 1.5px solid rgba(179,92,0,0.2);
+      border-radius: 6px;
+      padding: 0.4rem 0.75rem;
+    }
+    .root-info strong { color: var(--amber); }
+
+    /* ── Parent array table ─────────────────────────────────── */
+    .parent-array-wrap { overflow-x: auto; }
+
+    .parent-array-tbl {
+      border-collapse: collapse;
+      min-width: 100%;
+    }
+    .parent-array-tbl th,
+    .parent-array-tbl td {
+      width: 2.6rem;
+      min-width: 2.2rem;
+      text-align: center;
+      border: 1.5px solid rgba(179,92,0,0.2);
+      padding: 0.3rem 0.2rem;
+    }
+    .par-idx-row th {
+      background: rgba(179,92,0,0.1);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--amber-dark);
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+    }
+    .par-val-row td {
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+      background: #fff;
+    }
+    .par-val-row td.cell-root {
+      background: var(--amber-lt);
+      color: var(--amber-dark);
+    }
+    .par-val-row td.cell-hl {
+      outline: 2.5px solid var(--amber);
+      outline-offset: -2px;
+      background: rgba(255,224,178,0.55);
+    }
+    .par-val-row td.cell-root.cell-hl {
+      outline-color: var(--amber-dark);
+    }
+
+    /* ── Select (Mode 1) ────────────────────────────────────── */
+    .par-select {
+      width: 100%;
+      border: 1.5px solid rgba(179,92,0,0.3);
+      border-radius: 4px;
+      background: #fff;
+      color: var(--text);
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 0.15rem 0.1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.12s;
+    }
+    .par-select:focus   { outline: none; border-color: var(--amber); }
+    .par-select.sel-ok  { border-color: var(--ok);  background: rgba(46,125,50,0.06); }
+    .par-select.sel-bad { border-color: var(--bad); background: rgba(198,40,40,0.06); }
+
+    /* ── Quiz (Mode 2) ──────────────────────────────────────── */
+    .q-concept {
+      display: inline-block;
+      background: var(--amber);
+      color: #fff;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.52rem;
+      padding: 0.3rem 0.65rem;
+      border-radius: 4px;
+      letter-spacing: 0.05em;
+      align-self: flex-start;
+    }
+    .q-text {
+      font-size: 1rem;
+      font-weight: 700;
+      line-height: 1.55;
+    }
+    .choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.55rem;
+    }
+    .choice-btn {
+      padding: 0.65rem 0.5rem;
+      border: 2px solid rgba(179,92,0,0.25);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s, transform 0.1s;
+      text-align: center;
+      word-break: break-word;
+    }
+    .choice-btn:hover:not(:disabled) {
+      background: rgba(179,92,0,0.08);
+      border-color: var(--amber);
+      transform: translateY(-2px);
+    }
+    .choice-btn:disabled { cursor: default; }
+    .choice-btn.ok  { background: #e8f5e9; border-color: var(--ok);  color: var(--ok);  }
+    .choice-btn.bad { background: #ffebee; border-color: var(--bad); color: var(--bad); }
+
+    /* ── Buttons ────────────────────────────────────────────── */
+    .action-row { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+    .btn {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:hover  { opacity: 0.85; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary { background: var(--amber); color: #fff; }
+    .btn-outline {
+      background: rgba(179,92,0,0.08);
+      color: var(--amber-dark);
+      border: 1.5px solid rgba(179,92,0,0.3);
+    }
+    .btn-sm { padding: 0.45rem 0.9rem; font-size: 0.82rem; }
+
+    /* ── Feedback ────────────────────────────────────────────── */
+    .feedback { font-size: 0.9rem; font-weight: 700; min-height: 1.4em; }
+    .feedback.ok  { color: var(--ok); }
+    .feedback.bad { color: var(--bad); }
+
+    /* ── Score footer ────────────────────────────────────────── */
+    .score-bar {
+      border-top: 2px solid rgba(179,92,0,0.15);
+      background: rgba(255,253,231,0.95);
+      padding: 0.7rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--amber-dark);
+    }
+    .score-num {
+      font-size: 1.1rem;
+      color: var(--amber);
+    }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 700px) {
+      .ex-main { grid-template-columns: 1fr; padding: 1rem; }
+      #right-panel { position: static; max-height: none; overflow-y: visible; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="ex-header">
+  <a class="back-link" href="../index.html#arboles">← Árboles</a>
+  <h1 class="ex-title">04 — Puntero al Padre</h1>
+  <p class="ex-desc">Cada nodo guarda solo un puntero a su padre. La raíz apunta a sí misma: parent[raíz] = raíz. Practica leer y construir el array parent[1..N].</p>
+</header>
+
+<main class="ex-main" id="ex-main">
+  <section id="left-panel"  aria-label="Panel izquierdo"></section>
+  <section id="right-panel" aria-label="Panel derecho"></section>
+</main>
+
+<footer class="score-bar" aria-label="Puntuación">
+  Correctas: <span class="score-num" id="score-ok">0</span> / <span id="score-total">0</span>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var SVG_W = 560, SVG_H = 300, R = 18;
+  var NS = 'http://www.w3.org/2000/svg';
+
+  /* ── State ────────────────────────────────────────────────── */
+  var nodeArr   = [];
+  var parentArr = [];    // 1-indexed: parentArr[label] = parent's label
+  var rootLabel = 0;
+  var activeMode = 'm1'; // 'm1' | 'm2'
+  var selValues  = {};   // label → chosen value string (Mode 1)
+  var scoreOk   = 0;
+  var scoreAll  = 0;
+  var currentQ  = null;
+  var answered  = false;
+
+  /* ── Util ─────────────────────────────────────────────────── */
+  function rand(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = rand(0, i), t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  /* ── Tree ─────────────────────────────────────────────────── */
+  function nodeDepth(nodes, id) {
+    var d = 0, cur = id;
+    while (nodes[cur].parent !== null) { cur = nodes[cur].parent; d++; }
+    return d;
+  }
+
+  function treeHeight(nodes) {
+    var max = 0;
+    for (var i = 0; i < nodes.length; i++) {
+      var d = nodeDepth(nodes, i);
+      if (d > max) max = d;
+    }
+    return max;
+  }
+
+  function generateTree() {
+    var n = rand(6, 9);
+    var nodes = [], labels = [], i;
+    for (i = 0; i < n; i++) {
+      nodes.push({ id: i, label: 0, parent: null, children: [], x: 0, y: 0 });
+    }
+    for (i = 1; i <= n; i++) labels.push(i);
+    shuffle(labels);
+    for (i = 0; i < n; i++) nodes[i].label = labels[i];
+
+    var eligible = [0];
+    for (i = 1; i < n; i++) {
+      if (!eligible.length) eligible = nodes.slice(0, i).map(function(nd) { return nd.id; });
+      var pid = eligible[rand(0, eligible.length - 1)];
+      nodes[i].parent = pid;
+      nodes[pid].children.push(i);
+      if (nodeDepth(nodes, i) < 3) eligible.push(i);
+      if (nodes[pid].children.length >= 3) {
+        eligible = eligible.filter(function(id) { return id !== pid; });
+      }
+    }
+    return nodes;
+  }
+
+  /* ── Layout ───────────────────────────────────────────────── */
+  function computeLayout(nodes) {
+    function leafW(id) {
+      return nodes[id].children.length
+        ? nodes[id].children.reduce(function(s, c) { return s + leafW(c); }, 0)
+        : 1;
+    }
+    var h = treeHeight(nodes);
+    var levelH = h ? (SVG_H - 60) / h : 0;
+    var pad = R + 12;
+    function assign(id, x0, x1) {
+      nodes[id].x = (x0 + x1) / 2;
+      nodes[id].y = 38 + nodeDepth(nodes, id) * levelH;
+      var total = leafW(id), xc = x0;
+      nodes[id].children.forEach(function(c) {
+        var s = (x1 - x0) * leafW(c) / total;
+        assign(c, xc, xc + s);
+        xc += s;
+      });
+    }
+    assign(0, pad, SVG_W - pad);
+  }
+
+  /* ── Parent array computation ─────────────────────────────── */
+  function computeParentArr(nodes) {
+    var n = nodes.length;
+    var arr = new Array(n + 1);
+    for (var i = 0; i < n; i++) {
+      var nd = nodes[i];
+      arr[nd.label] = nd.parent === null ? nd.label : nodes[nd.parent].label;
+    }
+    return arr;
+  }
+
+  /* ── Parent array helpers ─────────────────────────────────── */
+  function findLeaves() {
+    var n = nodeArr.length;
+    var isParent = {};
+    for (var i = 1; i <= n; i++) {
+      var p = parentArr[i];
+      if (p !== i) isParent[p] = true;
+    }
+    var lv = [];
+    for (var j = 1; j <= n; j++) {
+      if (!isParent[j]) lv.push(j);
+    }
+    return lv;
+  }
+
+  function childCount(lbl) {
+    var n = nodeArr.length, cnt = 0;
+    for (var i = 1; i <= n; i++) {
+      if (i !== lbl && parentArr[i] === lbl) cnt++;
+    }
+    return cnt;
+  }
+
+  function isAncestor(anc, desc) {
+    var visited = {}, cur = desc;
+    while (true) {
+      if (cur === anc) return true;
+      if (visited[cur]) return false;
+      visited[cur] = true;
+      var p = parentArr[cur];
+      if (p === cur) return false;
+      cur = p;
+    }
+  }
+
+  /* ── Mode tabs ────────────────────────────────────────────── */
+  function makeModeTabs() {
+    var tabs = document.createElement('div');
+    tabs.className = 'mode-tabs';
+    tabs.setAttribute('role', 'tablist');
+    var defs = [['m1', 'Árbol → Array'], ['m2', 'Array → Quiz']];
+    for (var k = 0; k < defs.length; k++) {
+      (function(m, lbl) {
+        var btn = document.createElement('button');
+        btn.className = 'mode-tab' + (activeMode === m ? ' active' : '');
+        btn.dataset.mode = m;
+        btn.setAttribute('role', 'tab');
+        btn.setAttribute('aria-selected', String(activeMode === m));
+        btn.textContent = lbl;
+        btn.addEventListener('click', function() {
+          if (activeMode === m) return;
+          activeMode = m;
+          renderCurrentMode();
+        });
+        tabs.appendChild(btn);
+      })(defs[k][0], defs[k][1]);
+    }
+    return tabs;
+  }
+
+  /* ── SVG ──────────────────────────────────────────────────── */
+  function renderTreeSVG(svgId, hlLabels) {
+    var svg = document.getElementById(svgId);
+    if (!svg) return;
+    svg.innerHTML = '';
+    var hSet = {};
+    for (var k = 0; k < hlLabels.length; k++) hSet[hlLabels[k]] = true;
+
+    // Edges
+    for (var i = 0; i < nodeArr.length; i++) {
+      var nd = nodeArr[i];
+      if (nd.parent === null) continue;
+      var par = nodeArr[nd.parent];
+      var line = document.createElementNS(NS, 'line');
+      line.setAttribute('x1', par.x); line.setAttribute('y1', par.y);
+      line.setAttribute('x2', nd.x);  line.setAttribute('y2', nd.y);
+      line.setAttribute('stroke', '#c8b89a');
+      line.setAttribute('stroke-width', '2');
+      svg.appendChild(line);
+    }
+
+    // "raíz" label above root
+    var root = nodeArr[0];
+    var rt = document.createElementNS(NS, 'text');
+    rt.setAttribute('x', root.x);
+    rt.setAttribute('y', root.y - R - 8);
+    rt.setAttribute('text-anchor', 'middle');
+    rt.setAttribute('font-size', '8');
+    rt.setAttribute('font-family', 'Press Start 2P, monospace');
+    rt.setAttribute('fill', '#b35c00');
+    rt.textContent = 'raíz';
+    svg.appendChild(rt);
+
+    // Nodes
+    for (var j = 0; j < nodeArr.length; j++) {
+      var nd2 = nodeArr[j];
+      var isH = hSet[nd2.label] === true;
+      var g = document.createElementNS(NS, 'g');
+
+      var c = document.createElementNS(NS, 'circle');
+      c.setAttribute('cx', nd2.x); c.setAttribute('cy', nd2.y); c.setAttribute('r', R);
+      c.setAttribute('fill',         isH ? '#b35c00' : '#fff8e1');
+      c.setAttribute('stroke',       nd2.parent === null ? '#b35c00' : (isH ? '#5d3a00' : '#8d6e63'));
+      c.setAttribute('stroke-width', nd2.parent === null ? '3' : '2.5');
+      g.appendChild(c);
+
+      var t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', nd2.x); t.setAttribute('y', nd2.y + 5);
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('font-size', '14');
+      t.setAttribute('font-family', 'Space Grotesk, sans-serif');
+      t.setAttribute('font-weight', '700');
+      t.setAttribute('fill', isH ? '#fff' : '#3e2000');
+      t.setAttribute('pointer-events', 'none');
+      t.textContent = nd2.label;
+      g.appendChild(t);
+
+      svg.appendChild(g);
+    }
+  }
+
+  /* ── Parent array table ───────────────────────────────────── */
+  function renderParentArrayDisplay(container, readOnly) {
+    var n = nodeArr.length;
+    var wrap = document.createElement('div');
+    wrap.className = 'parent-array-wrap';
+
+    var tbl = document.createElement('table');
+    tbl.className = 'parent-array-tbl';
+    tbl.setAttribute('aria-label', 'Array de punteros al padre');
+
+    // Index row
+    var thead = document.createElement('thead');
+    var trIdx = document.createElement('tr');
+    trIdx.className = 'par-idx-row';
+    for (var i = 1; i <= n; i++) {
+      var th = document.createElement('th');
+      th.setAttribute('scope', 'col');
+      th.textContent = i;
+      trIdx.appendChild(th);
+    }
+    thead.appendChild(trIdx);
+    tbl.appendChild(thead);
+
+    // Value row
+    var tbody = document.createElement('tbody');
+    var trVal = document.createElement('tr');
+    trVal.className = 'par-val-row';
+    trVal.id = 'par-val-row';
+
+    for (var j = 1; j <= n; j++) {
+      var td = document.createElement('td');
+      td.dataset.label = j;
+      if (readOnly) {
+        td.textContent = parentArr[j];
+        if (j === rootLabel) td.classList.add('cell-root');
+      } else {
+        td.appendChild(makeParentSelect(j));
+      }
+      trVal.appendChild(td);
+    }
+    tbody.appendChild(trVal);
+    tbl.appendChild(tbody);
+    wrap.appendChild(tbl);
+    container.appendChild(wrap);
+  }
+
+  function makeParentSelect(nodeLabel) {
+    var n = nodeArr.length;
+    var sel = document.createElement('select');
+    sel.className = 'par-select';
+    sel.id = 'par-sel-' + nodeLabel;
+    sel.setAttribute('aria-label', 'parent[' + nodeLabel + ']');
+
+    var blank = document.createElement('option');
+    blank.value = '';
+    blank.textContent = '?';
+    sel.appendChild(blank);
+
+    for (var i = 1; i <= n; i++) {
+      var opt = document.createElement('option');
+      opt.value = String(i);
+      opt.textContent = i;
+      sel.appendChild(opt);
+    }
+
+    if (selValues[nodeLabel]) sel.value = selValues[nodeLabel];
+
+    sel.addEventListener('change', (function(lbl, s) {
+      return function() {
+        selValues[lbl] = s.value;
+        s.classList.remove('sel-ok', 'sel-bad');
+        var fb = document.getElementById('feedback-m1');
+        if (fb) { fb.textContent = ''; fb.className = 'feedback'; }
+      };
+    })(nodeLabel, sel));
+
+    return sel;
+  }
+
+  function initSelValues() { selValues = {}; }
+
+  /* ── Mode 1: Árbol → Array ────────────────────────────────── */
+  function renderMode1() {
+    var n = nodeArr.length;
+
+    var left = document.getElementById('left-panel');
+    left.innerHTML = '';
+    left.className = 'tree-panel';
+
+    var lbl1 = document.createElement('p');
+    lbl1.className = 'panel-label';
+    lbl1.textContent = 'Árbol generado';
+    left.appendChild(lbl1);
+
+    var svg = document.createElementNS(NS, 'svg');
+    svg.id = 'tree-svg';
+    svg.setAttribute('viewBox', '0 0 ' + SVG_W + ' ' + SVG_H);
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', 'Árbol con ' + n + ' nodos');
+    left.appendChild(svg);
+
+    var hint = document.createElement('p');
+    hint.className = 'instr-text';
+    hint.innerHTML = 'Nodos etiquetados 1..' + n + '. La <strong>raíz</strong> tiene borde ámbar grueso.';
+    left.appendChild(hint);
+
+    renderTreeSVG('tree-svg', []);
+
+    var right = document.getElementById('right-panel');
+    right.innerHTML = '';
+    right.className = 'array-panel';
+
+    right.appendChild(makeModeTabs());
+
+    var rootInfo = document.createElement('div');
+    rootInfo.className = 'root-info';
+    rootInfo.innerHTML = 'Raíz: nodo <strong>' + rootLabel + '</strong> → parent[' + rootLabel + '] = ' + rootLabel;
+    right.appendChild(rootInfo);
+
+    var instr = document.createElement('p');
+    instr.className = 'instr-text';
+    instr.innerHTML = 'Completa el array <strong>parent[1..' + n + ']</strong>: para cada índice selecciona el padre de ese nodo. La raíz apunta a sí misma.';
+    right.appendChild(instr);
+
+    renderParentArrayDisplay(right, false);
+
+    var actionRow = document.createElement('div');
+    actionRow.className = 'action-row';
+
+    var btnCheck = document.createElement('button');
+    btnCheck.className = 'btn btn-primary btn-sm';
+    btnCheck.textContent = 'Comprobar';
+    btnCheck.addEventListener('click', checkMode1);
+
+    var btnNew = document.createElement('button');
+    btnNew.className = 'btn btn-outline btn-sm';
+    btnNew.textContent = 'Nueva pregunta';
+    btnNew.addEventListener('click', newTree);
+
+    actionRow.appendChild(btnCheck);
+    actionRow.appendChild(btnNew);
+    right.appendChild(actionRow);
+
+    var fb = document.createElement('p');
+    fb.className = 'feedback';
+    fb.id = 'feedback-m1';
+    fb.setAttribute('aria-live', 'polite');
+    right.appendChild(fb);
+  }
+
+  function checkMode1() {
+    var n = nodeArr.length, correct = 0;
+    for (var i = 1; i <= n; i++) {
+      var sel = document.getElementById('par-sel-' + i);
+      if (!sel) continue;
+      sel.classList.remove('sel-ok', 'sel-bad');
+      var isOk = (parseInt(sel.value, 10) === parentArr[i]);
+      sel.classList.add(isOk ? 'sel-ok' : 'sel-bad');
+      if (isOk) correct++;
+    }
+    scoreAll++;
+    if (correct === n) scoreOk++;
+    updateScore();
+    var fb = document.getElementById('feedback-m1');
+    fb.textContent = correct === n
+      ? '¡Perfecto! Todos los punteros correctos. 🌴'
+      : correct + '/' + n + ' celdas correctas.';
+    fb.className = 'feedback ' + (correct === n ? 'ok' : 'bad');
+  }
+
+  /* ── Mode 2: Array → Quiz ─────────────────────────────────── */
+  function renderMode2() {
+    var n = nodeArr.length;
+
+    var left = document.getElementById('left-panel');
+    left.innerHTML = '';
+    left.className = 'tree-panel';
+
+    var lbl2 = document.createElement('p');
+    lbl2.className = 'panel-label';
+    lbl2.textContent = 'Array parent[1..' + n + ']';
+    left.appendChild(lbl2);
+
+    var instr2 = document.createElement('p');
+    instr2.className = 'instr-text';
+    instr2.innerHTML = 'Fila superior: índice del nodo. Fila inferior: índice de su padre. <strong style="color:var(--amber)">Celda ámbar</strong> = la raíz apunta a sí misma.';
+    left.appendChild(instr2);
+
+    renderParentArrayDisplay(left, true);
+
+    var right = document.getElementById('right-panel');
+    right.innerHTML = '';
+    right.className = 'array-panel';
+
+    right.appendChild(makeModeTabs());
+
+    var conceptEl = document.createElement('span');
+    conceptEl.className = 'q-concept';
+    conceptEl.id = 'm2-concept';
+    conceptEl.textContent = '—';
+    right.appendChild(conceptEl);
+
+    var qText = document.createElement('p');
+    qText.className = 'q-text';
+    qText.id = 'm2-qtext';
+    right.appendChild(qText);
+
+    var choicesEl = document.createElement('div');
+    choicesEl.className = 'choices';
+    choicesEl.id = 'm2-choices';
+    choicesEl.setAttribute('role', 'group');
+    choicesEl.setAttribute('aria-label', 'Opciones de respuesta');
+    right.appendChild(choicesEl);
+
+    var fb2 = document.createElement('p');
+    fb2.className = 'feedback';
+    fb2.id = 'm2-feedback';
+    fb2.setAttribute('aria-live', 'polite');
+    right.appendChild(fb2);
+
+    var btnNext = document.createElement('button');
+    btnNext.className = 'btn btn-primary';
+    btnNext.id = 'm2-btn-next';
+    btnNext.textContent = 'Siguiente pregunta →';
+    btnNext.style.display = 'none';
+    btnNext.addEventListener('click', function() {
+      currentQ = generateQuestion();
+      renderQuestion(currentQ);
+    });
+    right.appendChild(btnNext);
+
+    var btnNew2 = document.createElement('button');
+    btnNew2.className = 'btn btn-outline btn-sm';
+    btnNew2.textContent = 'Nuevo árbol';
+    btnNew2.addEventListener('click', newTree);
+    right.appendChild(btnNew2);
+
+    currentQ = generateQuestion();
+    renderQuestion(currentQ);
+  }
+
+  /* ── Question generation ──────────────────────────────────── */
+  var Q_TYPES = ['root', 'childCount', 'parent', 'leaves'];
+
+  function makeOptions(correct, min, max) {
+    var pool = [correct], cands = [], v, i, j, tmp;
+    for (v = Math.max(min, correct - 3); v <= Math.min(max, correct + 4); v++) {
+      if (v !== correct) cands.push(v);
+    }
+    for (i = cands.length - 1; i > 0; i--) {
+      j = rand(0, i); tmp = cands[i]; cands[i] = cands[j]; cands[j] = tmp;
+    }
+    for (i = 0; i < cands.length && pool.length < 4; i++) pool.push(cands[i]);
+    var off = 1, safety = 0;
+    while (pool.length < 4 && safety++ < 20) {
+      v = correct + off;
+      if (pool.indexOf(v) < 0) pool.push(v);
+      if (pool.length < 4) {
+        v = Math.max(0, correct - off);
+        if (pool.indexOf(v) < 0) pool.push(v);
+      }
+      off++;
+    }
+    return pool.sort(function(a, b) { return a - b; });
+  }
+
+  function makeSetOptions(correctSet, n) {
+    var sorted = correctSet.slice().sort(function(a,b){return a-b;});
+    var correctStr = '{' + sorted.join(', ') + '}';
+    var opts = [correctStr], attempts = 0;
+    while (opts.length < 4 && attempts++ < 60) {
+      var cand = correctSet.slice();
+      if (cand.length > 1 && Math.random() < 0.5) {
+        cand.splice(rand(0, cand.length - 1), 1);
+      } else {
+        var non = [];
+        for (var i = 1; i <= n; i++) {
+          if (correctSet.indexOf(i) === -1) non.push(i);
+        }
+        if (non.length) cand.push(non[rand(0, non.length - 1)]);
+      }
+      var seen = {}, deduped = [];
+      for (var k = 0; k < cand.length; k++) {
+        if (!seen[cand[k]]) { seen[cand[k]] = true; deduped.push(cand[k]); }
+      }
+      if (!deduped.length) continue;
+      deduped.sort(function(a,b){return a-b;});
+      var str = '{' + deduped.join(', ') + '}';
+      if (opts.indexOf(str) === -1) opts.push(str);
+    }
+    while (opts.length < 4) {
+      var fb = '{' + rand(1, n) + '}';
+      if (opts.indexOf(fb) === -1) opts.push(fb);
+    }
+    shuffle(opts);
+    return opts;
+  }
+
+  function generateQuestion() {
+    var type = Q_TYPES[rand(0, Q_TYPES.length - 1)];
+    var n = nodeArr.length;
+    var rootLbl = nodeArr[0].label;
+
+    if (type === 'root') {
+      return {
+        concept: 'Raíz',
+        text:    '¿Cuál es la <b>raíz</b> del árbol?',
+        correct: rootLbl,
+        opts:    makeOptions(rootLbl, 1, n),
+        hl:      [rootLbl]
+      };
+    }
+
+    if (type === 'childCount') {
+      var nd = nodeArr[rand(0, n - 1)];
+      var cnt = childCount(nd.label);
+      return {
+        concept: 'Hijos',
+        text:    '¿Cuántos <b>hijos</b> tiene el nodo <b>' + nd.label + '</b>?',
+        correct: cnt,
+        opts:    makeOptions(cnt, 0, n - 1),
+        hl:      [nd.label]
+      };
+    }
+
+    if (type === 'parent') {
+      var nonRoots = [];
+      for (var i = 0; i < nodeArr.length; i++) {
+        if (nodeArr[i].parent !== null) nonRoots.push(nodeArr[i]);
+      }
+      var nd2 = nonRoots[rand(0, nonRoots.length - 1)];
+      var pLbl = parentArr[nd2.label];
+      return {
+        concept: 'Padre',
+        text:    '¿Cuál es el <b>padre</b> del nodo <b>' + nd2.label + '</b>?',
+        correct: pLbl,
+        opts:    makeOptions(pLbl, 1, n),
+        hl:      [nd2.label, pLbl]
+      };
+    }
+
+    if (type === 'leaves') {
+      var lv = findLeaves();
+      var lvSorted = lv.slice().sort(function(a,b){return a-b;});
+      var correctStr = '{' + lvSorted.join(', ') + '}';
+      return {
+        concept: 'Hojas',
+        text:    '¿Cuáles son los nodos <b>hoja</b>? (sin hijos)',
+        correct: correctStr,
+        opts:    makeSetOptions(lv, n),
+        hl:      lv
+      };
+    }
+
+    /* ancestor */
+    var a = rand(1, n);
+    var b = a, safety = 0;
+    while (b === a && safety++ < 20) b = rand(1, n);
+    if (b === a) b = (a % n) + 1;
+    var aIsAnc = isAncestor(a, b);
+    return {
+      concept: 'Ancestro',
+      text:    '¿Es el nodo <b>' + a + '</b> ancestro del nodo <b>' + b + '</b>?',
+      correct: aIsAnc ? 'Sí' : 'No',
+      opts:    ['Sí', 'No'],
+      hl:      [a, b]
+    };
+  }
+
+  /* ── Render question ──────────────────────────────────────── */
+  function highlightArrayCells(labels) {
+    var hSet = {};
+    for (var k = 0; k < labels.length; k++) hSet[labels[k]] = true;
+    var cells = document.querySelectorAll('#par-val-row td');
+    for (var i = 0; i < cells.length; i++) {
+      var lbl = parseInt(cells[i].dataset.label, 10);
+      if (hSet[lbl]) cells[i].classList.add('cell-hl');
+      else cells[i].classList.remove('cell-hl');
+    }
+  }
+
+  function renderQuestion(q) {
+    highlightArrayCells([]);
+    document.getElementById('m2-concept').textContent = q.concept;
+    document.getElementById('m2-qtext').innerHTML = q.text;
+
+    var choicesEl = document.getElementById('m2-choices');
+    choicesEl.innerHTML = '';
+    for (var k = 0; k < q.opts.length; k++) {
+      (function(opt, correct) {
+        var btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.textContent = opt;
+        btn.addEventListener('click', function() { handleAnswer2(opt, correct); });
+        choicesEl.appendChild(btn);
+      })(q.opts[k], q.correct);
+    }
+
+    var fb = document.getElementById('m2-feedback');
+    fb.textContent = ''; fb.className = 'feedback';
+    document.getElementById('m2-btn-next').style.display = 'none';
+    answered = false;
+  }
+
+  function handleAnswer2(chosen, correct) {
+    if (answered) return;
+    answered = true;
+    scoreAll++;
+
+    var btns = document.querySelectorAll('#m2-choices .choice-btn');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].disabled = true;
+      var txt = btns[i].textContent;
+      if (txt === String(correct)) btns[i].classList.add('ok');
+      else if (txt === String(chosen)) btns[i].classList.add('bad');
+    }
+
+    var fb = document.getElementById('m2-feedback');
+    if (String(chosen) === String(correct)) {
+      scoreOk++;
+      fb.textContent = '¡Correcto! 🍌';
+      fb.className = 'feedback ok';
+    } else {
+      fb.textContent = 'Incorrecto — la respuesta es ' + correct + '.';
+      fb.className = 'feedback bad';
+    }
+
+    document.getElementById('m2-btn-next').style.display = '';
+    updateScore();
+  }
+
+  /* ── Score ────────────────────────────────────────────────── */
+  function updateScore() {
+    document.getElementById('score-ok').textContent    = scoreOk;
+    document.getElementById('score-total').textContent = scoreAll;
+  }
+
+  /* ── Dispatch ─────────────────────────────────────────────── */
+  function renderCurrentMode() {
+    if (activeMode === 'm1') renderMode1();
+    else renderMode2();
+  }
+
+  function newTree() {
+    nodeArr   = generateTree();
+    computeLayout(nodeArr);
+    parentArr = computeParentArr(nodeArr);
+    rootLabel = nodeArr[0].label;
+    initSelValues();
+    answered  = false;
+    currentQ  = null;
+    renderCurrentMode();
+  }
+
+  /* ── Boot ─────────────────────────────────────────────────── */
+  nodeArr   = generateTree();
+  computeLayout(nodeArr);
+  parentArr = computeParentArr(nodeArr);
+  rootLabel = nodeArr[0].label;
+  initSelValues();
+  activeMode = 'm1';
+  renderCurrentMode();
+
+}());
+</script>
+</body>
+</html>
