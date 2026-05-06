@@ -144,7 +144,24 @@
       padding: 0.55rem 0.75rem;
       border-radius: 0 4px 4px 0;
       line-height: 1.6;
+      display: none;
     }
+    .q-def.visible { display: block; }
+
+    .btn-hint {
+      align-self: flex-start;
+      background: none;
+      border: 1.5px dashed rgba(179,92,0,0.4);
+      border-radius: 6px;
+      color: var(--amber-dark);
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.3rem 0.7rem;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .btn-hint:hover { background: rgba(179,92,0,0.07); border-color: var(--amber); }
 
     /* ── Choices ─────────────────────────────────────────────── */
     .choices {
@@ -255,7 +272,8 @@
   <section class="q-panel" aria-label="Pregunta">
     <span class="q-concept" id="q-concept">—</span>
     <p class="q-text" id="q-text"></p>
-    <p class="q-def" id="q-def"></p>
+    <button class="btn-hint" id="btn-hint" aria-expanded="false">💡 Ver pista</button>
+    <p class="q-def" id="q-def" aria-live="polite"></p>
     <div class="choices" id="choices" role="group" aria-label="Opciones de respuesta"></div>
     <p class="feedback" id="feedback" aria-live="polite"></p>
     <button class="btn btn-primary" id="btn-next" style="display:none">Siguiente pregunta →</button>
@@ -552,6 +570,10 @@
     fb.textContent = '';
     fb.className   = 'feedback';
     document.getElementById('btn-next').style.display = 'none';
+    var hintEl = document.getElementById('q-def');
+    hintEl.classList.remove('visible');
+    document.getElementById('btn-hint').setAttribute('aria-expanded', 'false');
+    document.getElementById('btn-hint').textContent = '💡 Ver pista';
     answered = false;
   }
 
@@ -584,6 +606,13 @@
   }
 
   /* ── Events ───────────────────────────────────────────────── */
+  document.getElementById('btn-hint').addEventListener('click', function () {
+    var hintEl  = document.getElementById('q-def');
+    var visible = hintEl.classList.toggle('visible');
+    this.setAttribute('aria-expanded', String(visible));
+    this.textContent = visible ? '💡 Ocultar pista' : '💡 Ver pista';
+  });
+
   document.getElementById('btn-next').addEventListener('click', function () {
     currentQ = generateQuestion(tree);
     renderTree(tree, currentQ.hl);
