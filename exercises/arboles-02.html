@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>02 · Lista de Hijos — Árboles · PRA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --amber:      #b35c00;
+      --amber-dark: #7c3f00;
+      --amber-lt:   #ffe0b2;
+      --bg:         #fffde7;
+      --panel:      #fff8e1;
+      --text:       #3e2000;
+      --ok:         #2e7d32;
+      --bad:        #c62828;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 18px; }
+
+    body {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    .ex-header {
+      background: linear-gradient(135deg, #3e2000, #5d3a00);
+      color: #fff;
+      padding: 1rem 1.5rem 1.1rem;
+      border-bottom: 4px solid var(--amber);
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .back-link {
+      color: var(--amber-lt);
+      text-decoration: none;
+      font-size: 0.78rem;
+      font-weight: 700;
+      transition: opacity 0.15s;
+    }
+    .back-link:hover { opacity: 0.7; }
+    .ex-title {
+      font-family: 'Press Start 2P', monospace;
+      font-size: clamp(0.52rem, 2vw, 0.78rem);
+      color: #ffe082;
+      line-height: 1.8;
+    }
+    .ex-desc {
+      font-size: 0.82rem;
+      color: #ffcc80;
+      line-height: 1.5;
+      max-width: 64ch;
+    }
+
+    /* ── Layout ─────────────────────────────────────────────── */
+    .ex-main {
+      flex: 1;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+
+    /* ── Panels ─────────────────────────────────────────────── */
+    .tree-panel,
+    .array-panel {
+      background: var(--panel);
+      border: 2px solid rgba(179,92,0,0.2);
+      border-radius: 12px;
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: 0 2px 12px rgba(179,92,0,0.07);
+    }
+
+    .array-panel {
+      position: sticky;
+      top: 1.25rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+    }
+
+    .panel-label {
+      font-size: 0.7rem;
+      color: #9e6a2a;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    #tree-svg {
+      width: 100%;
+      border-radius: 8px;
+      background: #fffef5;
+      border: 1px solid rgba(179,92,0,0.1);
+    }
+
+    /* ── Chip pool ──────────────────────────────────────────── */
+    .pool-area { display: flex; flex-direction: column; gap: 0.4rem; }
+
+    .chips-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      min-height: 2.4rem;
+      padding: 0.5rem 0.6rem;
+      border: 1.5px dashed rgba(179,92,0,0.3);
+      border-radius: 8px;
+      background: rgba(179,92,0,0.03);
+      transition: border-color 0.12s, background 0.12s;
+    }
+    .chips-container.drag-over {
+      border-color: var(--amber);
+      background: rgba(179,92,0,0.08);
+    }
+
+    /* ── Array panel content ────────────────────────────────── */
+    .instr-text {
+      font-size: 0.8rem;
+      color: #7a4f1a;
+      line-height: 1.55;
+    }
+
+    .array-table {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .array-row {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.15rem 0.35rem;
+      border-left: 3px solid transparent;
+      border-radius: 0 4px 4px 0;
+      min-height: 2.3rem;
+      border-bottom: 1px solid rgba(179,92,0,0.07);
+      transition: border-left-color 0.2s, background 0.2s;
+    }
+    .array-row.row-ok  { border-left-color: var(--ok);  background: rgba(46,125,50,0.05); }
+    .array-row.row-bad { border-left-color: var(--bad); background: rgba(198,40,40,0.05); }
+
+    .row-index {
+      min-width: 3rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.15rem;
+      flex-shrink: 0;
+    }
+    .index-num {
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--amber);
+      line-height: 1;
+    }
+    .root-badge {
+      font-family: 'Press Start 2P', monospace;
+      font-size: 0.38rem;
+      background: var(--amber);
+      color: #fff;
+      padding: 0.15rem 0.35rem;
+      border-radius: 3px;
+      white-space: nowrap;
+      line-height: 1.5;
+    }
+
+    .row-drop-zone {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      min-height: 2rem;
+      padding: 0.2rem 0.4rem;
+      border: 1.5px dashed rgba(179,92,0,0.2);
+      border-radius: 6px;
+      transition: border-color 0.12s, background 0.12s;
+    }
+    .row-drop-zone.drag-over {
+      border-color: var(--amber);
+      background: rgba(179,92,0,0.06);
+    }
+
+    .null-marker { color: #9e7352; font-weight: 700; font-size: 0.85rem; }
+    .ll-arrow    { color: var(--amber); font-weight: 700; font-size: 0.85rem; }
+
+    /* ── Chips ──────────────────────────────────────────────── */
+    .chip {
+      background: var(--amber);
+      color: #fff;
+      border: 2px solid transparent;
+      border-radius: 20px;
+      padding: 0.18rem 0.65rem;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: grab;
+      user-select: none;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+      line-height: 1.4;
+    }
+    .chip:hover:not(.chip-ok):not(.chip-bad) { opacity: 0.82; }
+    .chip.dragging { opacity: 0.35; }
+    .chip.chip-ok  { background: #e8f5e9; color: var(--ok);  border-color: var(--ok);  cursor: default; }
+    .chip.chip-bad { background: #ffebee; color: var(--bad); border-color: var(--bad); animation: shake 0.4s ease-in-out; }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0);    }
+      20%,60% { transform: translateX(-5px); }
+      40%,80% { transform: translateX(5px);  }
+    }
+
+    /* ── Buttons ────────────────────────────────────────────── */
+    .action-row { display: flex; gap: 0.6rem; flex-wrap: wrap; }
+
+    .btn {
+      padding: 0.6rem 1.2rem;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .btn:hover  { opacity: 0.85; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+
+    .btn-primary { background: var(--amber); color: #fff; }
+    .btn-outline {
+      background: rgba(179,92,0,0.08);
+      color: var(--amber-dark);
+      border: 1.5px solid rgba(179,92,0,0.3);
+      width: 100%;
+    }
+    .btn-sm { padding: 0.45rem 0.9rem; font-size: 0.82rem; width: auto; }
+
+    .feedback { font-size: 0.9rem; font-weight: 700; min-height: 1.4em; }
+    .feedback.ok  { color: var(--ok); }
+    .feedback.bad { color: var(--bad); }
+
+    /* ── Score footer ───────────────────────────────────────── */
+    .score-bar {
+      border-top: 2px solid rgba(179,92,0,0.15);
+      background: rgba(255,253,231,0.95);
+      padding: 0.7rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--amber-dark);
+    }
+    .score-num { font-size: 1.1rem; color: var(--amber); }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 700px) {
+      .ex-main { grid-template-columns: 1fr; padding: 1rem; }
+      .array-panel { position: static; max-height: none; overflow-y: visible; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="ex-header">
+  <a class="back-link" href="../index.html#arboles">← Árboles</a>
+  <h1 class="ex-title">02 — Lista de Hijos</h1>
+  <p class="ex-desc">Construye la representación "Lista de Hijos" arrastrando cada nodo a la fila de su padre en el array.</p>
+</header>
+
+<main class="ex-main">
+
+  <section class="tree-panel" aria-label="Árbol y nodos">
+    <p class="panel-label">Árbol generado</p>
+    <svg id="tree-svg" viewBox="0 0 560 300" role="img" aria-label="Árbol aleatorio con nodos numerados"></svg>
+    <div class="pool-area" aria-label="Pool de nodos">
+      <p class="panel-label">Nodos — arrástralos a su fila</p>
+      <div class="chips-container" id="chips-container" role="list" aria-label="Nodos disponibles"></div>
+    </div>
+    <button class="btn btn-outline" id="btn-new-tree">🌴 Nuevo árbol</button>
+  </section>
+
+  <section class="array-panel" aria-label="Array Lista de Hijos">
+    <p class="panel-label">Lista de Hijos — array</p>
+    <p class="instr-text">
+      Fila <em>i</em> contiene los hijos directos del nodo <em>i</em>.
+      Arrastra cada nodo a la fila de su padre. Las hojas quedan con <strong>/</strong>.
+    </p>
+    <div class="array-table" id="array-table" role="list"></div>
+    <div class="action-row">
+      <button class="btn btn-primary btn-sm" id="btn-check">Comprobar</button>
+      <button class="btn btn-outline btn-sm" id="btn-reset">Reiniciar</button>
+    </div>
+    <p class="feedback" id="feedback" aria-live="polite"></p>
+  </section>
+
+</main>
+
+<footer class="score-bar" aria-label="Puntuación">
+  Filas correctas: <span class="score-num" id="score-ok">—</span> / <span id="score-total">—</span>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var SVG_W = 560, SVG_H = 300, R = 18;
+  var NS = 'http://www.w3.org/2000/svg';
+
+  var tree = [], N = 0;
+  var placements = {}; // nodeId (int) → parentNodeId (int) | null
+  var ddReady = false;
+
+  /* ── Util ─────────────────────────────────────────────────── */
+  function rand(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = rand(0, i), t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  /* ── Tree ─────────────────────────────────────────────────── */
+  function depth(nodes, id) {
+    var d = 0, cur = id;
+    while (nodes[cur].parent !== null) { cur = nodes[cur].parent; d++; }
+    return d;
+  }
+
+  function treeHeight(nodes) {
+    var max = 0;
+    for (var i = 0; i < nodes.length; i++) { var d = depth(nodes, i); if (d > max) max = d; }
+    return max;
+  }
+
+  function generateTree() {
+    N = rand(7, 9);
+    var nodes = [], labels = [], i, k;
+    for (i = 0; i < N; i++) nodes.push({ id: i, label: 0, parent: null, children: [], x: 0, y: 0 });
+    for (k = 1; k <= N; k++) labels.push(k);
+    shuffle(labels);
+    for (i = 0; i < N; i++) nodes[i].label = labels[i];
+
+    var eligible = [0];
+    for (i = 1; i < N; i++) {
+      if (!eligible.length) eligible = nodes.slice(0, i).map(function(n) { return n.id; });
+      var pid = eligible[rand(0, eligible.length - 1)];
+      nodes[i].parent = pid;
+      nodes[pid].children.push(i);
+      if (depth(nodes, i) < 3) eligible.push(i);
+      if (nodes[pid].children.length >= 3) eligible = eligible.filter(function(id) { return id !== pid; });
+    }
+    return nodes;
+  }
+
+  /* ── Layout ───────────────────────────────────────────────── */
+  function computeLayout(nodes) {
+    function leafW(id) {
+      return nodes[id].children.length ? nodes[id].children.reduce(function(s, c) { return s + leafW(c); }, 0) : 1;
+    }
+    var h = treeHeight(nodes), levelH = h ? (SVG_H - 50) / h : 0, pad = R + 8;
+    function assign(id, x0, x1) {
+      nodes[id].x = (x0 + x1) / 2;
+      nodes[id].y = 28 + depth(nodes, id) * levelH;
+      var total = leafW(id), xc = x0;
+      nodes[id].children.forEach(function(c) {
+        var s = (x1 - x0) * leafW(c) / total; assign(c, xc, xc + s); xc += s;
+      });
+    }
+    assign(0, pad, SVG_W - pad);
+  }
+
+  /* ── SVG render ───────────────────────────────────────────── */
+  function renderTree(nodes) {
+    var svg = document.getElementById('tree-svg');
+    svg.innerHTML = '';
+    nodes.forEach(function(nd) {
+      if (nd.parent === null) return;
+      var par = nodes[nd.parent], line = document.createElementNS(NS, 'line');
+      line.setAttribute('x1', par.x); line.setAttribute('y1', par.y);
+      line.setAttribute('x2', nd.x);  line.setAttribute('y2', nd.y);
+      line.setAttribute('stroke', '#c8b89a'); line.setAttribute('stroke-width', '2');
+      svg.appendChild(line);
+    });
+    nodes.forEach(function(nd) {
+      var g = document.createElementNS(NS, 'g');
+      var c = document.createElementNS(NS, 'circle');
+      c.setAttribute('cx', nd.x); c.setAttribute('cy', nd.y); c.setAttribute('r', R);
+      c.setAttribute('fill', '#fff8e1'); c.setAttribute('stroke', '#8d6e63'); c.setAttribute('stroke-width', '2.5');
+      var t = document.createElementNS(NS, 'text');
+      t.setAttribute('x', nd.x); t.setAttribute('y', nd.y + 5);
+      t.setAttribute('text-anchor', 'middle'); t.setAttribute('font-size', '14');
+      t.setAttribute('font-family', 'Space Grotesk, sans-serif'); t.setAttribute('font-weight', '700');
+      t.setAttribute('fill', '#3e2000'); t.setAttribute('pointer-events', 'none');
+      t.textContent = nd.label;
+      g.appendChild(c); g.appendChild(t); svg.appendChild(g);
+    });
+  }
+
+  /* ── Placements ───────────────────────────────────────────── */
+  function initPlacements() {
+    placements = {};
+    tree.forEach(function(nd) { if (nd.parent !== null) placements[nd.id] = null; });
+  }
+
+  /* ── Pool ─────────────────────────────────────────────────── */
+  function renderPool() {
+    var c = document.getElementById('chips-container');
+    c.innerHTML = '';
+    tree.forEach(function(nd) {
+      if (nd.parent === null || placements[nd.id] !== null) return;
+      c.appendChild(makeChip(nd.id, nd.label));
+    });
+  }
+
+  function makeChip(id, label) {
+    var chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.setAttribute('draggable', 'true');
+    chip.setAttribute('data-node-id', id);
+    chip.textContent = label;
+    return chip;
+  }
+
+  /* ── Array ────────────────────────────────────────────────── */
+  function renderArray() {
+    var table = document.getElementById('array-table');
+    table.innerHTML = '';
+    var sorted = tree.slice().sort(function(a, b) { return a.label - b.label; });
+    sorted.forEach(function(node) {
+      var row = document.createElement('div');
+      row.className = 'array-row';
+      row.id = 'row-' + node.id;
+
+      var idx = document.createElement('div');
+      idx.className = 'row-index';
+      var num = document.createElement('span');
+      num.className = 'index-num';
+      num.textContent = node.label;
+      idx.appendChild(num);
+      if (node.parent === null) {
+        var badge = document.createElement('span');
+        badge.className = 'root-badge';
+        badge.textContent = 'raíz';
+        idx.appendChild(badge);
+      }
+      row.appendChild(idx);
+
+      var zone = document.createElement('div');
+      zone.className = 'row-drop-zone';
+      zone.setAttribute('data-row-node-id', node.id);
+      renderDropZone(node, zone);
+      row.appendChild(zone);
+
+      table.appendChild(row);
+    });
+  }
+
+  function renderDropZone(node, el) {
+    el.innerHTML = '';
+    var placed = tree.filter(function(n) { return placements[n.id] === node.id; });
+    if (!placed.length) {
+      var slash = document.createElement('span');
+      slash.className = 'null-marker';
+      slash.textContent = '/';
+      el.appendChild(slash);
+      return;
+    }
+    placed.forEach(function(chipNode) {
+      var arr = document.createElement('span');
+      arr.className = 'll-arrow'; arr.textContent = '→';
+      el.appendChild(arr);
+      var chip = makeChip(chipNode.id, chipNode.label);
+      chip.classList.add('chip-placed');
+      el.appendChild(chip);
+    });
+    var end = document.createElement('span');
+    end.className = 'null-marker'; end.textContent = '/';
+    el.appendChild(end);
+  }
+
+  /* ── Validation ───────────────────────────────────────────── */
+  function checkAnswer() {
+    renderPool();
+    renderArray();
+    var correct = 0;
+    tree.forEach(function(P) {
+      var exp = {};
+      P.children.forEach(function(cid) { exp[cid] = true; });
+      var placed = [];
+      Object.keys(placements).forEach(function(k) {
+        var id = +k;
+        if (placements[id] === P.id) placed.push(id);
+      });
+      var ok = placed.length === P.children.length && placed.every(function(id) { return exp[id]; });
+      var rowEl = document.getElementById('row-' + P.id);
+      if (ok) {
+        correct++;
+        if (rowEl) rowEl.classList.add('row-ok');
+        placed.forEach(function(id) {
+          var el = document.querySelector('.chip[data-node-id="' + id + '"]');
+          if (el) el.classList.add('chip-ok');
+        });
+      } else {
+        if (rowEl) rowEl.classList.add('row-bad');
+        placed.forEach(function(id) {
+          if (!exp[id]) {
+            var el = document.querySelector('.chip[data-node-id="' + id + '"]');
+            if (el) el.classList.add('chip-bad');
+          }
+        });
+      }
+    });
+    var fb = document.getElementById('feedback');
+    fb.textContent = correct === N ? '¡Perfecto! Representación correcta. 🌴' : correct + '/' + N + ' filas correctas.';
+    fb.className   = 'feedback ' + (correct === N ? 'ok' : 'bad');
+    document.getElementById('score-ok').textContent    = correct;
+    document.getElementById('score-total').textContent = N;
+  }
+
+  function clearValidation() {
+    var fb = document.getElementById('feedback');
+    fb.textContent = ''; fb.className = 'feedback';
+  }
+
+  /* ── Drag & drop (attached once, event delegation) ────────── */
+  function initDragDrop() {
+    if (ddReady) return;
+    ddReady = true;
+
+    document.body.addEventListener('dragstart', function(e) {
+      var chip = e.target.closest('.chip');
+      if (!chip) return;
+      e.dataTransfer.setData('text/plain', chip.dataset.nodeId);
+      e.dataTransfer.effectAllowed = 'move';
+      chip.classList.add('dragging');
+    });
+
+    document.body.addEventListener('dragend', function() {
+      document.querySelectorAll('.chip.dragging').forEach(function(el) { el.classList.remove('dragging'); });
+    });
+
+    /* drag-over highlight */
+    document.body.addEventListener('dragenter', function(e) {
+      var el = e.target.closest('.row-drop-zone, .chips-container');
+      if (!el) return;
+      document.querySelectorAll('.drag-over').forEach(function(d) { d.classList.remove('drag-over'); });
+      el.classList.add('drag-over');
+    }, true);
+
+    document.body.addEventListener('dragover', function(e) {
+      if (e.target.closest('.row-drop-zone, .chips-container')) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+      }
+    });
+
+    document.body.addEventListener('dragleave', function(e) {
+      var el = e.target.closest('.row-drop-zone, .chips-container');
+      if (el && !el.contains(e.relatedTarget)) el.classList.remove('drag-over');
+    });
+
+    document.body.addEventListener('drop', function(e) {
+      var zone = e.target.closest('.row-drop-zone');
+      var pool = e.target.closest('.chips-container');
+      if (!zone && !pool) return;
+      e.preventDefault();
+      document.querySelectorAll('.drag-over').forEach(function(el) { el.classList.remove('drag-over'); });
+
+      var nodeId = parseInt(e.dataTransfer.getData('text/plain'), 10);
+      if (isNaN(nodeId) || !(nodeId in placements)) return;
+
+      if (zone) {
+        var rowNodeId = parseInt(zone.dataset.rowNodeId, 10);
+        if (nodeId === rowNodeId) return;
+        placements[nodeId] = rowNodeId;
+      } else {
+        placements[nodeId] = null;
+      }
+
+      clearValidation();
+      renderPool();
+      renderArray();
+    });
+  }
+
+  /* ── Button events ────────────────────────────────────────── */
+  document.getElementById('btn-check').addEventListener('click', checkAnswer);
+
+  document.getElementById('btn-reset').addEventListener('click', function() {
+    initPlacements();
+    clearValidation();
+    renderPool();
+    renderArray();
+  });
+
+  document.getElementById('btn-new-tree').addEventListener('click', function() {
+    tree = generateTree();
+    computeLayout(tree);
+    renderTree(tree);
+    initPlacements();
+    clearValidation();
+    renderPool();
+    renderArray();
+    document.getElementById('score-ok').textContent    = '—';
+    document.getElementById('score-total').textContent = '—';
+  });
+
+  /* ── Boot ─────────────────────────────────────────────────── */
+  tree = generateTree();
+  computeLayout(tree);
+  renderTree(tree);
+  initPlacements();
+  renderPool();
+  renderArray();
+  initDragDrop();
+
+}());
+</script>
+</body>
+</html>
