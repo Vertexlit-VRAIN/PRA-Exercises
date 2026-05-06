@@ -236,71 +236,24 @@
       line-height: 1.55;
     }
 
-    /* ── Array rows (Mode 2) ────────────────────────────────── */
-    .array-table {
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
-    }
-
-    .array-row {
+    /* ── Clave drop zone (Mode 2) ───────────────────────────── */
+    .clave-zone {
       display: flex;
       align-items: center;
-      gap: 0.55rem;
-      padding: 0.15rem 0.35rem;
-      border-left: 3px solid transparent;
-      border-radius: 0 4px 4px 0;
-      min-height: 2.3rem;
-      border-bottom: 1px solid rgba(179,92,0,0.07);
-      transition: border-left-color 0.2s, background 0.2s;
-    }
-    .array-row.row-ok  { border-left-color: var(--ok);  background: rgba(46,125,50,0.05); }
-    .array-row.row-bad { border-left-color: var(--bad); background: rgba(198,40,40,0.05); }
-
-    .row-index {
-      min-width: 3rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.15rem;
-      flex-shrink: 0;
-    }
-    .index-num {
-      font-weight: 700;
-      font-size: 1rem;
-      color: var(--amber);
-      line-height: 1;
-    }
-    .root-badge {
-      font-family: 'Press Start 2P', monospace;
-      font-size: 0.38rem;
-      background: var(--amber);
-      color: #fff;
-      padding: 0.15rem 0.35rem;
-      border-radius: 3px;
-      white-space: nowrap;
-      line-height: 1.5;
-    }
-
-    .row-drop-zone {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 0.25rem;
-      min-height: 2rem;
-      padding: 0.2rem 0.4rem;
-      border: 1.5px dashed rgba(179,92,0,0.2);
-      border-radius: 6px;
+      justify-content: center;
+      min-height: 1.9rem;
+      min-width: 2.8rem;
+      padding: 0.15rem 0.3rem;
+      border: 1.5px dashed rgba(179,92,0,0.3);
+      border-radius: 4px;
       transition: border-color 0.12s, background 0.12s;
     }
-    .row-drop-zone.drag-over {
+    .clave-zone.drag-over {
       border-color: var(--amber);
       background: rgba(179,92,0,0.06);
     }
 
     .null-marker { color: #9e7352; font-weight: 700; font-size: 0.85rem; }
-    .ll-arrow    { color: var(--amber); font-weight: 700; font-size: 0.85rem; }
 
     /* ── Chips ──────────────────────────────────────────────── */
     .chip {
@@ -385,11 +338,11 @@
 
   /* ── State ────────────────────────────────────────────────── */
   var nodeArr = [];
-  var lcrsTable = {};     // pos → { izq: pos|null, clave: str, der: pos|null }
-  var positions = [];     // sorted occupied positions
-  var activeMode = 'a2t'; // 'a2t' | 't2a'
-  var selValues = {};     // pos → { izq: str, der: str }
-  var placements = {};    // nodeId → parentId | null
+  var lcrsTable = {};       // pos → { izq: pos|null, clave: str, der: pos|null }
+  var positions = [];       // sorted occupied positions
+  var activeMode = 'a2t';   // 'a2t' | 't2a'
+  var selValues = {};       // pos → { izq: str, der: str }  (Mode 1)
+  var clavePlacements = {}; // pos → nodeId | null           (Mode 2)
   var ddReady = false;
 
   /* ── Util ─────────────────────────────────────────────────── */
@@ -513,11 +466,19 @@
   }
 
   /* ── SVG ──────────────────────────────────────────────────── */
-  function renderTreeSVG() {
+  function findNodeByPos(pos) {
+    for (var i = 0; i < nodeArr.length; i++) {
+      if (nodeArr[i].pos === pos) return nodeArr[i];
+    }
+    return null;
+  }
+
+  function renderTreeSVG(showBadge) {
     var svg = document.getElementById('tree-svg');
     if (!svg) return;
     svg.innerHTML = '';
 
+    // Solid parent-child edges
     nodeArr.forEach(function(nd) {
       if (nd.parent === null) return;
       var par = nodeArr[nd.parent];
@@ -529,6 +490,23 @@
       svg.appendChild(line);
     });
 
+    // Dashed sibling (der) edges
+    nodeArr.forEach(function(nd) {
+      var derPos = lcrsTable[nd.pos] && lcrsTable[nd.pos].der;
+      if (!derPos) return;
+      var sib = findNodeByPos(derPos);
+      if (!sib) return;
+      var dl = document.createElementNS(NS, 'line');
+      dl.setAttribute('x1', nd.x + R);  dl.setAttribute('y1', nd.y);
+      dl.setAttribute('x2', sib.x - R); dl.setAttribute('y2', sib.y);
+      dl.setAttribute('stroke', '#b35c00');
+      dl.setAttribute('stroke-width', '1.5');
+      dl.setAttribute('stroke-dasharray', '5,3');
+      dl.setAttribute('opacity', '0.5');
+      svg.appendChild(dl);
+    });
+
+    // "raíz" label above root
     var root = nodeArr[0];
     var rt = document.createElementNS(NS, 'text');
     rt.setAttribute('x', root.x);
@@ -540,6 +518,7 @@
     rt.textContent = 'raíz';
     svg.appendChild(rt);
 
+    // Nodes
     nodeArr.forEach(function(nd) {
       var g = document.createElementNS(NS, 'g');
 
@@ -561,23 +540,24 @@
       t.textContent = nd.label;
       g.appendChild(t);
 
-      var bx = nd.x + 8, by = nd.y - R - 2;
-      var br = document.createElementNS(NS, 'rect');
-      br.setAttribute('x', bx); br.setAttribute('y', by);
-      br.setAttribute('width', '18'); br.setAttribute('height', '12');
-      br.setAttribute('rx', '3'); br.setAttribute('fill', '#b35c00');
-      g.appendChild(br);
-
-      var bt = document.createElementNS(NS, 'text');
-      bt.setAttribute('x', bx + 9); bt.setAttribute('y', by + 9);
-      bt.setAttribute('text-anchor', 'middle');
-      bt.setAttribute('font-size', '8');
-      bt.setAttribute('font-family', 'Space Grotesk, sans-serif');
-      bt.setAttribute('font-weight', '700');
-      bt.setAttribute('fill', '#fff');
-      bt.setAttribute('pointer-events', 'none');
-      bt.textContent = nd.pos;
-      g.appendChild(bt);
+      if (showBadge) {
+        var bx = nd.x + 8, by = nd.y - R - 2;
+        var br = document.createElementNS(NS, 'rect');
+        br.setAttribute('x', bx); br.setAttribute('y', by);
+        br.setAttribute('width', '18'); br.setAttribute('height', '12');
+        br.setAttribute('rx', '3'); br.setAttribute('fill', '#b35c00');
+        g.appendChild(br);
+        var bt = document.createElementNS(NS, 'text');
+        bt.setAttribute('x', bx + 9); bt.setAttribute('y', by + 9);
+        bt.setAttribute('text-anchor', 'middle');
+        bt.setAttribute('font-size', '8');
+        bt.setAttribute('font-family', 'Space Grotesk, sans-serif');
+        bt.setAttribute('font-weight', '700');
+        bt.setAttribute('fill', '#fff');
+        bt.setAttribute('pointer-events', 'none');
+        bt.textContent = nd.pos;
+        g.appendChild(bt);
+      }
 
       svg.appendChild(g);
     });
@@ -603,10 +583,10 @@
 
     var hint = document.createElement('p');
     hint.className = 'instr-text';
-    hint.innerHTML = 'Cada nodo muestra su letra y, en el badge ámbar, su <strong>posición en la tabla</strong>.';
+    hint.innerHTML = 'Badge ámbar = posición en tabla. Línea de puntos = puntero <strong>der</strong> (hermano siguiente).';
     left.appendChild(hint);
 
-    renderTreeSVG();
+    renderTreeSVG(true);
 
     var right = document.getElementById('right-panel');
     right.innerHTML = '';
@@ -760,19 +740,61 @@
 
   /* ── Mode 2: Tabla → Árbol ────────────────────────────────── */
   function renderMode2() {
+    // LEFT: tree (no position badges) + chip pool below
     var left = document.getElementById('left-panel');
     left.innerHTML = '';
-    left.className = 'table-panel';
+    left.className = 'tree-panel';
 
     var lbl = document.createElement('p');
     lbl.className = 'panel-label';
-    lbl.textContent = 'Tabla hijo izquierdo – hermano derecho';
+    lbl.textContent = 'Árbol generado';
     left.appendChild(lbl);
+
+    var svg = document.createElementNS(NS, 'svg');
+    svg.id = 'tree-svg';
+    svg.setAttribute('viewBox', '0 0 ' + SVG_W + ' ' + SVG_H);
+    svg.setAttribute('role', 'img');
+    svg.setAttribute('aria-label', 'Árbol sin posiciones de tabla');
+    left.appendChild(svg);
+
+    var hint = document.createElement('p');
+    hint.className = 'instr-text';
+    hint.innerHTML = 'Sin números de posición. Línea de puntos = puntero <strong>der</strong> (hermano siguiente).';
+    left.appendChild(hint);
+
+    var poolArea = document.createElement('div');
+    poolArea.className = 'pool-area';
+    var poolLbl = document.createElement('p');
+    poolLbl.className = 'panel-label';
+    poolLbl.textContent = 'Nodos — arrástralos a la tabla';
+    poolArea.appendChild(poolLbl);
+    var pool = document.createElement('div');
+    pool.className = 'chips-container';
+    pool.id = 'chips-container';
+    pool.setAttribute('role', 'list');
+    pool.setAttribute('aria-label', 'Nodos disponibles');
+    poolArea.appendChild(pool);
+    left.appendChild(poolArea);
+
+    renderTreeSVG(false);
+    renderPool2();
+
+    // RIGHT: mode tabs + root badge + table with clave drop zones
+    var right = document.getElementById('right-panel');
+    right.innerHTML = '';
+    right.className = 'array-panel';
+
+    right.appendChild(makeModeTabs());
 
     var rootInfo = document.createElement('div');
     rootInfo.className = 'root-info';
     rootInfo.innerHTML = 'Raíz en posición: <strong>' + nodeArr[0].pos + '</strong>';
-    left.appendChild(rootInfo);
+    right.appendChild(rootInfo);
+
+    var instr = document.createElement('p');
+    instr.className = 'instr-text';
+    instr.innerHTML = 'Arrastra cada nodo del árbol a la celda <strong>clave</strong> de su posición. Usa izq/der para identificar cada fila.';
+    right.appendChild(instr);
 
     var tbl = document.createElement('table');
     tbl.className = 'lcrs-table';
@@ -785,53 +807,37 @@
       var entry = lcrsTable[pos];
       var tr = document.createElement('tr');
       tr.className = 'lcrs-row';
+      tr.id = 'lcrs-row-' + pos;
+      tr.dataset.pos = pos;
 
-      var tdPos = document.createElement('td'); tdPos.className = 'pos-cell'; tdPos.textContent = pos;
-      var tdIzq = document.createElement('td'); tdIzq.className = 'val-cell'; tdIzq.textContent = entry.izq !== null ? entry.izq : '/';
-      var tdClave = document.createElement('td'); tdClave.className = 'clave-cell'; tdClave.textContent = entry.clave;
-      var tdDer = document.createElement('td'); tdDer.className = 'val-cell'; tdDer.textContent = entry.der !== null ? entry.der : '/';
+      var tdPos = document.createElement('td');
+      tdPos.className = 'pos-cell';
+      tdPos.textContent = pos;
+
+      var tdIzq = document.createElement('td');
+      tdIzq.className = 'val-cell';
+      tdIzq.textContent = entry.izq !== null ? entry.izq : '/';
+
+      var tdClave = document.createElement('td');
+      tdClave.style.padding = '0.15rem';
+      var zone = document.createElement('div');
+      zone.className = 'clave-zone';
+      zone.dataset.clavePos = pos;
+      var slash = document.createElement('span');
+      slash.className = 'null-marker';
+      slash.textContent = '/';
+      zone.appendChild(slash);
+      tdClave.appendChild(zone);
+
+      var tdDer = document.createElement('td');
+      tdDer.className = 'val-cell';
+      tdDer.textContent = entry.der !== null ? entry.der : '/';
 
       tr.appendChild(tdPos); tr.appendChild(tdIzq); tr.appendChild(tdClave); tr.appendChild(tdDer);
       tbody.appendChild(tr);
     });
     tbl.appendChild(tbody);
-    left.appendChild(tbl);
-
-    var right = document.getElementById('right-panel');
-    right.innerHTML = '';
-    right.className = 'array-panel';
-
-    right.appendChild(makeModeTabs());
-
-    var instr = document.createElement('p');
-    instr.className = 'instr-text';
-    instr.innerHTML = 'Traza los punteros <strong>izq/der</strong> de la tabla y arrastra cada nodo a la fila de su padre.';
-    right.appendChild(instr);
-
-    var poolArea = document.createElement('div');
-    poolArea.className = 'pool-area';
-    var poolLbl = document.createElement('p');
-    poolLbl.className = 'panel-label';
-    poolLbl.textContent = 'Nodos — arrástralos a su fila';
-    poolArea.appendChild(poolLbl);
-    var pool = document.createElement('div');
-    pool.className = 'chips-container';
-    pool.id = 'chips-container';
-    pool.setAttribute('role', 'list');
-    pool.setAttribute('aria-label', 'Nodos disponibles');
-    poolArea.appendChild(pool);
-    right.appendChild(poolArea);
-
-    var arrLbl = document.createElement('p');
-    arrLbl.className = 'panel-label';
-    arrLbl.textContent = 'Árbol — filas de padres';
-    right.appendChild(arrLbl);
-
-    var arrTable = document.createElement('div');
-    arrTable.className = 'array-table';
-    arrTable.id = 'array-table';
-    arrTable.setAttribute('role', 'list');
-    right.appendChild(arrTable);
+    right.appendChild(tbl);
 
     var actionRow = document.createElement('div');
     actionRow.className = 'action-row';
@@ -845,10 +851,14 @@
     btnReset.className = 'btn btn-outline btn-sm';
     btnReset.textContent = 'Reiniciar';
     btnReset.addEventListener('click', function() {
-      initPlacements2();
+      initClavePlacements();
       clearFeedback2();
       renderPool2();
-      renderArray2();
+      renderClaveZones();
+      positions.forEach(function(p) {
+        var r = document.getElementById('lcrs-row-' + p);
+        if (r) r.classList.remove('row-ok', 'row-bad');
+      });
     });
 
     var btnNew = document.createElement('button');
@@ -866,16 +876,11 @@
     fb.id = 'feedback-2';
     fb.setAttribute('aria-live', 'polite');
     right.appendChild(fb);
-
-    renderPool2();
-    renderArray2();
   }
 
-  function initPlacements2() {
-    placements = {};
-    nodeArr.forEach(function(nd) {
-      if (nd.parent !== null) placements[nd.id] = null;
-    });
+  function initClavePlacements() {
+    clavePlacements = {};
+    positions.forEach(function(pos) { clavePlacements[pos] = null; });
   }
 
   function renderPool2() {
@@ -883,8 +888,12 @@
     if (!c) return;
     c.innerHTML = '';
     nodeArr.forEach(function(nd) {
-      if (nd.parent === null || placements[nd.id] !== null) return;
-      c.appendChild(makeChip(nd.id, nd.label));
+      var placed = false;
+      var keys = Object.keys(clavePlacements);
+      for (var i = 0; i < keys.length; i++) {
+        if (clavePlacements[+keys[i]] === nd.id) { placed = true; break; }
+      }
+      if (!placed) c.appendChild(makeChip(nd.id, nd.label));
     });
   }
 
@@ -898,97 +907,46 @@
     return chip;
   }
 
-  function renderArray2() {
-    var table = document.getElementById('array-table');
-    if (!table) return;
-    table.innerHTML = '';
-    var sorted = nodeArr.slice().sort(function(a, b) {
-      return a.label < b.label ? -1 : 1;
-    });
-    sorted.forEach(function(node) {
-      var row = document.createElement('div');
-      row.className = 'array-row';
-      row.id = 'row-' + node.id;
-      row.setAttribute('role', 'listitem');
-
-      var idx = document.createElement('div');
-      idx.className = 'row-index';
-      var num = document.createElement('span');
-      num.className = 'index-num';
-      num.textContent = node.label;
-      idx.appendChild(num);
-      if (node.parent === null) {
-        var badge = document.createElement('span');
-        badge.className = 'root-badge';
-        badge.textContent = 'raíz';
-        idx.appendChild(badge);
+  function renderClaveZones() {
+    positions.forEach(function(pos) {
+      var zone = document.querySelector('.clave-zone[data-clave-pos="' + pos + '"]');
+      if (!zone) return;
+      zone.innerHTML = '';
+      var nodeId = clavePlacements[pos];
+      if (nodeId === null || nodeId === undefined) {
+        var slash = document.createElement('span');
+        slash.className = 'null-marker';
+        slash.textContent = '/';
+        zone.appendChild(slash);
+      } else {
+        zone.appendChild(makeChip(nodeId, nodeArr[nodeId].label));
       }
-      row.appendChild(idx);
-
-      var zone = document.createElement('div');
-      zone.className = 'row-drop-zone';
-      zone.dataset.rowNodeId = node.id;
-      renderDropZone2(node, zone);
-      row.appendChild(zone);
-
-      table.appendChild(row);
     });
-  }
-
-  function renderDropZone2(node, el) {
-    el.innerHTML = '';
-    var placed = nodeArr.filter(function(n) {
-      return n.parent !== null && placements[n.id] === node.id;
-    });
-    if (!placed.length) {
-      var slash = document.createElement('span');
-      slash.className = 'null-marker';
-      slash.textContent = '/';
-      el.appendChild(slash);
-      return;
-    }
-    placed.sort(function(a, b) { return a.label < b.label ? -1 : 1; });
-    placed.forEach(function(chipNode) {
-      var arr = document.createElement('span');
-      arr.className = 'll-arrow';
-      arr.textContent = '→';
-      el.appendChild(arr);
-      var chip = makeChip(chipNode.id, chipNode.label);
-      chip.classList.add('chip-placed');
-      el.appendChild(chip);
-    });
-    var end = document.createElement('span');
-    end.className = 'null-marker';
-    end.textContent = '/';
-    el.appendChild(end);
   }
 
   function checkMode2() {
     renderPool2();
-    renderArray2();
+    renderClaveZones();
+    var posToNodeId = {};
+    nodeArr.forEach(function(nd) { posToNodeId[nd.pos] = nd.id; });
     var correct = 0;
-    nodeArr.forEach(function(P) {
-      var exp = {};
-      P.children.forEach(function(cid) { exp[cid] = true; });
-      var placed = [];
-      Object.keys(placements).forEach(function(k) {
-        if (placements[+k] === P.id) placed.push(+k);
-      });
-      var ok = placed.length === P.children.length && placed.every(function(id) { return exp[id]; });
-      var rowEl = document.getElementById('row-' + P.id);
+    positions.forEach(function(pos) {
+      var correctId = posToNodeId[pos];
+      var placedId  = clavePlacements[pos];
+      var ok = placedId === correctId;
+      var rowEl = document.getElementById('lcrs-row-' + pos);
       if (rowEl) { rowEl.classList.remove('row-ok','row-bad'); rowEl.classList.add(ok ? 'row-ok' : 'row-bad'); }
-      placed.forEach(function(id) {
-        var el = document.querySelector('.chip[data-node-id="' + id + '"]');
-        if (el) { el.classList.remove('chip-ok','chip-bad'); el.classList.add(exp[id] ? 'chip-ok' : 'chip-bad'); }
-      });
+      var zone = document.querySelector('.clave-zone[data-clave-pos="' + pos + '"]');
+      var chipEl = zone && zone.querySelector('.chip');
+      if (chipEl) { chipEl.classList.remove('chip-ok','chip-bad'); chipEl.classList.add(ok ? 'chip-ok' : 'chip-bad'); }
       if (ok) correct++;
     });
     var fb = document.getElementById('feedback-2');
-    var n = nodeArr.length;
-    fb.textContent = correct === n
-      ? '¡Perfecto! Árbol reconstruido. 🌴'
-      : correct + '/' + n + ' filas correctas.';
-    fb.className = 'feedback ' + (correct === n ? 'ok' : 'bad');
+    var total = positions.length;
+    fb.textContent = correct === total
+      ? '¡Perfecto! Todos los nodos en su posición. 🌴'
+      : correct + '/' + total + ' posiciones correctas.';
+    fb.className = 'feedback ' + (correct === total ? 'ok' : 'bad');
   }
 
   function clearFeedback2() {
@@ -1014,42 +972,43 @@
     });
 
     document.body.addEventListener('dragenter', function(e) {
-      var el = e.target.closest('.row-drop-zone, .chips-container');
+      var el = e.target.closest('.clave-zone, .chips-container');
       if (!el) return;
       document.querySelectorAll('.drag-over').forEach(function(d) { d.classList.remove('drag-over'); });
       el.classList.add('drag-over');
     }, true);
 
     document.body.addEventListener('dragover', function(e) {
-      if (e.target.closest('.row-drop-zone, .chips-container')) {
+      if (e.target.closest('.clave-zone, .chips-container')) {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
       }
     });
 
     document.body.addEventListener('dragleave', function(e) {
-      var el = e.target.closest('.row-drop-zone, .chips-container');
+      var el = e.target.closest('.clave-zone, .chips-container');
       if (el && !el.contains(e.relatedTarget)) el.classList.remove('drag-over');
     });
 
     document.body.addEventListener('drop', function(e) {
-      var zone = e.target.closest('.row-drop-zone');
+      var claveZone = e.target.closest('.clave-zone');
       var pool = e.target.closest('.chips-container');
-      if (!zone && !pool) return;
+      if (!claveZone && !pool) return;
       e.preventDefault();
       document.querySelectorAll('.drag-over').forEach(function(el) { el.classList.remove('drag-over'); });
       var nodeId = parseInt(e.dataTransfer.getData('text/plain'), 10);
-      if (isNaN(nodeId) || !(nodeId in placements)) return;
-      if (zone) {
-        var rowNodeId = parseInt(zone.dataset.rowNodeId, 10);
-        if (nodeId === rowNodeId) return;
-        placements[nodeId] = rowNodeId;
-      } else {
-        placements[nodeId] = null;
+      if (isNaN(nodeId) || nodeId < 0 || nodeId >= nodeArr.length) return;
+      // Clear old placement of this chip
+      Object.keys(clavePlacements).forEach(function(p) {
+        if (clavePlacements[+p] === nodeId) clavePlacements[+p] = null;
+      });
+      if (claveZone) {
+        var pos = parseInt(claveZone.dataset.clavePos, 10);
+        if (!isNaN(pos)) clavePlacements[pos] = nodeId;
       }
       clearFeedback2();
       renderPool2();
-      renderArray2();
+      renderClaveZones();
     });
   }
 
@@ -1065,7 +1024,7 @@
     computeLayout(nodeArr);
     computeLCRS();
     initSelValues();
-    initPlacements2();
+    initClavePlacements();
     renderCurrentMode();
   }
 
@@ -1075,7 +1034,7 @@
     computeLayout(nodeArr);
     computeLCRS();
     initSelValues();
-    initPlacements2();
+    initClavePlacements();
     activeMode = 'a2t';
     renderCurrentMode();
     initDragDrop();
