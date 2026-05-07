@@ -14,23 +14,38 @@
     });
 
     panels.forEach(function (panel) {
-      panel.hidden = panel.id !== targetId;
+      if (panel.id === targetId) {
+        panel.hidden = false;
+        panel.classList.add('is-entering');
+        panel.offsetHeight; // force reflow so opacity:0 is painted before transition
+        panel.classList.remove('is-entering');
+      } else {
+        panel.hidden = true;
+      }
     });
 
     main.setAttribute('data-active-theme', targetId);
 
-    // close hamburger menu if open
     if (nav.classList.contains('nav-open')) {
       nav.classList.remove('nav-open');
       burger.setAttribute('aria-expanded', 'false');
     }
   }
 
-  tabs.forEach(function (tab) {
+  tabs.forEach(function (tab, index) {
     tab.addEventListener('click', function () {
       var targetId = tab.getAttribute('aria-controls');
       activateTab(targetId);
       history.replaceState(null, '', '#' + targetId);
+    });
+
+    tab.addEventListener('keydown', function (e) {
+      var dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+      if (!dir) return;
+      e.preventDefault();
+      var next = (index + dir + tabs.length) % tabs.length;
+      tabs[next].focus();
+      tabs[next].click();
     });
   });
 
@@ -67,6 +82,34 @@
     card.dataset.staggerDelay    = delay;
     card.style.transitionDelay   = delay + 'ms';
     cardObserver.observe(card);
+  });
+
+  // ─── Card completion (localStorage) ─────────────────────────────────────────
+  document.querySelectorAll('.exercise-card').forEach(function (card) {
+    var link = card.querySelector('a.card-link[href]');
+    if (!link) return; // skip coming-soon cards
+
+    var key  = 'pra-done:' + link.getAttribute('href');
+    var btn  = document.createElement('button');
+    btn.className = 'card-done-btn';
+    btn.setAttribute('aria-pressed', 'false');
+    btn.setAttribute('aria-label',   'Marcar como completado');
+    btn.innerHTML = '<span aria-hidden="true">✓</span>';
+    card.appendChild(btn);
+
+    if (localStorage.getItem(key) === '1') {
+      card.classList.add('is-done');
+      btn.setAttribute('aria-pressed', 'true');
+      btn.setAttribute('aria-label',   'Desmarcar como completado');
+    }
+
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      var done = card.classList.toggle('is-done');
+      localStorage.setItem(key, done ? '1' : '0');
+      btn.setAttribute('aria-pressed', String(done));
+      btn.setAttribute('aria-label', done ? 'Desmarcar como completado' : 'Marcar como completado');
+    });
   });
 
 })();

@@ -183,6 +183,9 @@ body {
 
 .tab-panel[hidden] { display: none; }
 
+.tab-panel { transition: opacity 0.2s ease; }
+.tab-panel.is-entering { opacity: 0; }
+
 .panel-inner {
   max-width: var(--max-w);
   margin: 0 auto;
@@ -229,6 +232,7 @@ body {
 /* ─── Exercise Cards ────────────────────────────────────────────────────────── */
 
 .exercise-card {
+  position: relative;
   border-radius: 3px;
   padding: 1.875rem;
   border: 1px solid #e4e4e4;
@@ -262,6 +266,55 @@ body {
 @keyframes card-enter {
   from { opacity: 0; transform: translateY(18px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Card completion ───────────────────────────────────────────────────────── */
+
+.card-done-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 50%;
+  border: 1.5px solid #d0d0d0;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  color: transparent;
+  font-size: 0.6rem;
+  line-height: 1;
+  transition: border-color var(--transition), background var(--transition), color var(--transition);
+}
+
+.card-done-btn:hover {
+  border-color: #388e3c;
+  color: #388e3c;
+}
+
+.exercise-card.is-done .card-done-btn {
+  background: #388e3c;
+  border-color: #388e3c;
+  color: #fff;
+}
+
+.exercise-card.is-done {
+  background: #f8fef8;
+}
+
+/* ─── Coming-soon cards ─────────────────────────────────────────────────────── */
+
+.exercise-card.is-coming-soon {
+  opacity: 0.48;
+  pointer-events: none;
+  filter: grayscale(0.25);
+}
+
+.exercise-card.is-coming-soon .card-link {
+  color: #aaa;
 }
 
 .exercise-card h3 {
