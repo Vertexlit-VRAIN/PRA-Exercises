@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>05 · Inserta en el ABB — Árboles · PRA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="arboles.css" />
+  <style>
+    .q-panel { position: sticky; top: 1.25rem; }
+
+    .key-card {
+      background: rgba(179,92,0,0.06);
+      border: 1px solid rgba(179,92,0,0.2);
+      border-radius: 8px;
+      padding: 1.1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .key-label {
+      font-size: 0.72rem;
+      color: #9e6a2a;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .key-value {
+      font-size: 3rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--amber);
+      text-shadow: 0 0 20px rgba(179,92,0,0.25);
+    }
+
+    .progress-dots { display: flex; gap: 0.45rem; justify-content: center; }
+    .dot {
+      width: 0.7rem; height: 0.7rem;
+      border-radius: 50%;
+      border: 2px solid rgba(179,92,0,0.25);
+      background: transparent;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .dot.done    { background: var(--amber); border-color: var(--amber); }
+    .dot.current { border-color: var(--amber); background: rgba(179,92,0,0.15); }
+
+    .path-trace {
+      font-size: 0.76rem;
+      color: #9e6a2a;
+      background: rgba(179,92,0,0.05);
+      border-left: 3px solid var(--amber);
+      padding: 0.5rem 0.7rem;
+      border-radius: 0 4px 4px 0;
+      line-height: 1.65;
+      min-height: 2.6rem;
+    }
+
+    .round-result {
+      display: none;
+      background: rgba(179,92,0,0.06);
+      border: 1px solid rgba(179,92,0,0.2);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .round-result.visible { display: flex; }
+    .result-line { font-size: 0.85rem; color: var(--amber-dark); }
+    .result-line strong { color: var(--amber); }
+
+    @media (max-width: 700px) { .q-panel { position: static; } }
+  </style>
+</head>
+<body>
+
+<header class="ex-header">
+  <a class="back-link" href="../index.html#arboles">← Árboles</a>
+  <h1 class="ex-title">05 — Inserta en el ABB</h1>
+  <p class="ex-desc">Haz clic en el hueco correcto del árbol para insertar cada clave según la propiedad del ABB.</p>
+</header>
+
+<main class="ex-main">
+
+  <section class="tree-panel" aria-label="Árbol binario de búsqueda">
+    <p class="panel-label">ABB — haz clic en un hueco (+)</p>
+    <svg id="tree-svg" viewBox="0 0 560 320" role="img" aria-label="Árbol binario de búsqueda"></svg>
+  </section>
+
+  <section class="q-panel" aria-label="Clave e instrucciones">
+    <div class="round-badge" id="round-badge">Ronda 1</div>
+
+    <div class="key-card">
+      <span class="key-label">Clave a insertar</span>
+      <span class="key-value" id="key-value">—</span>
+    </div>
+
+    <div class="progress-dots" id="progress-dots" aria-label="Progreso"></div>
+
+    <p class="path-trace" id="path-trace">Clica el hueco (+) donde debe ir la clave.</p>
+
+    <p class="feedback" id="feedback" aria-live="polite"></p>
+
+    <div class="round-result" id="round-result">
+      <p class="result-line" id="res1"></p>
+      <p class="result-line" id="res2"></p>
+    </div>
+
+    <button class="btn btn-primary" id="btn-next" hidden>Nueva ronda →</button>
+  </section>
+
+</main>
+
+<footer class="score-bar" aria-label="Puntuación global">
+  Correctas a la primera: <span class="score-num" id="score-ok">0</span>
+  / <span id="score-total">0</span>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Constants ──────────────────────────────────────────────── */
+  var SVG_W  = 560;
+  var SVG_H  = 320;
+  var R      = 19;
+  var LEVEL_H = 62;
+  var PAD    = 28;
+  var NS     = 'http://www.w3.org/2000/svg';
+
+  /* ── State ──────────────────────────────────────────────────── */
+  var nodes      = [];
+  var insertKeys = [];
+  var keyIdx     = 0;
+  var roundNum   = 0;
+  var roundOk    = 0;
+  var gOk        = 0;
+  var gTotal     = 0;
+  var attempts   = 0;
+  var locked     = false;
+
+  /* ── DOM ────────────────────────────────────────────────────── */
+  var $svg     = document.getElementById('tree-svg');
+  var $badge   = document.getElementById('round-badge');
+  var $keyVal  = document.getElementById('key-value');
+  var $dots    = document.getElementById('progress-dots');
+  var $trace   = document.getElementById('path-trace');
+  var $fb      = document.getElementById('feedback');
+  var $result  = document.getElementById('round-result');
+  var $res1    = document.getElementById('res1');
+  var $res2    = document.getElementById('res2');
+  var $btn     = document.getElementById('btn-next');
+  var $scoreOk = document.getElementById('score-ok');
+  var $scoreAll= document.getElementById('score-total');
+
+  /* ── Util ───────────────────────────────────────────────────── */
+  function rand(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = rand(0, i); var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+  }
+
+  /* ── BST operations ─────────────────────────────────────────── */
+  function bstInsert(key) {
+    var node = { key: key, left: null, right: null, parent: null };
+    if (nodes.length === 0) { nodes.push(node); return; }
+    var idx = 0;
+    while (true) {
+      if (key < nodes[idx].key) {
+        if (nodes[idx].left === null) {
+          node.parent = idx; nodes[idx].left = nodes.length; nodes.push(node); return;
+        }
+        idx = nodes[idx].left;
+      } else {
+        if (nodes[idx].right === null) {
+          node.parent = idx; nodes[idx].right = nodes.length; nodes.push(node); return;
+        }
+        idx = nodes[idx].right;
+      }
+    }
+  }
+
+  function insertPath(key) {
+    var path = [], idx = 0;
+    while (idx !== null) {
+      var dir = key < nodes[idx].key ? 'left' : 'right';
+      path.push({ nodeIdx: idx, dir: dir });
+      if (nodes[idx][dir] === null) return path;
+      idx = nodes[idx][dir];
+    }
+    return path;
+  }
+
+  function pathFeedback(key) {
+    var path = insertPath(key);
+    return path.map(function (s) {
+      var nd = nodes[s.nodeIdx];
+      return key + (key < nd.key ? ' < ' : ' > ') + nd.key + ' → ' + (s.dir === 'left' ? 'izq.' : 'der.');
+    }).join('  ·  ');
+  }
+
+  /* ── Layout ─────────────────────────────────────────────────── */
+  function subtreeLeaves(idx) {
+    if (idx === null) return 1;
+    return subtreeLeaves(nodes[idx].left) + subtreeLeaves(nodes[idx].right);
+  }
+
+  function computeLayout() {
+    function assign(idx, x0, x1, depth) {
+      if (idx === null) return;
+      var nd = nodes[idx];
+      nd.x0 = x0; nd.x1 = x1; nd.depth = depth;
+      var lc = subtreeLeaves(nd.left);
+      var rc = subtreeLeaves(nd.right);
+      nd.x = x0 + (x1 - x0) * lc / (lc + rc);
+      nd.y = 30 + depth * LEVEL_H;
+      assign(nd.left,  x0,   nd.x, depth + 1);
+      assign(nd.right, nd.x, x1,   depth + 1);
+    }
+    assign(0, PAD, SVG_W - PAD, 0);
+  }
+
+  function ghostPos(parentIdx, side) {
+    var nd = nodes[parentIdx];
+    return {
+      x: side === 'left' ? (nd.x0 + nd.x) / 2 : (nd.x + nd.x1) / 2,
+      y: nd.y + LEVEL_H
+    };
+  }
+
+  /* ── SVG render ─────────────────────────────────────────────── */
+  function mk(tag) { return document.createElementNS(NS, tag); }
+
+  function renderTree(hlSet) {
+    $svg.innerHTML = '';
+
+    /* update viewBox height to fit tree */
+    var maxD = 0;
+    nodes.forEach(function (nd) { if (nd.depth > maxD) maxD = nd.depth; });
+    var svgH = Math.max(SVG_H, (maxD + 2) * LEVEL_H + 20);
+    $svg.setAttribute('viewBox', '0 0 ' + SVG_W + ' ' + svgH);
+
+    /* real edges */
+    nodes.forEach(function (nd, i) {
+      ['left', 'right'].forEach(function (s) {
+        var ci = nd[s]; if (ci === null) return;
+        var ch = nodes[ci];
+        var hl = hlSet && hlSet.has(i) && hlSet.has(ci);
+        var ln = mk('line');
+        ln.setAttribute('x1', nd.x); ln.setAttribute('y1', nd.y);
+        ln.setAttribute('x2', ch.x); ln.setAttribute('y2', ch.y);
+        ln.setAttribute('stroke', hl ? '#ffd600' : '#c5a86e');
+        ln.setAttribute('stroke-width', hl ? '3.5' : '2');
+        $svg.appendChild(ln);
+      });
+    });
+
+    /* ghost edges + ghost circles */
+    nodes.forEach(function (nd, i) {
+      ['left', 'right'].forEach(function (s) {
+        if (nd[s] !== null) return;
+        var gp = ghostPos(i, s);
+        var ln = mk('line');
+        ln.setAttribute('x1', nd.x); ln.setAttribute('y1', nd.y);
+        ln.setAttribute('x2', gp.x); ln.setAttribute('y2', gp.y);
+        ln.setAttribute('stroke', 'rgba(179,92,0,0.2)');
+        ln.setAttribute('stroke-width', '1.5');
+        ln.setAttribute('stroke-dasharray', '4 3');
+        $svg.appendChild(ln);
+
+        var g = mk('g');
+        g.setAttribute('data-ghost', '1');
+        g.setAttribute('data-parent', i);
+        g.setAttribute('data-side', s);
+        g.style.cursor = 'pointer';
+
+        var circ = mk('circle');
+        circ.setAttribute('cx', gp.x); circ.setAttribute('cy', gp.y);
+        circ.setAttribute('r', R - 2);
+        circ.setAttribute('fill', 'rgba(179,92,0,0.04)');
+        circ.setAttribute('stroke', 'rgba(179,92,0,0.35)');
+        circ.setAttribute('stroke-width', '1.5');
+        circ.setAttribute('stroke-dasharray', '5 3');
+
+        var txt = mk('text');
+        txt.setAttribute('x', gp.x); txt.setAttribute('y', gp.y + 5);
+        txt.setAttribute('text-anchor', 'middle');
+        txt.setAttribute('font-size', '14');
+        txt.setAttribute('font-family', 'Space Grotesk, sans-serif');
+        txt.setAttribute('fill', 'rgba(179,92,0,0.38)');
+        txt.setAttribute('pointer-events', 'none');
+        txt.textContent = '+';
+
+        g.appendChild(circ); g.appendChild(txt);
+        $svg.appendChild(g);
+      });
+    });
+
+    /* real nodes */
+    nodes.forEach(function (nd, i) {
+      var hl = hlSet && hlSet.has(i);
+      var g  = mk('g');
+      var c  = mk('circle');
+      c.setAttribute('cx', nd.x); c.setAttribute('cy', nd.y); c.setAttribute('r', R);
+      c.setAttribute('fill',         hl ? '#ffd600' : '#fff8e1');
+      c.setAttribute('stroke',       hl ? '#3d1f00' : '#9a6830');
+      c.setAttribute('stroke-width', '2.5');
+
+      var t = mk('text');
+      t.setAttribute('x', nd.x); t.setAttribute('y', nd.y + 5);
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('font-size', '13');
+      t.setAttribute('font-family', 'Space Grotesk, sans-serif');
+      t.setAttribute('font-weight', '700');
+      t.setAttribute('fill', hl ? '#1a0a00' : '#3e2000');
+      t.setAttribute('pointer-events', 'none');
+      t.textContent = nd.key;
+
+      g.appendChild(c); g.appendChild(t);
+      $svg.appendChild(g);
+    });
+  }
+
+  /* ── Dots ───────────────────────────────────────────────────── */
+  function renderDots() {
+    $dots.innerHTML = '';
+    for (var i = 0; i < insertKeys.length; i++) {
+      var d = document.createElement('span');
+      d.className = 'dot' + (i < keyIdx ? ' done' : i === keyIdx ? ' current' : '');
+      $dots.appendChild(d);
+    }
+  }
+
+  /* ── Round generation ───────────────────────────────────────── */
+  function generateRound() {
+    nodes = [];
+    var initSize = rand(3, 5);
+    var pool = [];
+    for (var k = 10; k <= 90; k++) pool.push(k);
+    shuffle(pool);
+    for (var i = 0; i < initSize; i++) bstInsert(pool[i]);
+    insertKeys = pool.slice(initSize, initSize + 5);
+  }
+
+  /* ── Handle ghost click ─────────────────────────────────────── */
+  $svg.addEventListener('click', function (e) {
+    if (locked || keyIdx >= insertKeys.length) return;
+    var g = e.target.closest('[data-ghost]');
+    if (!g) return;
+
+    var clickedParent = parseInt(g.dataset.parent, 10);
+    var clickedSide   = g.dataset.side;
+    var key           = insertKeys[keyIdx];
+    var path          = insertPath(key);
+    var last          = path[path.length - 1];
+
+    if (clickedParent === last.nodeIdx && clickedSide === last.dir) {
+      /* ─── Correct ─── */
+      var wasFirst = attempts === 0;
+      attempts = 0;
+      gTotal++;
+      if (wasFirst) { gOk++; roundOk++; }
+      $scoreOk.textContent  = gOk;
+      $scoreAll.textContent = gTotal;
+
+      var hlSet = new Set(path.map(function (s) { return s.nodeIdx; }));
+      renderTree(hlSet);
+      setFb('✓  ' + pathFeedback(key), 'ok');
+      locked = true;
+
+      setTimeout(function () {
+        bstInsert(key);
+        computeLayout();
+        keyIdx++;
+        locked = false;
+        if (keyIdx >= insertKeys.length) {
+          showRoundEnd();
+        } else {
+          renderTree(null);
+          renderKey();
+        }
+      }, 900);
+
+    } else {
+      /* ─── Wrong ─── */
+      attempts++;
+      setFb('✗  Ruta correcta: ' + pathFeedback(key), 'bad');
+      var qPanel = document.querySelector('.q-panel');
+      qPanel.classList.add('panel-flash-bad');
+      setTimeout(function () { qPanel.classList.remove('panel-flash-bad'); }, 650);
+    }
+  });
+
+  /* ── Helpers ────────────────────────────────────────────────── */
+  function setFb(txt, cls) {
+    $fb.textContent = txt;
+    $fb.className   = 'feedback' + (cls ? ' ' + cls : '');
+  }
+
+  function renderKey() {
+    $keyVal.textContent = insertKeys[keyIdx];
+    $trace.textContent  = 'Clica el hueco (+) donde debe ir ' + insertKeys[keyIdx] + '.';
+    $fb.textContent     = '';
+    $fb.className       = 'feedback';
+    renderDots();
+  }
+
+  function showRoundEnd() {
+    $keyVal.textContent = '✓';
+    $trace.textContent  = 'Ronda completada.';
+    renderDots();
+    var pct = Math.round(100 * roundOk / insertKeys.length);
+    $res1.innerHTML = 'A la primera: <strong>' + roundOk + ' / ' + insertKeys.length + '</strong> (' + pct + '%)';
+    $res2.innerHTML = 'Claves insertadas: ' + insertKeys.join(', ');
+    $result.classList.add('visible');
+    $btn.hidden = false;
+  }
+
+  $btn.addEventListener('click', function () {
+    $btn.hidden = true;
+    $result.classList.remove('visible');
+    startRound();
+  });
+
+  function startRound() {
+    roundNum++;
+    roundOk  = 0;
+    keyIdx   = 0;
+    attempts = 0;
+    locked   = false;
+    $badge.textContent = 'Ronda ' + roundNum;
+    generateRound();
+    computeLayout();
+    renderTree(null);
+    renderKey();
+  }
+
+  /* ── Boot ───────────────────────────────────────────────────── */
+  startRound();
+
+}());
+</script>
+</body>
+</html>

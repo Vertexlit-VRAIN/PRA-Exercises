@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>07 · Elimina del ABB — Árboles · PRA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="arboles.css" />
+  <style>
+    .q-panel { position: sticky; top: 1.25rem; }
+
+    .delete-card {
+      background: rgba(198,40,40,0.07);
+      border: 1px solid rgba(198,40,40,0.22);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .delete-label {
+      font-size: 0.72rem;
+      color: #c62828;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .delete-key {
+      font-size: 3rem;
+      font-weight: 700;
+      line-height: 1;
+      color: #c62828;
+    }
+
+    .phase-badge {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      background: rgba(179,92,0,0.1);
+      color: var(--amber-dark);
+      border: 1px solid rgba(179,92,0,0.2);
+      align-self: flex-start;
+    }
+
+    /* 3-column choices for phase 1 */
+    .choices-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+    .round-result {
+      display: none;
+      background: rgba(179,92,0,0.06);
+      border: 1px solid rgba(179,92,0,0.2);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .round-result.visible { display: flex; }
+    .result-line { font-size: 0.85rem; color: var(--amber-dark); }
+    .result-line strong { color: var(--amber); }
+
+    @media (max-width: 700px) { .q-panel { position: static; } }
+  </style>
+</head>
+<body>
+
+<header class="ex-header">
+  <a class="back-link" href="../index.html#arboles">← Árboles</a>
+  <h1 class="ex-title">07 — Elimina del ABB</h1>
+  <p class="ex-desc">Identifica el caso de eliminación y ejecuta la operación remove paso a paso.</p>
+</header>
+
+<main class="ex-main">
+
+  <section class="tree-panel" aria-label="Árbol binario de búsqueda">
+    <p class="panel-label" id="tree-label">ABB</p>
+    <svg id="tree-svg" viewBox="0 0 560 360" role="img" aria-label="ABB"></svg>
+  </section>
+
+  <section class="q-panel" aria-label="Fases de eliminación">
+    <div class="round-badge" id="round-badge">Ronda 1</div>
+
+    <div class="delete-card">
+      <span class="delete-label">Nodo a eliminar</span>
+      <span class="delete-key" id="del-key">—</span>
+    </div>
+
+    <!-- Phase 1 -->
+    <div id="area-p1">
+      <span class="phase-badge">Fase 1 — Identifica el caso</span>
+      <p class="instr-text" style="margin-top:.5rem">¿Qué tipo de nodo es?</p>
+      <div class="choices choices-3" id="p1-choices" role="group">
+        <button class="choice-btn" data-case="leaf">Hoja</button>
+        <button class="choice-btn" data-case="one-child">Un hijo</button>
+        <button class="choice-btn" data-case="two-children">Dos hijos</button>
+      </div>
+    </div>
+
+    <!-- Phase 2 (leaf confirm) -->
+    <div id="area-p2-leaf" hidden>
+      <span class="phase-badge">Fase 2 — Ejecuta</span>
+      <p class="instr-text" style="margin-top:.5rem">El nodo es hoja: sin hijos, se elimina directamente.</p>
+      <button class="btn btn-primary" id="btn-leaf-confirm" style="margin-top:.5rem">Eliminar →</button>
+    </div>
+
+    <!-- Phase 2 (one child — click node) -->
+    <div id="area-p2-one" hidden>
+      <span class="phase-badge">Fase 2 — Ejecuta</span>
+      <p class="instr-text" id="p2-one-instr" style="margin-top:.5rem"></p>
+    </div>
+
+    <!-- Phase 2a (two children — click successor) -->
+    <div id="area-p2a" hidden>
+      <span class="phase-badge">Fase 2a — Sucesor en inorden</span>
+      <p class="instr-text" style="margin-top:.5rem">
+        Haz clic en el <b>sucesor en inorden</b> — el nodo más pequeño del <b>subárbol derecho</b>.
+      </p>
+    </div>
+
+    <!-- Phase 2b (two children — click predecessor) -->
+    <div id="area-p2b" hidden>
+      <span class="phase-badge">Fase 2b — Predecesor en inorden</span>
+      <p class="instr-text" style="margin-top:.5rem">
+        Haz clic en el <b>predecesor en inorden</b> — el nodo más grande del <b>subárbol izquierdo</b>.
+      </p>
+    </div>
+
+    <!-- Phase 2c (MCQ: which is more efficient?) -->
+    <div id="area-p2c" hidden>
+      <span class="phase-badge">Fase 2c — ¿Cuál es más eficiente?</span>
+      <p class="instr-text" id="p2c-instr" style="margin-top:.5rem"></p>
+      <div class="choices" style="margin-top:.5rem;grid-template-columns:1fr;" id="p2c-choices" role="group"></div>
+    </div>
+
+    <p class="feedback" id="feedback" aria-live="polite"></p>
+
+    <div class="round-result" id="round-result">
+      <p class="result-line" id="res1"></p>
+      <p class="result-line" id="res2"></p>
+    </div>
+    <button class="btn btn-primary" id="btn-new-round" hidden>Nueva ronda →</button>
+  </section>
+
+</main>
+
+<footer class="score-bar" aria-label="Puntuación global">
+  Rondas perfectas: <span class="score-num" id="score-ok">0</span>
+  / <span id="score-total">0</span>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Constants ──────────────────────────────────────────────── */
+  var SVG_W   = 560;
+  var SVG_H   = 360;
+  var R       = 19;
+  var LEVEL_H = 62;
+  var PAD     = 28;
+  var NS      = 'http://www.w3.org/2000/svg';
+
+  /* ── State ──────────────────────────────────────────────────── */
+  var nodes      = [];
+  var rootIdx    = 0;
+  var targetIdx  = -1;
+  var delCase    = null;  // 'leaf' | 'one-child' | 'two-children'
+  var succIdx    = -1;
+  var predIdx    = -1;
+  var stepsSucc  = 0;
+  var stepsPred  = 0;
+  var phase      = 1;     // 1 | '2a' | '2b' | '2c' | 'done'
+  var allCorrect = true;
+  var roundNum   = 0;
+  var gOk        = 0;
+  var gTotal     = 0;
+
+  /* ── DOM ────────────────────────────────────────────────────── */
+  var $svg       = document.getElementById('tree-svg');
+  var $tLabel    = document.getElementById('tree-label');
+  var $badge     = document.getElementById('round-badge');
+  var $delKey    = document.getElementById('del-key');
+  var $fb        = document.getElementById('feedback');
+  var $result    = document.getElementById('round-result');
+  var $res1      = document.getElementById('res1');
+  var $res2      = document.getElementById('res2');
+  var $btnRound  = document.getElementById('btn-new-round');
+  var $scoreOk   = document.getElementById('score-ok');
+  var $scoreAll  = document.getElementById('score-total');
+
+  /* ── Util ───────────────────────────────────────────────────── */
+  function rand(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = rand(0, i); var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+  }
+  function show(id)  { document.getElementById(id).hidden = false; }
+  function hide(id)  { document.getElementById(id).hidden = true; }
+  function setFb(txt, cls) {
+    $fb.textContent = txt;
+    $fb.className   = 'feedback' + (cls ? ' ' + cls : '');
+  }
+
+  /* ── BST build ──────────────────────────────────────────────── */
+  function bstInsert(key) {
+    var node = { key: key, left: null, right: null, parent: null, deleted: false };
+    if (nodes.length === 0) { nodes.push(node); return; }
+    var idx = 0;
+    while (true) {
+      if (key < nodes[idx].key) {
+        if (nodes[idx].left === null) { node.parent = idx; nodes[idx].left = nodes.length; nodes.push(node); return; }
+        idx = nodes[idx].left;
+      } else {
+        if (nodes[idx].right === null) { node.parent = idx; nodes[idx].right = nodes.length; nodes.push(node); return; }
+        idx = nodes[idx].right;
+      }
+    }
+  }
+
+  /* ── Layout ─────────────────────────────────────────────────── */
+  function subtreeLeaves(idx) {
+    if (idx === null || (nodes[idx] && nodes[idx].deleted)) return 1;
+    return subtreeLeaves(nodes[idx].left) + subtreeLeaves(nodes[idx].right);
+  }
+
+  function computeLayout() {
+    function assign(idx, x0, x1, depth) {
+      if (idx === null || nodes[idx].deleted) return;
+      var nd = nodes[idx];
+      nd.x0 = x0; nd.x1 = x1; nd.depth = depth;
+      var lc = subtreeLeaves(nd.left);
+      var rc = subtreeLeaves(nd.right);
+      nd.x = x0 + (x1 - x0) * lc / (lc + rc);
+      nd.y = 30 + depth * LEVEL_H;
+      assign(nd.left,  x0,   nd.x, depth + 1);
+      assign(nd.right, nd.x, x1,   depth + 1);
+    }
+    assign(rootIdx, PAD, SVG_W - PAD, 0);
+  }
+
+  /* ── Subtree ────────────────────────────────────────────────── */
+  function getSubtree(idx) {
+    var s = new Set();
+    function walk(i) {
+      if (i === null || nodes[i].deleted) return;
+      s.add(i); walk(nodes[i].left); walk(nodes[i].right);
+    }
+    walk(idx);
+    return s;
+  }
+
+  /* ── SVG render ─────────────────────────────────────────────── */
+  function mk(tag) { return document.createElementNS(NS, tag); }
+
+  /*
+   * mode: 'normal' | 'target-select' | 'right-subtree' | 'left-subtree' | 'result'
+   * Highlighted sets are computed from mode + targetIdx
+   */
+  function renderTree(mode) {
+    $svg.innerHTML = '';
+    var rightSub = (mode === 'right-subtree' && targetIdx >= 0) ? getSubtree(nodes[targetIdx].right) : null;
+    var leftSub  = (mode === 'left-subtree'  && targetIdx >= 0) ? getSubtree(nodes[targetIdx].left)  : null;
+
+    var maxD = 0;
+    nodes.forEach(function (nd) { if (!nd.deleted && (nd.depth || 0) > maxD) maxD = nd.depth; });
+    var svgH = Math.max(SVG_H, (maxD + 2) * LEVEL_H + 20);
+    $svg.setAttribute('viewBox', '0 0 ' + SVG_W + ' ' + svgH);
+
+    /* edges */
+    nodes.forEach(function (nd, i) {
+      if (nd.deleted) return;
+      ['left', 'right'].forEach(function (s) {
+        var ci = nd[s]; if (ci === null || nodes[ci].deleted) return;
+        var ch = nodes[ci];
+        var ln = mk('line');
+        ln.setAttribute('x1', nd.x); ln.setAttribute('y1', nd.y);
+        ln.setAttribute('x2', ch.x); ln.setAttribute('y2', ch.y);
+        ln.setAttribute('stroke', '#c5a86e');
+        ln.setAttribute('stroke-width', '2');
+        $svg.appendChild(ln);
+      });
+    });
+
+    /* nodes */
+    nodes.forEach(function (nd, i) {
+      if (nd.deleted) return;
+      var isTarget  = i === targetIdx;
+      var inRight   = rightSub && rightSub.has(i);
+      var inLeft    = leftSub  && leftSub.has(i);
+
+      var fill, stroke, strokeW;
+      if (isTarget) {
+        fill = '#ffcdd2'; stroke = '#c62828'; strokeW = '3';
+      } else if (inRight) {
+        fill = '#e3f2fd'; stroke = '#1565c0'; strokeW = '2.5';
+      } else if (inLeft) {
+        fill = '#f3e5f5'; stroke = '#7b1fa2'; strokeW = '2.5';
+      } else {
+        fill = '#fff8e1'; stroke = '#9a6830'; strokeW = '2';
+      }
+
+      var g = mk('g');
+      g.setAttribute('data-node-idx', i);
+      g.style.cursor = (mode !== 'normal' && mode !== 'target-select' && !isTarget) ? 'pointer' : 'default';
+
+      var c = mk('circle');
+      c.setAttribute('cx', nd.x); c.setAttribute('cy', nd.y); c.setAttribute('r', R);
+      c.setAttribute('fill', fill); c.setAttribute('stroke', stroke); c.setAttribute('stroke-width', strokeW);
+
+      var t = mk('text');
+      t.setAttribute('x', nd.x); t.setAttribute('y', nd.y + 5);
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('font-size', '13');
+      t.setAttribute('font-family', 'Space Grotesk, sans-serif');
+      t.setAttribute('font-weight', '700');
+      t.setAttribute('fill', isTarget ? '#7f0000' : '#3e2000');
+      t.setAttribute('pointer-events', 'none');
+      t.textContent = nd.key;
+
+      g.appendChild(c); g.appendChild(t);
+      $svg.appendChild(g);
+    });
+  }
+
+  /* ── BST helpers ────────────────────────────────────────────── */
+  function deletionCase(idx) {
+    var nd = nodes[idx];
+    if (nd.left === null && nd.right === null) return 'leaf';
+    if (nd.left === null || nd.right === null) return 'one-child';
+    return 'two-children';
+  }
+
+  function findSuccessor(idx) {
+    var i = nodes[idx].right;
+    while (nodes[i].left !== null) i = nodes[i].left;
+    return i;
+  }
+
+  function findPredecessor(idx) {
+    var i = nodes[idx].left;
+    while (nodes[i].right !== null) i = nodes[i].right;
+    return i;
+  }
+
+  /* ── Apply deletion ─────────────────────────────────────────── */
+  function applyLeafDeletion() {
+    var par = nodes[targetIdx].parent;
+    if (par !== null) {
+      if (nodes[par].left === targetIdx)  nodes[par].left  = null;
+      else                                nodes[par].right = null;
+    } else {
+      rootIdx = -1; // tree is now empty
+    }
+    nodes[targetIdx].deleted = true;
+  }
+
+  function applyOneChildDeletion() {
+    var childIdx = nodes[targetIdx].left !== null ? nodes[targetIdx].left : nodes[targetIdx].right;
+    var par = nodes[targetIdx].parent;
+    if (par !== null) {
+      if (nodes[par].left === targetIdx) nodes[par].left  = childIdx;
+      else                               nodes[par].right = childIdx;
+    } else {
+      rootIdx = childIdx;
+    }
+    nodes[childIdx].parent = par;
+    nodes[targetIdx].deleted = true;
+  }
+
+  function applyTwoChildrenDeletion(repIdx) {
+    nodes[targetIdx].key = nodes[repIdx].key;
+    var repChild = nodes[repIdx].left !== null ? nodes[repIdx].left : nodes[repIdx].right;
+    var repPar   = nodes[repIdx].parent;
+    if (nodes[repPar].left === repIdx) nodes[repPar].left  = repChild;
+    else                               nodes[repPar].right = repChild;
+    if (repChild !== null) nodes[repChild].parent = repPar;
+    nodes[repIdx].deleted = true;
+  }
+
+  /* ── Phase transition ───────────────────────────────────────── */
+  function hideAllPhases() {
+    ['area-p1','area-p2-leaf','area-p2-one','area-p2a','area-p2b','area-p2c'].forEach(hide);
+  }
+
+  function startPhase(p) {
+    phase = p;
+    hideAllPhases();
+    setFb('', '');
+
+    if (p === 1) {
+      show('area-p1');
+      document.querySelectorAll('#p1-choices .choice-btn').forEach(function (btn) {
+        btn.disabled = false;
+        btn.className = 'choice-btn';
+      });
+      renderTree('target-select');
+      $tLabel.textContent = 'ABB — identifica el nodo marcado en rojo';
+
+    } else if (p === '2-leaf') {
+      show('area-p2-leaf');
+      renderTree('target-select');
+
+    } else if (p === '2-one') {
+      show('area-p2-one');
+      var childIdx = nodes[targetIdx].left !== null ? nodes[targetIdx].left : nodes[targetIdx].right;
+      document.getElementById('p2-one-instr').innerHTML =
+        'El nodo tiene <b>un solo hijo</b>. Haz clic en el nodo hijo que debe <b>subir</b> a reemplazar a <b>' +
+        nodes[targetIdx].key + '</b>.';
+      renderTree('target-select');
+      $tLabel.textContent = 'ABB — haz clic en el hijo que sube';
+
+    } else if (p === '2a') {
+      show('area-p2a');
+      renderTree('right-subtree');
+      $tLabel.textContent = 'ABB — subárbol derecho resaltado (azul)';
+
+    } else if (p === '2b') {
+      show('area-p2b');
+      renderTree('left-subtree');
+      $tLabel.textContent = 'ABB — subárbol izquierdo resaltado (violeta)';
+
+    } else if (p === '2c') {
+      show('area-p2c');
+      renderTree('target-select');
+      $tLabel.textContent = 'ABB';
+
+      var correctOpt, opts;
+      var succKey = nodes[succIdx].key;
+      var predKey = nodes[predIdx].key;
+      var optA = 'Sucesor — ' + succKey + '  ·  ' + stepsSucc + ' paso' + (stepsSucc > 1 ? 's' : '');
+      var optB = 'Predecesor — ' + predKey + '  ·  ' + stepsPred + ' paso' + (stepsPred > 1 ? 's' : '');
+      var optC = 'Son equivalentes (' + stepsSucc + ' pasos)';
+
+      if (stepsSucc < stepsPred)       { correctOpt = 'A'; }
+      else if (stepsPred < stepsSucc)  { correctOpt = 'B'; }
+      else                             { correctOpt = 'C'; }
+
+      opts = [
+        { label: optA, id: 'A' },
+        { label: optB, id: 'B' },
+        { label: optC, id: 'C' }
+      ];
+
+      document.getElementById('p2c-instr').innerHTML =
+        '¿Qué nodo es <b>más eficiente</b> para sustituir a <b>' + nodes[targetIdx].key + '</b>? ' +
+        '(el que requiere menos pasos para localizarse desde el nodo eliminado)';
+
+      var $choices = document.getElementById('p2c-choices');
+      $choices.innerHTML = '';
+      opts.forEach(function (opt) {
+        var btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.textContent = opt.label;
+        btn.addEventListener('click', function () { handleP2cChoice(opt.id, correctOpt); });
+        $choices.appendChild(btn);
+      });
+    }
+  }
+
+  /* ── Phase 1 handler ────────────────────────────────────────── */
+  document.getElementById('p1-choices').addEventListener('click', function (e) {
+    var btn = e.target.closest('.choice-btn');
+    if (!btn || btn.disabled) return;
+    var chosen = btn.dataset.case;
+    document.querySelectorAll('#p1-choices .choice-btn').forEach(function (b) { b.disabled = true; });
+
+    if (chosen === delCase) {
+      btn.classList.add('ok');
+      setFb('✓ Correcto — caso ' + caseLabel(delCase) + '.', 'ok');
+      setTimeout(function () {
+        setFb('', '');
+        if (delCase === 'leaf')          startPhase('2-leaf');
+        else if (delCase === 'one-child') startPhase('2-one');
+        else                             startPhase('2a');
+      }, 700);
+    } else {
+      allCorrect = false;
+      btn.classList.add('bad');
+      document.querySelectorAll('#p1-choices .choice-btn').forEach(function (b) {
+        if (b.dataset.case === delCase) b.classList.add('ok');
+      });
+      setFb('✗ El caso correcto es ' + caseLabel(delCase) + '. Avanzamos a la siguiente fase.', 'bad');
+      setTimeout(function () {
+        setFb('', '');
+        if (delCase === 'leaf')          startPhase('2-leaf');
+        else if (delCase === 'one-child') startPhase('2-one');
+        else                             startPhase('2a');
+      }, 1200);
+    }
+  });
+
+  function caseLabel(c) {
+    return c === 'leaf' ? 'Hoja' : c === 'one-child' ? 'Un hijo' : 'Dos hijos';
+  }
+
+  /* ── Phase 2 leaf confirm ───────────────────────────────────── */
+  document.getElementById('btn-leaf-confirm').addEventListener('click', function () {
+    applyLeafDeletion();
+    computeLayout();
+    renderTree('normal');
+    $tLabel.textContent = 'ABB tras eliminar ' + nodes.find(function(nd, i) { return i === targetIdx; }).key;
+    hideAllPhases();
+    finishRound(true);
+  });
+
+  /* ── SVG click handler ──────────────────────────────────────── */
+  $svg.addEventListener('click', function (e) {
+    var g = e.target.closest('[data-node-idx]');
+    if (!g) return;
+    var clicked = parseInt(g.dataset.nodeIdx, 10);
+    if (nodes[clicked].deleted) return;
+
+    if (phase === '2-one') {
+      var correctChild = nodes[targetIdx].left !== null ? nodes[targetIdx].left : nodes[targetIdx].right;
+      if (clicked === correctChild) {
+        setFb('✓ Correcto — ' + nodes[clicked].key + ' sube a la posición de ' + nodes[targetIdx].key + '.', 'ok');
+        applyOneChildDeletion();
+        computeLayout();
+        setTimeout(function () {
+          renderTree('normal');
+          $tLabel.textContent = 'ABB tras eliminar';
+          hideAllPhases();
+          finishRound(true);
+        }, 700);
+      } else if (clicked !== targetIdx) {
+        allCorrect = false;
+        setFb('✗ Ese no es el hijo directo de ' + nodes[targetIdx].key + '. Inténtalo de nuevo.', 'bad');
+      }
+
+    } else if (phase === '2a') {
+      if (clicked !== targetIdx && nodes[targetIdx].right !== null) {
+        var rightSub = getSubtree(nodes[targetIdx].right);
+        if (rightSub.has(clicked)) {
+          if (clicked === succIdx) {
+            setFb('✓ Correcto — ' + nodes[clicked].key + ' es el mínimo del subárbol derecho.', 'ok');
+            setTimeout(function () { setFb('', ''); startPhase('2b'); }, 700);
+          } else {
+            allCorrect = false;
+            setFb('✗ No es el mínimo del subárbol derecho. El sucesor correcto es ' + nodes[succIdx].key + '.', 'bad');
+            setTimeout(function () { setFb('', ''); startPhase('2b'); }, 1200);
+          }
+        }
+      }
+
+    } else if (phase === '2b') {
+      if (clicked !== targetIdx && nodes[targetIdx].left !== null) {
+        var leftSub = getSubtree(nodes[targetIdx].left);
+        if (leftSub.has(clicked)) {
+          if (clicked === predIdx) {
+            setFb('✓ Correcto — ' + nodes[clicked].key + ' es el máximo del subárbol izquierdo.', 'ok');
+            setTimeout(function () { setFb('', ''); startPhase('2c'); }, 700);
+          } else {
+            allCorrect = false;
+            setFb('✗ No es el máximo del subárbol izquierdo. El predecesor correcto es ' + nodes[predIdx].key + '.', 'bad');
+            setTimeout(function () { setFb('', ''); startPhase('2c'); }, 1200);
+          }
+        }
+      }
+    }
+  });
+
+  /* ── Phase 2c MCQ ───────────────────────────────────────────── */
+  function handleP2cChoice(chosen, correct) {
+    document.querySelectorAll('#p2c-choices .choice-btn').forEach(function (b) { b.disabled = true; });
+    var choiceMap = { A: 0, B: 1, C: 2 };
+    var btns = document.querySelectorAll('#p2c-choices .choice-btn');
+    btns[choiceMap[correct]].classList.add('ok');
+
+    if (chosen === correct) {
+      btns[choiceMap[chosen]].classList.add('ok');
+      setFb('✓ Correcto.', 'ok');
+    } else {
+      allCorrect = false;
+      btns[choiceMap[chosen]].classList.add('bad');
+      var msg = correct === 'C' ? 'Son equivalentes.' :
+                correct === 'A' ? 'El sucesor (' + nodes[succIdx].key + ') requiere menos pasos (' + stepsSucc + ' vs ' + stepsPred + ').' :
+                                  'El predecesor (' + nodes[predIdx].key + ') requiere menos pasos (' + stepsPred + ' vs ' + stepsSucc + ').';
+      setFb('✗ ' + msg, 'bad');
+    }
+
+    /* apply deletion with the MORE EFFICIENT candidate (or succ if tied) */
+    var repIdx = (stepsSucc <= stepsPred) ? succIdx : predIdx;
+    applyTwoChildrenDeletion(repIdx);
+    computeLayout();
+
+    setTimeout(function () {
+      renderTree('normal');
+      $tLabel.textContent = 'ABB tras eliminar';
+      hideAllPhases();
+      finishRound(false); // false = don't override allCorrect
+    }, 900);
+  }
+
+  /* ── Finish round ───────────────────────────────────────────── */
+  function finishRound(forceOk) {
+    gTotal++;
+    var ok = forceOk ? allCorrect : allCorrect;
+    if (ok) { gOk++; }
+    $scoreOk.textContent  = gOk;
+    $scoreAll.textContent = gTotal;
+
+    $res1.innerHTML = allCorrect ? '✓ Ronda perfecta — todas las fases correctas a la primera.' :
+                                   'Ronda completada con algún fallo — repasa los pasos incorrectos.';
+    $res2.innerHTML = 'Nodo eliminado: <strong>' + nodes[targetIdx].key + '</strong> · caso: ' + caseLabel(delCase);
+    $result.classList.add('visible');
+    $btnRound.hidden = false;
+  }
+
+  /* ── New round ──────────────────────────────────────────────── */
+  $btnRound.addEventListener('click', function () {
+    $result.classList.remove('visible');
+    $btnRound.hidden = true;
+    startRound();
+  });
+
+  /* ── Start round ────────────────────────────────────────────── */
+  function startRound() {
+    nodes = []; rootIdx = 0;
+    roundNum++;
+    allCorrect = true;
+    $badge.textContent = 'Ronda ' + roundNum;
+
+    var pool = [];
+    for (var k = 10; k <= 90; k++) pool.push(k);
+    shuffle(pool);
+    var size = rand(8, 10);
+    for (var i = 0; i < size; i++) bstInsert(pool[i]);
+    computeLayout();
+
+    /* pick target: prefer two-children node for variety, allow any */
+    var candidates = [];
+    for (var j = 0; j < nodes.length; j++) candidates.push(j);
+    shuffle(candidates);
+    /* try to find a two-children node first */
+    targetIdx = -1;
+    for (var c = 0; c < candidates.length; c++) {
+      if (deletionCase(candidates[c]) === 'two-children') { targetIdx = candidates[c]; break; }
+    }
+    /* 40% of the time pick any node (to see leaf/one-child cases too) */
+    if (targetIdx < 0 || rand(0, 9) < 4) {
+      targetIdx = candidates[0];
+    }
+
+    delCase = deletionCase(targetIdx);
+    $delKey.textContent = nodes[targetIdx].key;
+
+    if (delCase === 'two-children') {
+      succIdx   = findSuccessor(targetIdx);
+      predIdx   = findPredecessor(targetIdx);
+      stepsSucc = nodes[succIdx].depth - nodes[targetIdx].depth;
+      stepsPred = nodes[predIdx].depth - nodes[targetIdx].depth;
+    }
+
+    $result.classList.remove('visible');
+    $btnRound.hidden = true;
+    startPhase(1);
+  }
+
+  /* ── Boot ───────────────────────────────────────────────────── */
+  startRound();
+
+}());
+</script>
+</body>
+</html>

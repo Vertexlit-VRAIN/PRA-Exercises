@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>06 · Busca, Max y Min — Árboles · PRA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="arboles.css" />
+  <style>
+    .q-panel { position: sticky; top: 1.25rem; }
+
+    .trace-counter {
+      font-size: 0.78rem;
+      color: #9e6a2a;
+      background: rgba(179,92,0,0.05);
+      border-left: 3px solid rgba(179,92,0,0.3);
+      padding: 0.45rem 0.7rem;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .q-progress {
+      font-size: 0.72rem;
+      color: #9e6a2a;
+      letter-spacing: 0.06em;
+    }
+
+    .round-result {
+      display: none;
+      background: rgba(179,92,0,0.06);
+      border: 1px solid rgba(179,92,0,0.2);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .round-result.visible { display: flex; }
+    .result-line { font-size: 0.85rem; color: var(--amber-dark); }
+    .result-line strong { color: var(--amber); }
+
+    @media (max-width: 700px) { .q-panel { position: static; } }
+  </style>
+</head>
+<body>
+
+<header class="ex-header">
+  <a class="back-link" href="../index.html#arboles">← Árboles</a>
+  <h1 class="ex-title">06 — Busca, Max y Min</h1>
+  <p class="ex-desc">Traza las operaciones search, max y min sobre un ABB haciendo clic en los nodos que visita el algoritmo.</p>
+</header>
+
+<main class="ex-main">
+
+  <section class="tree-panel" aria-label="Árbol binario de búsqueda">
+    <p class="panel-label">ABB — haz clic en el siguiente nodo del recorrido</p>
+    <svg id="tree-svg" viewBox="0 0 560 340" role="img" aria-label="Árbol binario de búsqueda"></svg>
+  </section>
+
+  <section class="q-panel" aria-label="Pregunta">
+    <span class="q-concept" id="q-concept">—</span>
+    <p  class="q-text"     id="q-text"></p>
+    <p  class="trace-counter" id="trace-counter" aria-live="polite"></p>
+    <p  class="feedback"   id="feedback" aria-live="polite"></p>
+    <button class="btn btn-primary" id="btn-next" hidden>Siguiente →</button>
+
+    <div class="round-result" id="round-result">
+      <p class="result-line" id="res1"></p>
+      <p class="result-line" id="res2"></p>
+    </div>
+    <button class="btn btn-primary" id="btn-new-round" hidden>Nueva ronda →</button>
+  </section>
+
+</main>
+
+<footer class="score-bar" aria-label="Puntuación global">
+  Preguntas correctas: <span class="score-num" id="score-ok">0</span>
+  / <span id="score-total">0</span>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Constants ──────────────────────────────────────────────── */
+  var SVG_W   = 560;
+  var SVG_H   = 340;
+  var R       = 19;
+  var LEVEL_H = 62;
+  var PAD     = 28;
+  var NS      = 'http://www.w3.org/2000/svg';
+
+  /* ── State ──────────────────────────────────────────────────── */
+  var nodes    = [];
+  var questions= [];
+  var qIdx     = 0;
+  var traceIdx = 0;
+  var answered  = false;
+  var hadWrong  = false;
+  var roundNum  = 0;
+  var roundOk   = 0;
+  var gOk       = 0;
+  var gTotal    = 0;
+
+  /* ── DOM ────────────────────────────────────────────────────── */
+  var $svg      = document.getElementById('tree-svg');
+  var $concept  = document.getElementById('q-concept');
+  var $text     = document.getElementById('q-text');
+  var $counter  = document.getElementById('trace-counter');
+  var $fb       = document.getElementById('feedback');
+  var $btnNext  = document.getElementById('btn-next');
+  var $result   = document.getElementById('round-result');
+  var $res1     = document.getElementById('res1');
+  var $res2     = document.getElementById('res2');
+  var $btnRound = document.getElementById('btn-new-round');
+  var $scoreOk  = document.getElementById('score-ok');
+  var $scoreAll = document.getElementById('score-total');
+
+  /* ── Util ───────────────────────────────────────────────────── */
+  function rand(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = rand(0, i); var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+  }
+
+  /* ── BST build ──────────────────────────────────────────────── */
+  function bstInsert(key) {
+    var node = { key: key, left: null, right: null, parent: null };
+    if (nodes.length === 0) { nodes.push(node); return; }
+    var idx = 0;
+    while (true) {
+      if (key < nodes[idx].key) {
+        if (nodes[idx].left === null) { node.parent = idx; nodes[idx].left = nodes.length; nodes.push(node); return; }
+        idx = nodes[idx].left;
+      } else {
+        if (nodes[idx].right === null) { node.parent = idx; nodes[idx].right = nodes.length; nodes.push(node); return; }
+        idx = nodes[idx].right;
+      }
+    }
+  }
+
+  /* ── Paths ──────────────────────────────────────────────────── */
+  function searchPath(key) {
+    var path = [], idx = 0;
+    while (idx !== null) {
+      path.push(idx);
+      if (nodes[idx].key === key) return path;
+      idx = key < nodes[idx].key ? nodes[idx].left : nodes[idx].right;
+    }
+    return path;
+  }
+
+  function searchNotFoundPath(key) {
+    var path = [], idx = 0;
+    while (idx !== null) {
+      path.push(idx);
+      idx = key < nodes[idx].key ? nodes[idx].left : nodes[idx].right;
+    }
+    return path;
+  }
+
+  function maxPath() {
+    var path = [], idx = 0;
+    while (idx !== null) { path.push(idx); idx = nodes[idx].right; }
+    return path;
+  }
+
+  function minPath() {
+    var path = [], idx = 0;
+    while (idx !== null) { path.push(idx); idx = nodes[idx].left; }
+    return path;
+  }
+
+  function notFoundKey() {
+    var used = new Set(nodes.map(function (nd) { return nd.key; }));
+    for (var t = 0; t < 200; t++) {
+      var k = rand(5, 95);
+      if (!used.has(k)) return k;
+    }
+    return 99;
+  }
+
+  /* ── Layout ─────────────────────────────────────────────────── */
+  function subtreeLeaves(idx) {
+    if (idx === null) return 1;
+    return subtreeLeaves(nodes[idx].left) + subtreeLeaves(nodes[idx].right);
+  }
+
+  function computeLayout() {
+    function assign(idx, x0, x1, depth) {
+      if (idx === null) return;
+      var nd = nodes[idx];
+      nd.x0 = x0; nd.x1 = x1; nd.depth = depth;
+      var lc = subtreeLeaves(nd.left);
+      var rc = subtreeLeaves(nd.right);
+      nd.x = x0 + (x1 - x0) * lc / (lc + rc);
+      nd.y = 30 + depth * LEVEL_H;
+      assign(nd.left,  x0,   nd.x, depth + 1);
+      assign(nd.right, nd.x, x1,   depth + 1);
+    }
+    assign(0, PAD, SVG_W - PAD, 0);
+  }
+
+  /* ── SVG render ─────────────────────────────────────────────── */
+  function mk(tag) { return document.createElementNS(NS, tag); }
+
+  /*
+   * visitedSet: Set of node indices already clicked (gold fill)
+   * nextIdx   : index of the "correct next" node (amber ring)
+   */
+  function renderTree(visitedSet, nextIdx) {
+    $svg.innerHTML = '';
+
+    var maxD = 0;
+    nodes.forEach(function (nd) { if ((nd.depth || 0) > maxD) maxD = nd.depth || 0; });
+    var svgH = Math.max(SVG_H, (maxD + 2) * LEVEL_H + 20);
+    $svg.setAttribute('viewBox', '0 0 ' + SVG_W + ' ' + svgH);
+
+    /* edges */
+    nodes.forEach(function (nd, i) {
+      ['left', 'right'].forEach(function (s) {
+        var ci = nd[s]; if (ci === null) return;
+        var ch = nodes[ci];
+        var hl = visitedSet && visitedSet.has(i) && visitedSet.has(ci);
+        var ln = mk('line');
+        ln.setAttribute('x1', nd.x); ln.setAttribute('y1', nd.y);
+        ln.setAttribute('x2', ch.x); ln.setAttribute('y2', ch.y);
+        ln.setAttribute('stroke', hl ? '#ffd600' : '#c5a86e');
+        ln.setAttribute('stroke-width', hl ? '3.5' : '2');
+        $svg.appendChild(ln);
+      });
+    });
+
+    /* nodes */
+    nodes.forEach(function (nd, i) {
+      var visited = visitedSet && visitedSet.has(i);
+      var isNext  = i === nextIdx;
+      var g = mk('g');
+      g.setAttribute('data-node-idx', i);
+      g.style.cursor = 'pointer';
+
+      var c = mk('circle');
+      c.setAttribute('cx', nd.x); c.setAttribute('cy', nd.y); c.setAttribute('r', R);
+      c.setAttribute('fill',   visited ? '#ffd600' : '#fff8e1');
+      c.setAttribute('stroke', visited ? '#3d1f00' : (isNext ? '#b35c00' : '#9a6830'));
+      c.setAttribute('stroke-width', isNext ? '3.5' : '2.5');
+
+      var t = mk('text');
+      t.setAttribute('x', nd.x); t.setAttribute('y', nd.y + 5);
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('font-size', '13');
+      t.setAttribute('font-family', 'Space Grotesk, sans-serif');
+      t.setAttribute('font-weight', '700');
+      t.setAttribute('fill', visited ? '#1a0a00' : '#3e2000');
+      t.setAttribute('pointer-events', 'none');
+      t.textContent = nd.key;
+
+      g.appendChild(c); g.appendChild(t);
+      $svg.appendChild(g);
+    });
+  }
+
+  /* ── Question generation ────────────────────────────────────── */
+  function generateQuestions() {
+    var treeKeys = nodes.map(function (nd) { return nd.key; });
+    shuffle(treeKeys);
+
+    var qs = [
+      { type: 'search', key: treeKeys[0], found: true,  trace: searchPath(treeKeys[0]) },
+      { type: 'search', key: treeKeys[1], found: true,  trace: searchPath(treeKeys[1]) },
+      { type: 'search', key: notFoundKey(), found: false, trace: [] },
+      { type: 'max', trace: maxPath() },
+      { type: 'min', trace: minPath() }
+    ];
+    /* fill not-found trace after key is set */
+    qs[2].trace = searchNotFoundPath(qs[2].key);
+
+    shuffle(qs);
+    return qs;
+  }
+
+  /* ── Question display ───────────────────────────────────────── */
+  function conceptLabel(q) {
+    if (q.type === 'max') return 'MAX';
+    if (q.type === 'min') return 'MIN';
+    return 'SEARCH';
+  }
+
+  function questionText(q) {
+    if (q.type === 'search' && q.found)
+      return 'Traza <b>search(' + q.key + ')</b>. Haz clic en los nodos que visita el algoritmo hasta encontrar la clave.';
+    if (q.type === 'search' && !q.found)
+      return 'Traza <b>search(' + q.key + ')</b> — la clave <b>no está</b> en el árbol. Haz clic en cada nodo visitado antes de llegar a null.';
+    if (q.type === 'max')
+      return 'Traza <b>max()</b>. Haz clic en los nodos que visita el algoritmo hasta alcanzar el máximo.';
+    return 'Traza <b>min()</b>. Haz clic en los nodos que visita el algoritmo hasta alcanzar el mínimo.';
+  }
+
+  function counterText(q, idx) {
+    return 'Nodo ' + (idx + 1) + ' de ' + q.trace.length + ' — siguiente: clave ' + nodes[q.trace[idx]].key;
+  }
+
+  function successText(q) {
+    if (q.type === 'search' && q.found)
+      return '✓ Encontrado: ' + q.key + ' en ' + q.trace.length + ' comparación' + (q.trace.length > 1 ? 'es.' : '.');
+    if (q.type === 'search' && !q.found)
+      return '✓ ' + q.key + ' no está en el árbol — ' + q.trace.length + ' comparación' + (q.trace.length > 1 ? 'es' : '') + ', llega a null.';
+    var result = nodes[q.trace[q.trace.length - 1]].key;
+    if (q.type === 'max')
+      return '✓ Máximo: ' + result + ' — siempre el nodo más a la derecha.';
+    return '✓ Mínimo: ' + result + ' — siempre el nodo más a la izquierda.';
+  }
+
+  /* ── Render question ────────────────────────────────────────── */
+  function renderQuestion() {
+    var q = questions[qIdx];
+    answered = false;
+    hadWrong = false;
+    traceIdx = 0;
+    $concept.textContent = conceptLabel(q);
+    $text.innerHTML      = questionText(q);
+    $counter.textContent = counterText(q, 0);
+    $fb.textContent      = '';
+    $fb.className        = 'feedback';
+    $btnNext.hidden      = true;
+    renderTree(new Set(), q.trace[0]);
+  }
+
+  /* ── Click handler ──────────────────────────────────────────── */
+  $svg.addEventListener('click', function (e) {
+    if (answered) return;
+    var g = e.target.closest('[data-node-idx]');
+    if (!g) return;
+
+    var clicked = parseInt(g.dataset.nodeIdx, 10);
+    var q       = questions[qIdx];
+    var correct = q.trace[traceIdx];
+
+    if (clicked === correct) {
+      traceIdx++;
+      var visited = new Set(q.trace.slice(0, traceIdx));
+      if (traceIdx >= q.trace.length) {
+        /* trace complete */
+        answered = true;
+        gTotal++;
+        if (!hadWrong) { gOk++; roundOk++; }
+        $scoreOk.textContent  = gOk;
+        $scoreAll.textContent = gTotal;
+        renderTree(visited, null);
+        $counter.textContent = '';
+        setFb(successText(q), 'ok');
+        var qPanel = document.querySelector('.q-panel');
+        qPanel.classList.add('panel-flash-ok');
+        setTimeout(function () { qPanel.classList.remove('panel-flash-ok'); }, 650);
+        if (qIdx + 1 >= questions.length) {
+          $btnNext.hidden = true;
+          setTimeout(showRoundEnd, 700);
+        } else {
+          $btnNext.hidden = false;
+        }
+      } else {
+        renderTree(visited, q.trace[traceIdx]);
+        $counter.textContent = counterText(q, traceIdx);
+        setFb('✓ Nodo ' + nodes[correct].key + ' visitado. Continúa.', 'ok');
+      }
+    } else {
+      hadWrong = true;
+      var expKey = nodes[q.trace[traceIdx]].key;
+      var hint = q.type === 'max' ? 'Para max() ve siempre a la derecha. Siguiente: ' + expKey + '.' :
+                 q.type === 'min' ? 'Para min() ve siempre a la izquierda. Siguiente: ' + expKey + '.' :
+                 'El siguiente nodo correcto es ' + expKey + '.';
+      setFb('✗ ' + hint, 'bad');
+      var qPanel = document.querySelector('.q-panel');
+      qPanel.classList.add('panel-flash-bad');
+      setTimeout(function () { qPanel.classList.remove('panel-flash-bad'); }, 650);
+    }
+  });
+
+  /* ── Next question ──────────────────────────────────────────── */
+  $btnNext.addEventListener('click', function () {
+    qIdx++;
+    $btnNext.hidden = true;
+    renderQuestion();
+  });
+
+  /* ── Round end ──────────────────────────────────────────────── */
+  function showRoundEnd() {
+    var pct = Math.round(100 * roundOk / questions.length);
+    $res1.innerHTML = 'Correctas: <strong>' + roundOk + ' / ' + questions.length + '</strong> (' + pct + '%)';
+    $res2.innerHTML = 'Nodos en el árbol: ' + nodes.length;
+    $result.classList.add('visible');
+    $btnRound.hidden = false;
+  }
+
+  $btnRound.addEventListener('click', function () {
+    $result.classList.remove('visible');
+    $btnRound.hidden = true;
+    startRound();
+  });
+
+  /* ── Helpers ────────────────────────────────────────────────── */
+  function setFb(txt, cls) {
+    $fb.textContent = txt;
+    $fb.className   = 'feedback' + (cls ? ' ' + cls : '');
+  }
+
+  /* ── Start round ────────────────────────────────────────────── */
+  function startRound() {
+    nodes = [];
+    roundNum++;
+    roundOk = 0;
+    qIdx    = 0;
+
+    var pool = [];
+    for (var k = 10; k <= 90; k++) pool.push(k);
+    shuffle(pool);
+    var size = rand(7, 9);
+    for (var i = 0; i < size; i++) bstInsert(pool[i]);
+    computeLayout();
+
+    questions = generateQuestions();
+    renderQuestion();
+  }
+
+  /* ── Boot ───────────────────────────────────────────────────── */
+  startRound();
+
+}());
+</script>
+</body>
+</html>
