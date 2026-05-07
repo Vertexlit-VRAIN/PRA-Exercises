@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>01 · Clasificador de Símbolos — Tablas Hash · PRA</title>
+  <title>01 · Sondeo Lineal — Tablas Hash · PRA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
@@ -38,16 +38,15 @@
       background-color: var(--terminal);
       background-image: repeating-linear-gradient(
         0deg, transparent, transparent 2px,
-        rgba(0, 200, 50, 0.07) 2px, rgba(0, 200, 50, 0.07) 3px
+        rgba(0,200,50,0.07) 2px, rgba(0,200,50,0.07) 3px
       );
       color: #fff;
       padding: 1rem 1.5rem 1.1rem;
-      border-bottom: 1px solid rgba(0, 200, 50, 0.15);
+      border-bottom: 1px solid rgba(0,200,50,0.15);
       display: flex;
       flex-direction: column;
       gap: 0.3rem;
     }
-
     .back-link {
       color: rgba(255,255,255,0.55);
       text-decoration: none;
@@ -57,7 +56,6 @@
       transition: opacity 0.15s;
     }
     .back-link:hover { opacity: 0.7; }
-
     .ex-title {
       font-family: 'Share Tech Mono', monospace;
       font-size: clamp(0.78rem, 2.5vw, 1.05rem);
@@ -65,7 +63,6 @@
       text-shadow: 0 0 14px rgba(0,204,68,0.45);
       line-height: 1.6;
     }
-
     .ex-desc {
       font-family: 'Share Tech Mono', monospace;
       font-size: 0.78rem;
@@ -84,23 +81,11 @@
       gap: 1.5rem;
       align-items: start;
     }
+    .left-panel  { display: flex; flex-direction: column; gap: 1rem; }
+    .right-panel { display: flex; flex-direction: column; gap: 0.75rem; position: sticky; top: 1.25rem; }
 
-    .left-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .right-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      position: sticky;
-      top: 1.25rem;
-    }
-
-    /* ── Phase badge ─────────────────────────────────────── */
-    .phase-badge {
+    /* ── Round badge ─────────────────────────────────────── */
+    .round-badge {
       font-family: 'Share Tech Mono', monospace;
       font-size: 0.72rem;
       color: var(--green-glow);
@@ -112,145 +97,51 @@
       align-self: flex-start;
     }
 
-    /* ── Conveyor area ───────────────────────────────────── */
-    .conveyor-area {
+    /* ── Key card ────────────────────────────────────────── */
+    .key-card {
       background: var(--panel);
-      border: 1px solid rgba(0,130,40,0.22);
+      border: 1px solid rgba(0,130,40,0.2);
       border-radius: 8px;
-      padding: 1.5rem 1.25rem 1.1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.65rem;
-    }
-
-    .conveyor {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    /* Item zone: left slot on the belt */
-    .item-zone {
-      min-width: 4.5rem;
-      min-height: 4.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 2px dashed rgba(0,130,40,0.25);
-      border-radius: 8px;
-      transition: border-color 0.25s;
-      flex-shrink: 0;
-    }
-    .item-zone.has-item { border-color: var(--green-lt); }
-
-    /* Belt arrows */
-    .belt-seg {
-      flex: 1;
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 1rem;
-      color: rgba(0,150,50,0.4);
-      text-align: center;
-      user-select: none;
-      letter-spacing: -0.1em;
-      transition: color 0.15s, text-shadow 0.15s;
-    }
-    .belt-seg.active {
-      color: var(--green-glow);
-      text-shadow: 0 0 8px rgba(0,204,68,0.5);
-    }
-
-    /* Machine box */
-    .machine-box {
+      padding: 1.5rem;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      gap: 0.15rem;
-      width: 5.5rem;
-      height: 4.5rem;
-      border: 2px solid var(--green-lt);
-      border-radius: 6px;
-      background: rgba(0,204,68,0.04);
-      flex-shrink: 0;
-      transition: border-color 0.3s, box-shadow 0.3s;
+      gap: 0.4rem;
     }
-    .machine-box.active {
-      border-color: var(--green-glow);
-      box-shadow: 0 0 14px rgba(0,204,68,0.45), inset 0 0 8px rgba(0,204,68,0.08);
-      animation: machine-pulse 0.7s ease-in-out infinite;
-    }
-
-    .machine-label {
+    .key-label {
       font-family: 'Share Tech Mono', monospace;
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--green);
+      font-size: 0.68rem;
+      color: #4a7a42;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
     }
-
-    .machine-proc {
+    .key-value {
       font-family: 'Share Tech Mono', monospace;
-      font-size: 0.75rem;
+      font-size: 3.5rem;
+      line-height: 1;
       color: var(--green-glow);
-      letter-spacing: 0.15em;
-      animation: proc-blink 0.45s step-end infinite;
+      text-shadow: 0 0 16px rgba(0,204,68,0.35);
+      letter-spacing: 0.05em;
     }
-
-    /* Output zone: right slot */
-    .output-zone {
-      min-width: 5.5rem;
-      min-height: 4.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .key-formula {
       font-family: 'Share Tech Mono', monospace;
       font-size: 0.88rem;
-      font-weight: 700;
-      color: var(--green-glow);
-      border: 2px dashed transparent;
-      border-radius: 8px;
-      text-align: center;
-      flex-shrink: 0;
-      transition: border-color 0.3s, background 0.3s;
-    }
-    .output-zone.visible {
-      border-color: rgba(0,204,68,0.3);
-      background: rgba(0,204,68,0.04);
+      color: #3a7a34;
+      margin-top: 0.1rem;
     }
 
-    /* Result label below conveyor */
-    .result-label {
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 0.88rem;
-      color: var(--green);
-      min-height: 1.4em;
-      text-align: center;
-      opacity: 0;
-      transition: opacity 0.35s;
+    /* ── Progress dots ───────────────────────────────────── */
+    .progress-dots { display: flex; gap: 0.45rem; justify-content: center; }
+    .dot {
+      width: 0.7rem;
+      height: 0.7rem;
+      border-radius: 50%;
+      border: 2px solid rgba(0,130,40,0.25);
+      background: transparent;
+      transition: background 0.2s, border-color 0.2s;
     }
-    .result-label.visible { opacity: 1; }
-
-    /* Conveyor item (observation phase) */
-    .conv-item {
-      font-size: 2.6rem;
-      line-height: 1;
-      transition: opacity 0.3s, transform 0.3s;
-    }
-    .conv-item.fade-out { opacity: 0; transform: scale(0.4); }
-
-    /* ── Draggable chip ──────────────────────────────────── */
-    .draggable-item {
-      font-size: 2.6rem;
-      line-height: 1;
-      padding: 0.3rem 0.45rem;
-      border: 2px solid var(--green-lt);
-      border-radius: 8px;
-      background: rgba(0,204,68,0.07);
-      cursor: grab;
-      user-select: none;
-      transition: background 0.15s, transform 0.15s;
-    }
-    .draggable-item:hover { background: rgba(0,204,68,0.16); transform: translateY(-2px); }
-    .draggable-item.dragging { opacity: 0.4; cursor: grabbing; }
+    .dot.done    { background: var(--green-lt); border-color: var(--green-lt); }
+    .dot.current { border-color: var(--green-glow); background: rgba(0,204,68,0.15); }
 
     /* ── Instruction & feedback ──────────────────────────── */
     .instr-text {
@@ -262,16 +153,25 @@
       padding: 0.6rem 0.8rem;
       border-radius: 0 4px 4px 0;
     }
-
-    .feedback {
-      font-size: 0.9rem;
-      font-weight: 700;
-      min-height: 1.4em;
-    }
+    .feedback { font-size: 0.85rem; font-weight: 700; min-height: 1.4em; line-height: 1.55; }
     .feedback.ok  { color: var(--ok); }
     .feedback.bad { color: var(--bad); }
 
-    /* ── Buttons ─────────────────────────────────────────── */
+    /* ── Round result ────────────────────────────────────── */
+    .round-result {
+      display: none;
+      background: rgba(0,204,68,0.06);
+      border: 1px solid rgba(0,204,68,0.2);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .round-result.visible { display: flex; }
+    .result-line { font-family: 'Share Tech Mono', monospace; font-size: 0.85rem; color: var(--green); }
+    .result-line strong { color: var(--green-glow); font-size: 1.05rem; }
+
+    /* ── Button ──────────────────────────────────────────── */
     .btn {
       padding: 0.6rem 1.25rem;
       border: none;
@@ -285,41 +185,9 @@
     }
     .btn:hover  { opacity: 0.85; transform: translateY(-1px); }
     .btn:active { transform: translateY(0); }
-    .btn-primary   { background: var(--green); color: #fff; }
-    .btn-secondary {
-      background: rgba(0,130,40,0.1);
-      color: var(--green);
-      border: 1.5px solid rgba(0,130,40,0.3);
-    }
+    .btn-primary { background: var(--green); color: #fff; }
 
-    /* ── Collision overlay ───────────────────────────────── */
-    .collision-overlay {
-      display: none;
-      flex-direction: column;
-      gap: 0.75rem;
-      background: #fff7f7;
-      border: 2px solid var(--bad);
-      border-radius: 8px;
-      padding: 1.25rem 1.5rem;
-      animation: fade-in 0.4s ease-out;
-    }
-    .collision-overlay.visible { display: flex; }
-
-    .collision-title {
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 1.1rem;
-      color: var(--bad);
-    }
-
-    .collision-desc {
-      font-size: 0.88rem;
-      color: #5a1010;
-      line-height: 1.7;
-    }
-
-    .collision-desc strong { color: var(--bad); }
-
-    /* ── Right panel: buckets ────────────────────────────── */
+    /* ── Right panel ─────────────────────────────────────── */
     .panel-label {
       font-family: 'Share Tech Mono', monospace;
       font-size: 0.72rem;
@@ -328,115 +196,96 @@
       text-transform: uppercase;
     }
 
-    .bucket-array {
-      display: flex;
-      flex-direction: column;
-      gap: 0.35rem;
-    }
+    /* ── Hash table ──────────────────────────────────────── */
+    .hash-table { display: flex; flex-direction: column; gap: 0.3rem; }
 
-    .bucket-slot {
+    .ht-row {
+      display: flex;
+      align-items: stretch;
+      border-radius: 5px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 1.5px dashed rgba(0,130,40,0.22);
+      background: #fff;
+      min-height: 3rem;
+      transition: border-color 0.15s, background 0.15s;
+      user-select: none;
+    }
+    .ht-row:hover:not(.filled) {
+      border-color: var(--green-lt);
+      border-style: solid;
+      background: rgba(0,204,68,0.05);
+    }
+    .ht-row.filled {
+      border-style: solid;
+      border-color: rgba(0,130,40,0.3);
+      cursor: default;
+    }
+    .ht-row.flash-ok  { animation: flash-ok  0.5s ease-out; }
+    .ht-row.flash-bad { animation: flash-bad 0.4s ease-out; }
+
+    .ht-idx {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      padding: 0.35rem 0.6rem;
-      min-height: 3.2rem;
-      border: 1.5px dashed rgba(0,130,40,0.22);
-      border-radius: 6px;
-      background: #fff;
-      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
-    }
-    .bucket-slot.drag-over {
-      border-color: var(--green-lt);
-      background: rgba(0,204,68,0.06);
-      border-style: solid;
-    }
-    .bucket-slot.filled {
-      border-style: solid;
-      border-color: rgba(0,130,40,0.35);
-    }
-    .bucket-slot.flash-bad {
-      animation: slot-flash-bad 0.45s ease-out;
-    }
-    .bucket-slot.collision {
-      border-color: var(--bad);
-      background: rgba(198,40,40,0.04);
-      box-shadow: 0 0 10px rgba(198,40,40,0.22);
-      animation: shake 0.5s ease-in-out;
-    }
-
-    .bucket-index {
+      justify-content: center;
+      min-width: 2.5rem;
+      padding: 0 0.5rem;
+      background: rgba(0,130,40,0.07);
+      border-right: 1px solid rgba(0,130,40,0.12);
       font-family: 'Share Tech Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--green);
+      flex-shrink: 0;
+    }
+    .ht-val {
+      display: flex;
+      align-items: center;
+      padding: 0 0.8rem;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      flex: 1;
+    }
+    .ht-val.empty { color: rgba(0,130,40,0.22); font-size: 0.9rem; }
+    .ht-val .placed { animation: pop-in 0.35s ease-out; }
+
+    /* ── Score footer ────────────────────────────────────── */
+    .score-bar {
+      border-top: 2px solid rgba(0,130,40,0.12);
+      background: rgba(232,245,233,0.95);
+      padding: 0.65rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
       font-size: 0.88rem;
       font-weight: 700;
       color: var(--green);
-      min-width: 1.4rem;
-      flex-shrink: 0;
     }
-
-    .bucket-contents {
-      display: flex;
-      align-items: center;
-      gap: 0.2rem;
-      flex-wrap: wrap;
-    }
-
-    .bucket-emoji {
-      font-size: 1.8rem;
-      line-height: 1;
-      animation: receive 0.4s ease-out;
-    }
-
-    .collision-tag {
-      font-family: 'Share Tech Mono', monospace;
-      font-size: 0.6rem;
-      font-weight: 700;
-      color: var(--bad);
-      background: rgba(198,40,40,0.1);
-      border: 1px solid rgba(198,40,40,0.3);
-      border-radius: 3px;
-      padding: 0.1rem 0.35rem;
-      letter-spacing: 0.04em;
-    }
+    .score-num { font-size: 1.4rem; font-weight: 700; color: var(--green-glow); }
 
     /* ── Animations ──────────────────────────────────────── */
-    @keyframes machine-pulse {
-      0%, 100% { box-shadow: 0 0 4px rgba(0,204,68,0.2); }
-      50%       { box-shadow: 0 0 20px rgba(0,204,68,0.55), inset 0 0 10px rgba(0,204,68,0.12); }
-    }
-
-    @keyframes proc-blink {
-      0%, 100% { opacity: 1; }
-      50%       { opacity: 0; }
-    }
-
-    @keyframes receive {
-      0%   { transform: scale(1.5); opacity: 0.4; }
-      60%  { transform: scale(0.9); }
-      100% { transform: scale(1);   opacity: 1; }
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      20%, 60% { transform: translateX(-5px); }
-      40%, 80% { transform: translateX(5px); }
-    }
-
-    @keyframes slot-flash-bad {
+    @keyframes flash-ok {
       0%, 100% { background: #fff; }
-      40%       { background: rgba(198,40,40,0.1); border-color: var(--bad); }
+      40%       { background: rgba(46,125,50,0.15); border-color: var(--ok); border-style: solid; }
     }
-
-    @keyframes fade-in {
-      from { opacity: 0; transform: translateY(6px); }
-      to   { opacity: 1; transform: translateY(0); }
+    @keyframes flash-bad {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-4px); }
+      40%, 80% { transform: translateX(4px); }
+    }
+    @keyframes pop-in {
+      0%   { transform: scale(1.4); opacity: 0.3; }
+      65%  { transform: scale(0.93); }
+      100% { transform: scale(1);   opacity: 1; }
     }
 
     /* ── Responsive ──────────────────────────────────────── */
     @media (max-width: 720px) {
       .ex-main { grid-template-columns: 1fr; padding: 1rem; }
       .right-panel { position: static; }
-      .conveyor { flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
-      .belt-seg { flex: 0 0 auto; }
     }
   </style>
 </head>
@@ -444,422 +293,325 @@
 
 <header class="ex-header">
   <a class="back-link" href="../index.html#hash">← Tablas Hash</a>
-  <h1 class="ex-title">01 — Clasificador de Símbolos</h1>
-  <p class="ex-desc">// Una función hash mapea cada clave a un índice del array.</p>
+  <h1 class="ex-title">01 — Sondeo Lineal</h1>
+  <p class="ex-desc">// h(k) = k mod m &nbsp;·&nbsp; colisión → (h(k) + i) mod m</p>
 </header>
 
 <main class="ex-main">
 
-  <!-- LEFT: conveyor + controls -->
-  <section class="left-panel" aria-label="Cinta transportadora y controles">
+  <section class="left-panel" aria-label="Clave actual y controles">
 
-    <div class="phase-badge" id="phase-badge">Fase 1 de 3 — Observación</div>
+    <div class="round-badge" id="round-badge">Ronda 1</div>
 
-    <div class="conveyor-area">
-      <div class="conveyor" id="conveyor" aria-label="Cinta transportadora">
-        <div class="item-zone" id="item-zone" aria-label="Objeto en la cinta"></div>
-        <span class="belt-seg" id="belt-left"  aria-hidden="true">══════▶</span>
-        <div class="machine-box" id="machine-box" aria-label="Función hash">
-          <span class="machine-label">h(k)</span>
-          <span class="machine-proc" id="machine-proc" hidden aria-hidden="true">···</span>
-        </div>
-        <span class="belt-seg" id="belt-right" aria-hidden="true">══▶</span>
-        <div class="output-zone" id="output-zone" aria-live="polite"></div>
-      </div>
-      <div class="result-label" id="result-label" aria-live="polite"></div>
+    <div class="key-card">
+      <span class="key-label">Clave a insertar</span>
+      <span class="key-value"  id="key-value">—</span>
+      <span class="key-formula" id="key-formula">h(k) = k mod m</span>
     </div>
 
+    <div class="progress-dots" id="progress-dots" aria-label="Progreso de la ronda"></div>
+
     <p class="instr-text" id="instr-text">
-      Observa cómo la máquina asigna cada objeto a su cubeta.
+      Clica la celda donde debe insertarse la clave.
     </p>
 
     <p class="feedback" id="feedback" aria-live="polite"></p>
 
-    <button class="btn btn-primary" id="btn-action" hidden>Ver siguiente →</button>
-
-    <div class="collision-overlay" id="collision-overlay" role="alert">
-      <p class="collision-title">💥 ¡Colisión!</p>
-      <p class="collision-desc">
-        <strong>🐶</strong> y <strong>🐱</strong> son claves distintas, pero
-        la función hash les asignó el mismo índice (<strong>4</strong>).
-        Esto se llama <strong>colisión</strong>.
-        Los próximos ejercicios mostrarán cómo resolverlas.
-      </p>
-      <button class="btn btn-secondary" id="btn-restart">↺ Volver a empezar</button>
+    <div class="round-result" id="round-result">
+      <p class="result-line" id="result-line-1"></p>
+      <p class="result-line" id="result-line-2"></p>
     </div>
+
+    <button class="btn btn-primary" id="btn-next" hidden>Nueva tabla →</button>
 
   </section>
 
-  <!-- RIGHT: bucket array -->
-  <aside class="right-panel" aria-label="Array de cubetas">
-    <p class="panel-label">Array — 6 cubetas</p>
-    <div class="bucket-array" id="bucket-array" role="list"
-         aria-label="Cubetas del array hash"></div>
+  <aside class="right-panel" aria-label="Tabla hash">
+    <p class="panel-label" id="m-label">Tabla hash</p>
+    <div class="hash-table" id="hash-table" role="grid"
+         aria-label="Celdas de la tabla hash"></div>
   </aside>
 
 </main>
+
+<footer class="score-bar" aria-label="Puntuación global">
+  Correctas a la primera: <span class="score-num" id="score-ok">0</span>
+  / <span id="score-total">0</span>
+</footer>
 
 <script>
 (function () {
   'use strict';
 
-  /* ── Data ───────────────────────────────────────────────── */
-  var OBS_ITEMS = [
-    { emoji: '🐶', name: 'perro', bucket: 4 },
-    { emoji: '🔑', name: 'llave', bucket: 1 },
-    { emoji: '📚', name: 'libro', bucket: 2 },
-  ];
-  var PH2_ITEM = { emoji: '🐶', name: 'perro', bucket: 4 };
-  var PH3_ITEM = { emoji: '🐱', name: 'gato',  bucket: 4 };
-  var N = 6; // number of buckets
+  /* ── Global score ───────────────────────────────────────── */
+  var gOk = 0, gTotal = 0;
 
-  /* ── State ──────────────────────────────────────────────── */
-  var phase   = 1;
-  var obsStep = 0;
-  var btnMode = 'obs'; // 'obs' | 'ph2-continue'
+  /* ── Round state ────────────────────────────────────────── */
+  var round    = null;  // { m, keys, table, keyIdx, roundOk }
+  var roundNum = 0;
+  var attempts = 0;     // wrong clicks on current key
 
   /* ── DOM ────────────────────────────────────────────────── */
-  var $badge    = document.getElementById('phase-badge');
-  var $itemZone = document.getElementById('item-zone');
-  var $machine  = document.getElementById('machine-box');
-  var $proc     = document.getElementById('machine-proc');
-  var $beltL    = document.getElementById('belt-left');
-  var $beltR    = document.getElementById('belt-right');
-  var $output   = document.getElementById('output-zone');
-  var $result   = document.getElementById('result-label');
+  var $badge    = document.getElementById('round-badge');
+  var $keyVal   = document.getElementById('key-value');
+  var $formula  = document.getElementById('key-formula');
+  var $dots     = document.getElementById('progress-dots');
   var $instr    = document.getElementById('instr-text');
   var $fb       = document.getElementById('feedback');
-  var $btn      = document.getElementById('btn-action');
-  var $buckets  = document.getElementById('bucket-array');
-  var $overlay  = document.getElementById('collision-overlay');
+  var $result   = document.getElementById('round-result');
+  var $res1     = document.getElementById('result-line-1');
+  var $res2     = document.getElementById('result-line-2');
+  var $btn      = document.getElementById('btn-next');
+  var $mLabel   = document.getElementById('m-label');
+  var $table    = document.getElementById('hash-table');
+  var $scoreOk  = document.getElementById('score-ok');
+  var $scoreAll = document.getElementById('score-total');
 
-  /* ── Bucket helpers ─────────────────────────────────────── */
-  function buildBuckets() {
-    $buckets.innerHTML = '';
-    for (var i = 0; i < N; i++) {
-      var slot = document.createElement('div');
-      slot.className = 'bucket-slot';
-      slot.dataset.index = i;
-      slot.setAttribute('role', 'listitem');
-      slot.setAttribute('aria-label', 'Cubeta ' + i);
+  /* ── Util ───────────────────────────────────────────────── */
+  function rand(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
 
-      var idx = document.createElement('span');
-      idx.className = 'bucket-index';
+  /* Returns the first free slot for key using linear probing. */
+  function targetSlot(table, m, key) {
+    var h = key % m, s = h;
+    for (var i = 0; i < m; i++) {
+      if (table[s] === null) return s;
+      s = (s + 1) % m;
+    }
+    return -1;
+  }
+
+  /* Returns the probing path: [h(k), h(k)+1, ..., free_slot]. */
+  function probePath(table, m, key) {
+    var h = key % m, s = h, path = [];
+    for (var i = 0; i < m; i++) {
+      path.push(s);
+      if (table[s] === null) break;
+      s = (s + 1) % m;
+    }
+    return path;
+  }
+
+  /* ── Key generation ─────────────────────────────────────── */
+  function generateRound() {
+    var mOpts = [5, 7, 8, 9, 11];
+    var m     = mOpts[rand(0, mOpts.length - 1)];
+    var count = 5 + rand(0, 1);
+    var keys  = buildKeys(m, count);
+    return { m: m, keys: keys, table: new Array(m).fill(null), keyIdx: 0, roundOk: 0 };
+  }
+
+  function buildKeys(m, count) {
+    var keys = [], used = new Set(), tries = 0;
+    while (keys.length < count && tries++ < 400) {
+      var k = rand(10, 99);
+      if (!used.has(k)) { used.add(k); keys.push(k); }
+    }
+
+    /* Ensure at least 1 collision (hash-level, not just probe-level). */
+    var sim = new Array(m).fill(null), hasCol = false;
+    for (var i = 0; i < keys.length; i++) {
+      var h = keys[i] % m;
+      if (sim[h] !== null) hasCol = true;
+      var s = h, p = 0;
+      while (sim[s] !== null && p < m) { s = (s + 1) % m; p++; }
+      if (p < m) sim[s] = keys[i];
+    }
+
+    if (!hasCol && keys.length >= 3) {
+      var target = keys[0] % m;
+      for (var d = m; d <= 89; d += m) {
+        var c = target + d;
+        if (c >= 10 && c <= 99 && !used.has(c)) {
+          used.delete(keys[keys.length - 1]);
+          keys[keys.length - 1] = c;
+          break;
+        }
+      }
+    }
+
+    return keys;
+  }
+
+  /* ── Render ─────────────────────────────────────────────── */
+  function renderTable() {
+    $table.innerHTML = '';
+    for (var i = 0; i < round.m; i++) {
+      var row = document.createElement('div');
+      row.className = 'ht-row' + (round.table[i] !== null ? ' filled' : '');
+      row.dataset.idx = i;
+      row.setAttribute('role', 'gridcell');
+      row.setAttribute('aria-label',
+        'Celda ' + i + (round.table[i] !== null ? ', contiene ' + round.table[i] : ', vacía'));
+
+      var idx = document.createElement('div');
+      idx.className = 'ht-idx';
       idx.textContent = i;
 
-      var contents = document.createElement('div');
-      contents.className = 'bucket-contents';
-      contents.id = 'bc-' + i;
+      var val = document.createElement('div');
+      val.className = 'ht-val' + (round.table[i] === null ? ' empty' : '');
+      val.textContent = round.table[i] !== null ? round.table[i] : '—';
 
-      slot.appendChild(idx);
-      slot.appendChild(contents);
-      $buckets.appendChild(slot);
+      row.appendChild(idx);
+      row.appendChild(val);
+      $table.appendChild(row);
     }
   }
 
-  function fillBucket(index, emoji) {
-    var el = document.createElement('span');
-    el.className = 'bucket-emoji';
-    el.setAttribute('aria-label', emoji);
-    el.textContent = emoji;
-    document.getElementById('bc-' + index).appendChild(el);
-    var slot = $buckets.querySelector('[data-index="' + index + '"]');
-    if (slot) slot.classList.add('filled');
+  function renderKey() {
+    var k = round.keys[round.keyIdx];
+    $keyVal.textContent  = k;
+    $formula.textContent = 'h(k) = k mod ' + round.m;
+    renderDots();
+    clearFeedback();
   }
 
-  /* ── UI helpers ─────────────────────────────────────────── */
-  function setFeedback(text, type) {
+  function renderDots() {
+    $dots.innerHTML = '';
+    for (var i = 0; i < round.keys.length; i++) {
+      var d = document.createElement('span');
+      d.className = 'dot' + (i < round.keyIdx ? ' done' : i === round.keyIdx ? ' current' : '');
+      d.setAttribute('aria-hidden', 'true');
+      $dots.appendChild(d);
+    }
+  }
+
+  /* ── Feedback helpers ───────────────────────────────────── */
+  function setFb(text, type) {
     $fb.textContent = text;
-    $fb.className = 'feedback' + (type ? ' ' + type : '');
+    $fb.className   = 'feedback' + (type ? ' ' + type : '');
+  }
+  function clearFeedback() { $fb.textContent = ''; $fb.className = 'feedback'; }
+
+  function flashRow(i, type) {
+    var row = $table.querySelector('[data-idx="' + i + '"]');
+    if (!row) return;
+    row.classList.add('flash-' + type);
+    setTimeout(function () { row.classList.remove('flash-' + type); }, 550);
   }
 
-  function clearFeedback() {
-    $fb.textContent = '';
-    $fb.className = 'feedback';
-  }
+  /* ── Click handler ──────────────────────────────────────── */
+  $table.addEventListener('click', function (e) {
+    if (round.keyIdx >= round.keys.length) return;
 
-  function flashBelt(el) {
-    el.classList.add('active');
-    setTimeout(function () { el.classList.remove('active'); }, 450);
-  }
+    var row = e.target.closest('.ht-row');
+    if (!row) return;
 
-  function resetConveyor() {
-    $itemZone.innerHTML = '';
-    $itemZone.classList.remove('has-item');
-    $machine.classList.remove('active');
-    $proc.hidden = true;
-    $output.textContent = '';
-    $output.classList.remove('visible');
-    $result.textContent = '';
-    $result.classList.remove('visible');
-  }
+    var clicked = parseInt(row.dataset.idx, 10);
+    var key     = round.keys[round.keyIdx];
+    var correct = targetSlot(round.table, round.m, key);
 
-  function makeChip(item) {
-    var chip = document.createElement('div');
-    chip.className = 'draggable-item';
-    chip.draggable = true;
-    chip.dataset.bucket = item.bucket;
-    chip.dataset.emoji  = item.emoji;
-    chip.setAttribute('aria-label', 'Arrastra el ' + item.name + ' a una cubeta');
-    chip.textContent = item.emoji;
-    return chip;
-  }
+    if (clicked === correct) {
+      /* ─── Correct ─── */
+      var wasFirst = (attempts === 0);
+      attempts = 0;
+      if (wasFirst) { round.roundOk++; gOk++; }
+      gTotal++;
 
-  /* ── Phase 1: Observation ───────────────────────────────── */
-  function runObs(step) {
-    var item = OBS_ITEMS[step];
-    $btn.hidden = true;
-    clearFeedback();
-    resetConveyor();
+      var snapshotTable = round.table.slice(); // table before insertion
+      round.table[correct] = key;
 
-    // 1. Show item on belt
-    var ci = document.createElement('span');
-    ci.className = 'conv-item';
-    ci.setAttribute('aria-hidden', 'true');
-    ci.textContent = item.emoji;
-    $itemZone.appendChild(ci);
-    $itemZone.classList.add('has-item');
-
-    // 2. Item travels toward machine
-    setTimeout(function () {
-      flashBelt($beltL);
-      ci.classList.add('fade-out');
-    }, 700);
-
-    // 3. Item enters machine
-    setTimeout(function () {
-      $itemZone.innerHTML = '';
-      $itemZone.classList.remove('has-item');
-      $machine.classList.add('active');
-      $proc.hidden = false;
-    }, 1100);
-
-    // 4. Machine outputs result
-    setTimeout(function () {
-      $machine.classList.remove('active');
-      $proc.hidden = true;
-      flashBelt($beltR);
-      $output.textContent = '→ cubeta ' + item.bucket;
-      $output.classList.add('visible');
-      $result.textContent = 'h(' + item.emoji + ')  =  ' + item.bucket;
-      $result.classList.add('visible');
-    }, 2000);
-
-    // 5. Item lands in bucket, reveal button
-    setTimeout(function () {
-      fillBucket(item.bucket, item.emoji);
-      var isLast = (step === OBS_ITEMS.length - 1);
-      $btn.textContent = isLast ? '¡Entendido! →' : 'Ver siguiente →';
-      $btn.hidden = false;
-    }, 2600);
-  }
-
-  /* ── Phase 2: Action ────────────────────────────────────── */
-  function startPhase2() {
-    phase = 2;
-    $badge.textContent = 'Fase 2 de 3 — Acción';
-    clearFeedback();
-    $btn.hidden = true;
-    resetConveyor();
-
-    $instr.textContent =
-      'Aparece un nuevo ' + PH2_ITEM.name + ' ' + PH2_ITEM.emoji +
-      '. ¿A qué cubeta debe ir? Arrástralo.';
-
-    $itemZone.appendChild(makeChip(PH2_ITEM));
-    $itemZone.classList.add('has-item');
-  }
-
-  /* ── Phase 3: Conflict ──────────────────────────────────── */
-  function startPhase3() {
-    phase = 3;
-    $badge.textContent = 'Fase 3 de 3 — Conflicto';
-    clearFeedback();
-    $btn.hidden = true;
-
-    // Reset buckets to phase-1 state so collision is dog vs. cat
-    buildBuckets();
-    OBS_ITEMS.forEach(function (it) { fillBucket(it.bucket, it.emoji); });
-
-    resetConveyor();
-    $instr.textContent = 'Observa qué hace la máquina con el ' + PH3_ITEM.name + ' ' + PH3_ITEM.emoji + '.';
-
-    // Same machine animation as phase 1
-    var ci = document.createElement('span');
-    ci.className = 'conv-item';
-    ci.setAttribute('aria-hidden', 'true');
-    ci.textContent = PH3_ITEM.emoji;
-    $itemZone.appendChild(ci);
-    $itemZone.classList.add('has-item');
-
-    setTimeout(function () {
-      flashBelt($beltL);
-      ci.classList.add('fade-out');
-    }, 700);
-
-    setTimeout(function () {
-      $itemZone.innerHTML = '';
-      $itemZone.classList.remove('has-item');
-      $machine.classList.add('active');
-      $proc.hidden = false;
-    }, 1100);
-
-    setTimeout(function () {
-      $machine.classList.remove('active');
-      $proc.hidden = true;
-      flashBelt($beltR);
-      $output.textContent = '→ cubeta ' + PH3_ITEM.bucket;
-      $output.classList.add('visible');
-      $result.textContent = 'h(' + PH3_ITEM.emoji + ')  =  ' + PH3_ITEM.bucket;
-      $result.classList.add('visible');
-
-      $instr.textContent =
-        'La máquina asigna el ' + PH3_ITEM.name + ' a la cubeta ' +
-        PH3_ITEM.bucket + '. Arrástralo allí.';
-
-      $itemZone.appendChild(makeChip(PH3_ITEM));
-      $itemZone.classList.add('has-item');
-    }, 2000);
-  }
-
-  /* ── Drop handler ───────────────────────────────────────── */
-  function handleDrop(targetIndex) {
-    var chip = $itemZone.querySelector('.draggable-item');
-    if (!chip) return;
-
-    var correct = parseInt(chip.dataset.bucket, 10);
-    var emoji   = chip.dataset.emoji;
-
-    if (targetIndex !== correct) {
-      var badSlot = $buckets.querySelector('[data-index="' + targetIndex + '"]');
-      if (badSlot) {
-        badSlot.classList.add('flash-bad');
-        setTimeout(function () { badSlot.classList.remove('flash-bad'); }, 500);
+      /* Animate the new cell */
+      renderTable();
+      flashRow(correct, 'ok');
+      var newRow = $table.querySelector('[data-idx="' + correct + '"]');
+      if (newRow) {
+        var span = document.createElement('span');
+        span.className = 'placed';
+        span.textContent = key;
+        newRow.querySelector('.ht-val').innerHTML = '';
+        newRow.querySelector('.ht-val').appendChild(span);
       }
-      if (phase === 2) {
-        setFeedback('Incorrecto. Fíjate en la fase 1: ¿a qué cubeta fue el ' + chip.dataset.emoji + '?', 'bad');
+
+      /* Build feedback message */
+      var h    = key % round.m;
+      var path = probePath(snapshotTable, round.m, key);
+      var msg;
+      if (correct === h) {
+        msg = '✓  h(' + key + ') = ' + key + ' mod ' + round.m + ' = ' + h + ' — celda libre.';
       } else {
-        setFeedback('La máquina ha indicado la cubeta ' + correct + '. Sigue su regla.', 'bad');
+        var occupied = path.slice(0, -1);
+        msg = '✓  Colisión en ' + occupied.join(' → ') + '. Sondeo: celda ' + correct + ' libre.';
       }
-      return;
-    }
+      setFb(msg, 'ok');
 
-    // Correct
-    clearFeedback();
-    chip.remove();
-    $itemZone.classList.remove('has-item');
-    fillBucket(correct, emoji);
+      /* Update global score */
+      $scoreOk.textContent  = gOk;
+      $scoreAll.textContent = gTotal;
 
-    if (phase === 2) {
-      setFeedback('¡Correcto! Una función hash siempre asigna la misma clave al mismo índice.', 'ok');
-      setTimeout(function () {
-        clearFeedback();
-        btnMode = 'ph2-continue';
-        $btn.textContent = 'Continuar →';
-        $btn.hidden = false;
-      }, 1800);
+      round.keyIdx++;
+      if (round.keyIdx >= round.keys.length) {
+        setTimeout(showRoundEnd, 900);
+      } else {
+        setTimeout(function () { renderKey(); }, 900);
+      }
+
     } else {
-      setTimeout(triggerCollision, 400);
+      /* ─── Wrong ─── */
+      attempts++;
+      flashRow(clicked, 'bad');
+
+      var h2    = key % round.m;
+      var path2 = probePath(round.table, round.m, key);
+      var dest  = path2[path2.length - 1];
+      var msg2;
+
+      if (round.table[clicked] !== null) {
+        /* Clicked an occupied cell */
+        msg2 = 'Celda ' + clicked + ' ya contiene ' + round.table[clicked] + '. ';
+        if (dest === h2) {
+          msg2 += 'h(' + key + ') = ' + h2 + ' está libre — la clave va allí.';
+        } else {
+          msg2 += 'h(' + key + ') = ' + h2 + ', ocupada. Sondeo: ' +
+                  path2.slice(0, -1).join(' → ') + ' → celda ' + dest + ' libre.';
+        }
+      } else {
+        /* Clicked the wrong free cell */
+        msg2 = 'h(' + key + ') = ' + key + ' mod ' + round.m + ' = ' + h2 + '. ';
+        if (dest === h2) {
+          msg2 += 'La celda ' + h2 + ' está libre — la clave va allí directamente.';
+        } else {
+          msg2 += 'Colisión en ' + path2.slice(0, -1).join(' → ') +
+                  '. Sondeo: la clave va a la celda ' + dest + '.';
+        }
+      }
+      setFb(msg2, 'bad');
     }
+  });
+
+  /* ── Round end ──────────────────────────────────────────── */
+  function showRoundEnd() {
+    $keyVal.textContent  = '✓';
+    $formula.textContent = 'Ronda completada';
+    clearFeedback();
+
+    var pct = Math.round(100 * round.roundOk / round.keys.length);
+    $res1.innerHTML = 'A la primera: <strong>' + round.roundOk +
+                      ' / ' + round.keys.length + '</strong> (' + pct + '%)';
+    $res2.innerHTML = 'm = ' + round.m + ' &nbsp;·&nbsp; claves: ' + round.keys.join(', ');
+    $result.classList.add('visible');
+    $btn.hidden = false;
   }
 
-  /* ── Collision reveal ───────────────────────────────────── */
-  function triggerCollision() {
-    var slot = $buckets.querySelector('[data-index="4"]');
-    if (slot) {
-      slot.classList.add('collision');
-      var bc = document.getElementById('bc-4');
-      var tag = document.createElement('span');
-      tag.className = 'collision-tag';
-      tag.textContent = '¡COLISIÓN!';
-      bc.appendChild(tag);
-    }
-    $overlay.classList.add('visible');
-    $overlay.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-
-  /* ── Button ─────────────────────────────────────────────── */
+  /* ── New round ──────────────────────────────────────────── */
   $btn.addEventListener('click', function () {
     $btn.hidden = true;
-    if (btnMode === 'obs') {
-      obsStep++;
-      if (obsStep < OBS_ITEMS.length) {
-        runObs(obsStep);
-      } else {
-        startPhase2();
-      }
-    } else if (btnMode === 'ph2-continue') {
-      startPhase3();
-    }
+    $result.classList.remove('visible');
+    startRound();
   });
 
-  /* ── Restart ────────────────────────────────────────────── */
-  document.getElementById('btn-restart').addEventListener('click', function () {
-    $overlay.classList.remove('visible');
-    phase   = 1;
-    obsStep = 0;
-    btnMode = 'obs';
-
-    buildBuckets();
-    clearFeedback();
-    $badge.textContent = 'Fase 1 de 3 — Observación';
-    $instr.textContent = 'Observa cómo la máquina asigna cada objeto a su cubeta.';
-    $btn.hidden = true;
-    resetConveyor();
-    runObs(0);
-  });
-
-  /* ── Drag & drop (event delegation) ────────────────────── */
-  document.body.addEventListener('dragstart', function (e) {
-    var chip = e.target.closest('.draggable-item');
-    if (!chip) return;
-    e.dataTransfer.setData('text/plain', '1');
-    e.dataTransfer.effectAllowed = 'move';
-    chip.classList.add('dragging');
-  });
-
-  document.body.addEventListener('dragend', function () {
-    document.querySelectorAll('.draggable-item.dragging').forEach(function (el) {
-      el.classList.remove('dragging');
-    });
-  });
-
-  document.body.addEventListener('dragenter', function (e) {
-    var slot = e.target.closest('.bucket-slot');
-    if (!slot) return;
-    document.querySelectorAll('.bucket-slot.drag-over').forEach(function (el) {
-      el.classList.remove('drag-over');
-    });
-    slot.classList.add('drag-over');
-  }, true);
-
-  document.body.addEventListener('dragover', function (e) {
-    if (e.target.closest('.bucket-slot')) {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
-    }
-  });
-
-  document.body.addEventListener('dragleave', function (e) {
-    var slot = e.target.closest('.bucket-slot');
-    if (slot && !slot.contains(e.relatedTarget)) {
-      slot.classList.remove('drag-over');
-    }
-  });
-
-  document.body.addEventListener('drop', function (e) {
-    var slot = e.target.closest('.bucket-slot');
-    if (!slot) return;
-    e.preventDefault();
-    document.querySelectorAll('.bucket-slot.drag-over').forEach(function (el) {
-      el.classList.remove('drag-over');
-    });
-    handleDrop(parseInt(slot.dataset.index, 10));
-  });
+  function startRound() {
+    roundNum++;
+    round    = generateRound();
+    attempts = 0;
+    $badge.textContent   = 'Ronda ' + roundNum;
+    $mLabel.textContent  = 'Tabla hash  ·  m = ' + round.m;
+    $instr.textContent   = 'Clica la celda donde debe insertarse la clave.';
+    renderTable();
+    renderKey();
+  }
 
   /* ── Boot ───────────────────────────────────────────────── */
-  buildBuckets();
-  runObs(0);
+  startRound();
 
 }());
 </script>
