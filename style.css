@@ -286,10 +286,41 @@ body {
 
 .card-link:hover { gap: 0.6rem; }
 
+/* ─── Section title strip — shared structure ────────────────────────────────── */
+
+.section-title-strip {
+  padding: 3.5rem 2rem 3rem;
+  text-align: center;
+}
+
 /* ─── THEME 1: Tablas Hash — Matrix / Terminal ──────────────────────────────── */
 
 .theme-hash {
   background: var(--hash-bg);
+}
+
+.theme-hash .section-title-strip {
+  background-color: #001a0a;
+  background-image: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 200, 50, 0.04) 2px,
+    rgba(0, 200, 50, 0.04) 3px
+  );
+}
+
+.theme-hash .section-title-strip .panel-title {
+  font-size: clamp(0.85rem, 2.5vw, 1.3rem);
+  color: #00cc44;
+  text-shadow: 0 0 18px rgba(0, 204, 68, 0.45), 0 0 40px rgba(0, 204, 68, 0.15);
+  line-height: 1.8;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.theme-hash .panel-inner {
+  padding-top: 2.5rem;
 }
 
 .theme-hash .panel-title {
@@ -334,18 +365,14 @@ body {
   border-bottom-color: rgba(179, 92, 0, 0.15);
 }
 
-/* ─── DKC Title Strip (B) ───────────────────────────────────────────────── */
-
-.dk-title-strip {
+.theme-arboles .section-title-strip {
   background-color: #0a1e10;
   background-image:
     radial-gradient(ellipse at 20% 80%, rgba(20, 70, 30, 0.7) 0%, transparent 55%),
     radial-gradient(ellipse at 80% 20%, rgba(10, 50, 20, 0.5) 0%, transparent 55%);
-  padding: 3.5rem 2rem 3rem;
-  text-align: center;
 }
 
-.theme-arboles .dk-title-strip .panel-title {
+.theme-arboles .section-title-strip .panel-title {
   font-family: var(--font-pixel);
   font-size: clamp(0.9rem, 2.8vw, 1.5rem);
   color: var(--arboles-dk);
@@ -384,6 +411,26 @@ body {
 
 .theme-grafos {
   background: var(--grafos-bg);
+}
+
+.theme-grafos .section-title-strip {
+  background-color: #050a1e;
+  background-image:
+    radial-gradient(ellipse at 25% 75%, rgba(57, 73, 171, 0.4) 0%, transparent 50%),
+    radial-gradient(ellipse at 75% 25%, rgba(21, 101, 192, 0.3) 0%, transparent 50%);
+}
+
+.theme-grafos .section-title-strip .panel-title {
+  font-size: clamp(0.9rem, 2.8vw, 1.5rem);
+  color: #7cb9ff;
+  text-shadow: 0 0 18px rgba(124, 185, 255, 0.5), 0 0 40px rgba(124, 185, 255, 0.2);
+  line-height: 2;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.theme-grafos .panel-inner {
+  padding-top: 2.5rem;
 }
 
 .theme-grafos .panel-title {
