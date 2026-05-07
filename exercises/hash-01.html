@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>01 · Función Hash — Tablas Hash · PRA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green:      #1b5e20;
+      --green-lt:   #4caf50;
+      --green-glow: #00cc44;
+      --bg:         #f0fff4;
+      --text:       #0d1f0d;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 18px; }
+
+    body {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      background-color: var(--bg);
+      background-image: linear-gradient(180deg, #001a0a 0px, transparent 320px);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    .ex-header {
+      background-color: #001a0a;
+      background-image: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 200, 50, 0.04) 2px,
+        rgba(0, 200, 50, 0.04) 3px
+      );
+      color: #fff;
+      padding: 1rem 1.5rem 1.1rem;
+      border-bottom: 1px solid rgba(0, 200, 50, 0.15);
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .back-link {
+      color: rgba(255, 255, 255, 0.5);
+      text-decoration: none;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 700;
+      transition: opacity 0.15s;
+    }
+    .back-link:hover { opacity: 0.7; }
+
+    .ex-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: clamp(0.78rem, 2.5vw, 1.05rem);
+      color: #00cc44;
+      text-shadow: 0 0 14px rgba(0, 204, 68, 0.45);
+      line-height: 1.6;
+    }
+
+    .ex-desc {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.78rem;
+      color: rgba(255, 255, 255, 0.4);
+      line-height: 1.5;
+      max-width: 64ch;
+    }
+
+    /* ── Placeholder ─────────────────────────────────────────── */
+    .ex-main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 4rem 1.5rem;
+    }
+
+    .terminal-block {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1rem;
+      color: var(--green);
+      line-height: 2.4;
+      text-align: left;
+    }
+
+    .terminal-block .dim { color: rgba(27, 94, 32, 0.45); }
+
+    .cursor {
+      display: inline-block;
+      width: 0.6em;
+      height: 1.1em;
+      background: var(--green-lt);
+      vertical-align: text-bottom;
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="ex-header">
+  <a class="back-link" href="../index.html#hash">← Tablas Hash</a>
+  <h1 class="ex-title">01 — Función Hash</h1>
+  <p class="ex-desc">// Calcula posiciones de inserción con h(k) = k mod m.</p>
+</header>
+
+<main class="ex-main">
+  <div class="terminal-block">
+    <p><span class="dim">$</span> loading exercise...</p>
+    <p><span class="dim">></span> // Ejercicio en construcción</p>
+    <p><span class="dim">></span> // Próximamente</p>
+    <p><span class="cursor"></span></p>
+  </div>
+</main>
+
+</body>
+</html>
