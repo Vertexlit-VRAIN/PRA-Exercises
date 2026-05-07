@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>01 · Función Hash — Tablas Hash · PRA</title>
+  <title>01 · Clasificador de Símbolos — Tablas Hash · PRA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
@@ -13,7 +13,11 @@
       --green-lt:   #4caf50;
       --green-glow: #00cc44;
       --bg:         #f0fff4;
+      --panel:      #e8f5e9;
       --text:       #0d1f0d;
+      --ok:         #2e7d32;
+      --bad:        #c62828;
+      --terminal:   #001a0a;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -22,22 +26,19 @@
     body {
       font-family: 'Space Grotesk', system-ui, sans-serif;
       background-color: var(--bg);
-      background-image: linear-gradient(180deg, #001a0a 0px, transparent 320px);
+      background-image: linear-gradient(180deg, var(--terminal) 0px, transparent 320px);
       color: var(--text);
       min-height: 100vh;
       display: flex;
       flex-direction: column;
     }
 
-    /* ── Header ─────────────────────────────────────────────── */
+    /* ── Header ──────────────────────────────────────────── */
     .ex-header {
-      background-color: #001a0a;
+      background-color: var(--terminal);
       background-image: repeating-linear-gradient(
-        0deg,
-        transparent,
-        transparent 2px,
-        rgba(0, 200, 50, 0.04) 2px,
-        rgba(0, 200, 50, 0.04) 3px
+        0deg, transparent, transparent 2px,
+        rgba(0, 200, 50, 0.07) 2px, rgba(0, 200, 50, 0.07) 3px
       );
       color: #fff;
       padding: 1rem 1.5rem 1.1rem;
@@ -48,7 +49,7 @@
     }
 
     .back-link {
-      color: rgba(255, 255, 255, 0.5);
+      color: rgba(255,255,255,0.55);
       text-decoration: none;
       font-family: 'Share Tech Mono', monospace;
       font-size: 0.78rem;
@@ -61,49 +62,381 @@
       font-family: 'Share Tech Mono', monospace;
       font-size: clamp(0.78rem, 2.5vw, 1.05rem);
       color: #00cc44;
-      text-shadow: 0 0 14px rgba(0, 204, 68, 0.45);
+      text-shadow: 0 0 14px rgba(0,204,68,0.45);
       line-height: 1.6;
     }
 
     .ex-desc {
       font-family: 'Share Tech Mono', monospace;
       font-size: 0.78rem;
-      color: rgba(255, 255, 255, 0.4);
-      line-height: 1.5;
-      max-width: 64ch;
+      color: rgba(255,255,255,0.4);
     }
 
-    /* ── Placeholder ─────────────────────────────────────────── */
+    /* ── Layout ──────────────────────────────────────────── */
     .ex-main {
       flex: 1;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    .left-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      position: sticky;
+      top: 1.25rem;
+    }
+
+    /* ── Phase badge ─────────────────────────────────────── */
+    .phase-badge {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--green-glow);
+      letter-spacing: 0.08em;
+      background: rgba(0,204,68,0.07);
+      border: 1px solid rgba(0,204,68,0.2);
+      border-radius: 4px;
+      padding: 0.25rem 0.65rem;
+      align-self: flex-start;
+    }
+
+    /* ── Conveyor area ───────────────────────────────────── */
+    .conveyor-area {
+      background: var(--panel);
+      border: 1px solid rgba(0,130,40,0.22);
+      border-radius: 8px;
+      padding: 1.5rem 1.25rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .conveyor {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Item zone: left slot on the belt */
+    .item-zone {
+      min-width: 4.5rem;
+      min-height: 4.5rem;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 4rem 1.5rem;
+      border: 2px dashed rgba(0,130,40,0.25);
+      border-radius: 8px;
+      transition: border-color 0.25s;
+      flex-shrink: 0;
     }
+    .item-zone.has-item { border-color: var(--green-lt); }
 
-    .terminal-block {
+    /* Belt arrows */
+    .belt-seg {
+      flex: 1;
       font-family: 'Share Tech Mono', monospace;
       font-size: 1rem;
+      color: rgba(0,150,50,0.4);
+      text-align: center;
+      user-select: none;
+      letter-spacing: -0.1em;
+      transition: color 0.15s, text-shadow 0.15s;
+    }
+    .belt-seg.active {
+      color: var(--green-glow);
+      text-shadow: 0 0 8px rgba(0,204,68,0.5);
+    }
+
+    /* Machine box */
+    .machine-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.15rem;
+      width: 5.5rem;
+      height: 4.5rem;
+      border: 2px solid var(--green-lt);
+      border-radius: 6px;
+      background: rgba(0,204,68,0.04);
+      flex-shrink: 0;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .machine-box.active {
+      border-color: var(--green-glow);
+      box-shadow: 0 0 14px rgba(0,204,68,0.45), inset 0 0 8px rgba(0,204,68,0.08);
+      animation: machine-pulse 0.7s ease-in-out infinite;
+    }
+
+    .machine-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.05rem;
+      font-weight: 700;
       color: var(--green);
-      line-height: 2.4;
-      text-align: left;
     }
 
-    .terminal-block .dim { color: rgba(27, 94, 32, 0.45); }
-
-    .cursor {
-      display: inline-block;
-      width: 0.6em;
-      height: 1.1em;
-      background: var(--green-lt);
-      vertical-align: text-bottom;
-      animation: blink 1s step-end infinite;
+    .machine-proc {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--green-glow);
+      letter-spacing: 0.15em;
+      animation: proc-blink 0.45s step-end infinite;
     }
 
-    @keyframes blink {
+    /* Output zone: right slot */
+    .output-zone {
+      min-width: 5.5rem;
+      min-height: 4.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--green-glow);
+      border: 2px dashed transparent;
+      border-radius: 8px;
+      text-align: center;
+      flex-shrink: 0;
+      transition: border-color 0.3s, background 0.3s;
+    }
+    .output-zone.visible {
+      border-color: rgba(0,204,68,0.3);
+      background: rgba(0,204,68,0.04);
+    }
+
+    /* Result label below conveyor */
+    .result-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.88rem;
+      color: var(--green);
+      min-height: 1.4em;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.35s;
+    }
+    .result-label.visible { opacity: 1; }
+
+    /* Conveyor item (observation phase) */
+    .conv-item {
+      font-size: 2.6rem;
+      line-height: 1;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+    .conv-item.fade-out { opacity: 0; transform: scale(0.4); }
+
+    /* ── Draggable chip ──────────────────────────────────── */
+    .draggable-item {
+      font-size: 2.6rem;
+      line-height: 1;
+      padding: 0.3rem 0.45rem;
+      border: 2px solid var(--green-lt);
+      border-radius: 8px;
+      background: rgba(0,204,68,0.07);
+      cursor: grab;
+      user-select: none;
+      transition: background 0.15s, transform 0.15s;
+    }
+    .draggable-item:hover { background: rgba(0,204,68,0.16); transform: translateY(-2px); }
+    .draggable-item.dragging { opacity: 0.4; cursor: grabbing; }
+
+    /* ── Instruction & feedback ──────────────────────────── */
+    .instr-text {
+      font-size: 0.88rem;
+      color: #2a5c24;
+      line-height: 1.65;
+      background: rgba(0,130,40,0.05);
+      border-left: 3px solid var(--green-lt);
+      padding: 0.6rem 0.8rem;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .feedback {
+      font-size: 0.9rem;
+      font-weight: 700;
+      min-height: 1.4em;
+    }
+    .feedback.ok  { color: var(--ok); }
+    .feedback.bad { color: var(--bad); }
+
+    /* ── Buttons ─────────────────────────────────────────── */
+    .btn {
+      padding: 0.6rem 1.25rem;
+      border: none;
+      border-radius: 6px;
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      align-self: flex-start;
+    }
+    .btn:hover  { opacity: 0.85; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary   { background: var(--green); color: #fff; }
+    .btn-secondary {
+      background: rgba(0,130,40,0.1);
+      color: var(--green);
+      border: 1.5px solid rgba(0,130,40,0.3);
+    }
+
+    /* ── Collision overlay ───────────────────────────────── */
+    .collision-overlay {
+      display: none;
+      flex-direction: column;
+      gap: 0.75rem;
+      background: #fff7f7;
+      border: 2px solid var(--bad);
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      animation: fade-in 0.4s ease-out;
+    }
+    .collision-overlay.visible { display: flex; }
+
+    .collision-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.1rem;
+      color: var(--bad);
+    }
+
+    .collision-desc {
+      font-size: 0.88rem;
+      color: #5a1010;
+      line-height: 1.7;
+    }
+
+    .collision-desc strong { color: var(--bad); }
+
+    /* ── Right panel: buckets ────────────────────────────── */
+    .panel-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.72rem;
+      color: #4a7a42;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .bucket-array {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .bucket-slot {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.35rem 0.6rem;
+      min-height: 3.2rem;
+      border: 1.5px dashed rgba(0,130,40,0.22);
+      border-radius: 6px;
+      background: #fff;
+      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    }
+    .bucket-slot.drag-over {
+      border-color: var(--green-lt);
+      background: rgba(0,204,68,0.06);
+      border-style: solid;
+    }
+    .bucket-slot.filled {
+      border-style: solid;
+      border-color: rgba(0,130,40,0.35);
+    }
+    .bucket-slot.flash-bad {
+      animation: slot-flash-bad 0.45s ease-out;
+    }
+    .bucket-slot.collision {
+      border-color: var(--bad);
+      background: rgba(198,40,40,0.04);
+      box-shadow: 0 0 10px rgba(198,40,40,0.22);
+      animation: shake 0.5s ease-in-out;
+    }
+
+    .bucket-index {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--green);
+      min-width: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    .bucket-contents {
+      display: flex;
+      align-items: center;
+      gap: 0.2rem;
+      flex-wrap: wrap;
+    }
+
+    .bucket-emoji {
+      font-size: 1.8rem;
+      line-height: 1;
+      animation: receive 0.4s ease-out;
+    }
+
+    .collision-tag {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: var(--bad);
+      background: rgba(198,40,40,0.1);
+      border: 1px solid rgba(198,40,40,0.3);
+      border-radius: 3px;
+      padding: 0.1rem 0.35rem;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Animations ──────────────────────────────────────── */
+    @keyframes machine-pulse {
+      0%, 100% { box-shadow: 0 0 4px rgba(0,204,68,0.2); }
+      50%       { box-shadow: 0 0 20px rgba(0,204,68,0.55), inset 0 0 10px rgba(0,204,68,0.12); }
+    }
+
+    @keyframes proc-blink {
       0%, 100% { opacity: 1; }
       50%       { opacity: 0; }
+    }
+
+    @keyframes receive {
+      0%   { transform: scale(1.5); opacity: 0.4; }
+      60%  { transform: scale(0.9); }
+      100% { transform: scale(1);   opacity: 1; }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-5px); }
+      40%, 80% { transform: translateX(5px); }
+    }
+
+    @keyframes slot-flash-bad {
+      0%, 100% { background: #fff; }
+      40%       { background: rgba(198,40,40,0.1); border-color: var(--bad); }
+    }
+
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width: 720px) {
+      .ex-main { grid-template-columns: 1fr; padding: 1rem; }
+      .right-panel { position: static; }
+      .conveyor { flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
+      .belt-seg { flex: 0 0 auto; }
     }
   </style>
 </head>
@@ -111,18 +444,424 @@
 
 <header class="ex-header">
   <a class="back-link" href="../index.html#hash">← Tablas Hash</a>
-  <h1 class="ex-title">01 — Función Hash</h1>
-  <p class="ex-desc">// Calcula posiciones de inserción con h(k) = k mod m.</p>
+  <h1 class="ex-title">01 — Clasificador de Símbolos</h1>
+  <p class="ex-desc">// Una función hash mapea cada clave a un índice del array.</p>
 </header>
 
 <main class="ex-main">
-  <div class="terminal-block">
-    <p><span class="dim">$</span> loading exercise...</p>
-    <p><span class="dim">></span> // Ejercicio en construcción</p>
-    <p><span class="dim">></span> // Próximamente</p>
-    <p><span class="cursor"></span></p>
-  </div>
+
+  <!-- LEFT: conveyor + controls -->
+  <section class="left-panel" aria-label="Cinta transportadora y controles">
+
+    <div class="phase-badge" id="phase-badge">Fase 1 de 3 — Observación</div>
+
+    <div class="conveyor-area">
+      <div class="conveyor" id="conveyor" aria-label="Cinta transportadora">
+        <div class="item-zone" id="item-zone" aria-label="Objeto en la cinta"></div>
+        <span class="belt-seg" id="belt-left"  aria-hidden="true">══════▶</span>
+        <div class="machine-box" id="machine-box" aria-label="Función hash">
+          <span class="machine-label">h(k)</span>
+          <span class="machine-proc" id="machine-proc" hidden aria-hidden="true">···</span>
+        </div>
+        <span class="belt-seg" id="belt-right" aria-hidden="true">══▶</span>
+        <div class="output-zone" id="output-zone" aria-live="polite"></div>
+      </div>
+      <div class="result-label" id="result-label" aria-live="polite"></div>
+    </div>
+
+    <p class="instr-text" id="instr-text">
+      Observa cómo la máquina asigna cada objeto a su cubeta.
+    </p>
+
+    <p class="feedback" id="feedback" aria-live="polite"></p>
+
+    <button class="btn btn-primary" id="btn-action" hidden>Ver siguiente →</button>
+
+    <div class="collision-overlay" id="collision-overlay" role="alert">
+      <p class="collision-title">💥 ¡Colisión!</p>
+      <p class="collision-desc">
+        <strong>🐶</strong> y <strong>🐱</strong> son claves distintas, pero
+        la función hash les asignó el mismo índice (<strong>4</strong>).
+        Esto se llama <strong>colisión</strong>.
+        Los próximos ejercicios mostrarán cómo resolverlas.
+      </p>
+      <button class="btn btn-secondary" id="btn-restart">↺ Volver a empezar</button>
+    </div>
+
+  </section>
+
+  <!-- RIGHT: bucket array -->
+  <aside class="right-panel" aria-label="Array de cubetas">
+    <p class="panel-label">Array — 6 cubetas</p>
+    <div class="bucket-array" id="bucket-array" role="list"
+         aria-label="Cubetas del array hash"></div>
+  </aside>
+
 </main>
 
+<script>
+(function () {
+  'use strict';
+
+  /* ── Data ───────────────────────────────────────────────── */
+  var OBS_ITEMS = [
+    { emoji: '🐶', name: 'perro', bucket: 4 },
+    { emoji: '🔑', name: 'llave', bucket: 1 },
+    { emoji: '📚', name: 'libro', bucket: 2 },
+  ];
+  var PH2_ITEM = { emoji: '🐶', name: 'perro', bucket: 4 };
+  var PH3_ITEM = { emoji: '🐱', name: 'gato',  bucket: 4 };
+  var N = 6; // number of buckets
+
+  /* ── State ──────────────────────────────────────────────── */
+  var phase   = 1;
+  var obsStep = 0;
+  var btnMode = 'obs'; // 'obs' | 'ph2-continue'
+
+  /* ── DOM ────────────────────────────────────────────────── */
+  var $badge    = document.getElementById('phase-badge');
+  var $itemZone = document.getElementById('item-zone');
+  var $machine  = document.getElementById('machine-box');
+  var $proc     = document.getElementById('machine-proc');
+  var $beltL    = document.getElementById('belt-left');
+  var $beltR    = document.getElementById('belt-right');
+  var $output   = document.getElementById('output-zone');
+  var $result   = document.getElementById('result-label');
+  var $instr    = document.getElementById('instr-text');
+  var $fb       = document.getElementById('feedback');
+  var $btn      = document.getElementById('btn-action');
+  var $buckets  = document.getElementById('bucket-array');
+  var $overlay  = document.getElementById('collision-overlay');
+
+  /* ── Bucket helpers ─────────────────────────────────────── */
+  function buildBuckets() {
+    $buckets.innerHTML = '';
+    for (var i = 0; i < N; i++) {
+      var slot = document.createElement('div');
+      slot.className = 'bucket-slot';
+      slot.dataset.index = i;
+      slot.setAttribute('role', 'listitem');
+      slot.setAttribute('aria-label', 'Cubeta ' + i);
+
+      var idx = document.createElement('span');
+      idx.className = 'bucket-index';
+      idx.textContent = i;
+
+      var contents = document.createElement('div');
+      contents.className = 'bucket-contents';
+      contents.id = 'bc-' + i;
+
+      slot.appendChild(idx);
+      slot.appendChild(contents);
+      $buckets.appendChild(slot);
+    }
+  }
+
+  function fillBucket(index, emoji) {
+    var el = document.createElement('span');
+    el.className = 'bucket-emoji';
+    el.setAttribute('aria-label', emoji);
+    el.textContent = emoji;
+    document.getElementById('bc-' + index).appendChild(el);
+    var slot = $buckets.querySelector('[data-index="' + index + '"]');
+    if (slot) slot.classList.add('filled');
+  }
+
+  /* ── UI helpers ─────────────────────────────────────────── */
+  function setFeedback(text, type) {
+    $fb.textContent = text;
+    $fb.className = 'feedback' + (type ? ' ' + type : '');
+  }
+
+  function clearFeedback() {
+    $fb.textContent = '';
+    $fb.className = 'feedback';
+  }
+
+  function flashBelt(el) {
+    el.classList.add('active');
+    setTimeout(function () { el.classList.remove('active'); }, 450);
+  }
+
+  function resetConveyor() {
+    $itemZone.innerHTML = '';
+    $itemZone.classList.remove('has-item');
+    $machine.classList.remove('active');
+    $proc.hidden = true;
+    $output.textContent = '';
+    $output.classList.remove('visible');
+    $result.textContent = '';
+    $result.classList.remove('visible');
+  }
+
+  function makeChip(item) {
+    var chip = document.createElement('div');
+    chip.className = 'draggable-item';
+    chip.draggable = true;
+    chip.dataset.bucket = item.bucket;
+    chip.dataset.emoji  = item.emoji;
+    chip.setAttribute('aria-label', 'Arrastra el ' + item.name + ' a una cubeta');
+    chip.textContent = item.emoji;
+    return chip;
+  }
+
+  /* ── Phase 1: Observation ───────────────────────────────── */
+  function runObs(step) {
+    var item = OBS_ITEMS[step];
+    $btn.hidden = true;
+    clearFeedback();
+    resetConveyor();
+
+    // 1. Show item on belt
+    var ci = document.createElement('span');
+    ci.className = 'conv-item';
+    ci.setAttribute('aria-hidden', 'true');
+    ci.textContent = item.emoji;
+    $itemZone.appendChild(ci);
+    $itemZone.classList.add('has-item');
+
+    // 2. Item travels toward machine
+    setTimeout(function () {
+      flashBelt($beltL);
+      ci.classList.add('fade-out');
+    }, 700);
+
+    // 3. Item enters machine
+    setTimeout(function () {
+      $itemZone.innerHTML = '';
+      $itemZone.classList.remove('has-item');
+      $machine.classList.add('active');
+      $proc.hidden = false;
+    }, 1100);
+
+    // 4. Machine outputs result
+    setTimeout(function () {
+      $machine.classList.remove('active');
+      $proc.hidden = true;
+      flashBelt($beltR);
+      $output.textContent = '→ cubeta ' + item.bucket;
+      $output.classList.add('visible');
+      $result.textContent = 'h(' + item.emoji + ')  =  ' + item.bucket;
+      $result.classList.add('visible');
+    }, 2000);
+
+    // 5. Item lands in bucket, reveal button
+    setTimeout(function () {
+      fillBucket(item.bucket, item.emoji);
+      var isLast = (step === OBS_ITEMS.length - 1);
+      $btn.textContent = isLast ? '¡Entendido! →' : 'Ver siguiente →';
+      $btn.hidden = false;
+    }, 2600);
+  }
+
+  /* ── Phase 2: Action ────────────────────────────────────── */
+  function startPhase2() {
+    phase = 2;
+    $badge.textContent = 'Fase 2 de 3 — Acción';
+    clearFeedback();
+    $btn.hidden = true;
+    resetConveyor();
+
+    $instr.textContent =
+      'Aparece un nuevo ' + PH2_ITEM.name + ' ' + PH2_ITEM.emoji +
+      '. ¿A qué cubeta debe ir? Arrástralo.';
+
+    $itemZone.appendChild(makeChip(PH2_ITEM));
+    $itemZone.classList.add('has-item');
+  }
+
+  /* ── Phase 3: Conflict ──────────────────────────────────── */
+  function startPhase3() {
+    phase = 3;
+    $badge.textContent = 'Fase 3 de 3 — Conflicto';
+    clearFeedback();
+    $btn.hidden = true;
+
+    // Reset buckets to phase-1 state so collision is dog vs. cat
+    buildBuckets();
+    OBS_ITEMS.forEach(function (it) { fillBucket(it.bucket, it.emoji); });
+
+    resetConveyor();
+    $instr.textContent = 'Observa qué hace la máquina con el ' + PH3_ITEM.name + ' ' + PH3_ITEM.emoji + '.';
+
+    // Same machine animation as phase 1
+    var ci = document.createElement('span');
+    ci.className = 'conv-item';
+    ci.setAttribute('aria-hidden', 'true');
+    ci.textContent = PH3_ITEM.emoji;
+    $itemZone.appendChild(ci);
+    $itemZone.classList.add('has-item');
+
+    setTimeout(function () {
+      flashBelt($beltL);
+      ci.classList.add('fade-out');
+    }, 700);
+
+    setTimeout(function () {
+      $itemZone.innerHTML = '';
+      $itemZone.classList.remove('has-item');
+      $machine.classList.add('active');
+      $proc.hidden = false;
+    }, 1100);
+
+    setTimeout(function () {
+      $machine.classList.remove('active');
+      $proc.hidden = true;
+      flashBelt($beltR);
+      $output.textContent = '→ cubeta ' + PH3_ITEM.bucket;
+      $output.classList.add('visible');
+      $result.textContent = 'h(' + PH3_ITEM.emoji + ')  =  ' + PH3_ITEM.bucket;
+      $result.classList.add('visible');
+
+      $instr.textContent =
+        'La máquina asigna el ' + PH3_ITEM.name + ' a la cubeta ' +
+        PH3_ITEM.bucket + '. Arrástralo allí.';
+
+      $itemZone.appendChild(makeChip(PH3_ITEM));
+      $itemZone.classList.add('has-item');
+    }, 2000);
+  }
+
+  /* ── Drop handler ───────────────────────────────────────── */
+  function handleDrop(targetIndex) {
+    var chip = $itemZone.querySelector('.draggable-item');
+    if (!chip) return;
+
+    var correct = parseInt(chip.dataset.bucket, 10);
+    var emoji   = chip.dataset.emoji;
+
+    if (targetIndex !== correct) {
+      var badSlot = $buckets.querySelector('[data-index="' + targetIndex + '"]');
+      if (badSlot) {
+        badSlot.classList.add('flash-bad');
+        setTimeout(function () { badSlot.classList.remove('flash-bad'); }, 500);
+      }
+      if (phase === 2) {
+        setFeedback('Incorrecto. Fíjate en la fase 1: ¿a qué cubeta fue el ' + chip.dataset.emoji + '?', 'bad');
+      } else {
+        setFeedback('La máquina ha indicado la cubeta ' + correct + '. Sigue su regla.', 'bad');
+      }
+      return;
+    }
+
+    // Correct
+    clearFeedback();
+    chip.remove();
+    $itemZone.classList.remove('has-item');
+    fillBucket(correct, emoji);
+
+    if (phase === 2) {
+      setFeedback('¡Correcto! Una función hash siempre asigna la misma clave al mismo índice.', 'ok');
+      setTimeout(function () {
+        clearFeedback();
+        btnMode = 'ph2-continue';
+        $btn.textContent = 'Continuar →';
+        $btn.hidden = false;
+      }, 1800);
+    } else {
+      setTimeout(triggerCollision, 400);
+    }
+  }
+
+  /* ── Collision reveal ───────────────────────────────────── */
+  function triggerCollision() {
+    var slot = $buckets.querySelector('[data-index="4"]');
+    if (slot) {
+      slot.classList.add('collision');
+      var bc = document.getElementById('bc-4');
+      var tag = document.createElement('span');
+      tag.className = 'collision-tag';
+      tag.textContent = '¡COLISIÓN!';
+      bc.appendChild(tag);
+    }
+    $overlay.classList.add('visible');
+    $overlay.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  /* ── Button ─────────────────────────────────────────────── */
+  $btn.addEventListener('click', function () {
+    $btn.hidden = true;
+    if (btnMode === 'obs') {
+      obsStep++;
+      if (obsStep < OBS_ITEMS.length) {
+        runObs(obsStep);
+      } else {
+        startPhase2();
+      }
+    } else if (btnMode === 'ph2-continue') {
+      startPhase3();
+    }
+  });
+
+  /* ── Restart ────────────────────────────────────────────── */
+  document.getElementById('btn-restart').addEventListener('click', function () {
+    $overlay.classList.remove('visible');
+    phase   = 1;
+    obsStep = 0;
+    btnMode = 'obs';
+
+    buildBuckets();
+    clearFeedback();
+    $badge.textContent = 'Fase 1 de 3 — Observación';
+    $instr.textContent = 'Observa cómo la máquina asigna cada objeto a su cubeta.';
+    $btn.hidden = true;
+    resetConveyor();
+    runObs(0);
+  });
+
+  /* ── Drag & drop (event delegation) ────────────────────── */
+  document.body.addEventListener('dragstart', function (e) {
+    var chip = e.target.closest('.draggable-item');
+    if (!chip) return;
+    e.dataTransfer.setData('text/plain', '1');
+    e.dataTransfer.effectAllowed = 'move';
+    chip.classList.add('dragging');
+  });
+
+  document.body.addEventListener('dragend', function () {
+    document.querySelectorAll('.draggable-item.dragging').forEach(function (el) {
+      el.classList.remove('dragging');
+    });
+  });
+
+  document.body.addEventListener('dragenter', function (e) {
+    var slot = e.target.closest('.bucket-slot');
+    if (!slot) return;
+    document.querySelectorAll('.bucket-slot.drag-over').forEach(function (el) {
+      el.classList.remove('drag-over');
+    });
+    slot.classList.add('drag-over');
+  }, true);
+
+  document.body.addEventListener('dragover', function (e) {
+    if (e.target.closest('.bucket-slot')) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    }
+  });
+
+  document.body.addEventListener('dragleave', function (e) {
+    var slot = e.target.closest('.bucket-slot');
+    if (slot && !slot.contains(e.relatedTarget)) {
+      slot.classList.remove('drag-over');
+    }
+  });
+
+  document.body.addEventListener('drop', function (e) {
+    var slot = e.target.closest('.bucket-slot');
+    if (!slot) return;
+    e.preventDefault();
+    document.querySelectorAll('.bucket-slot.drag-over').forEach(function (el) {
+      el.classList.remove('drag-over');
+    });
+    handleDrop(parseInt(slot.dataset.index, 10));
+  });
+
+  /* ── Boot ───────────────────────────────────────────────── */
+  buildBuckets();
+  runObs(0);
+
+}());
+</script>
 </body>
 </html>
