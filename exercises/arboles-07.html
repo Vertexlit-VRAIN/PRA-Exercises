@@ -113,19 +113,19 @@
       <p class="instr-text" id="p2-one-instr" style="margin-top:.5rem"></p>
     </div>
 
-    <!-- Phase 2a (two children — click successor) -->
+    <!-- Phase 2a (two children — click min of right subtree) -->
     <div id="area-p2a" hidden>
-      <span class="phase-badge">Fase 2a — Sucesor en inorden</span>
+      <span class="phase-badge">Fase 2a — Mín. subárbol derecho</span>
       <p class="instr-text" style="margin-top:.5rem">
-        Haz clic en el <b>sucesor en inorden</b> — el nodo más pequeño del <b>subárbol derecho</b>.
+        Haz clic en el <b>nodo más pequeño del subárbol derecho</b>: ve al hijo derecho y luego siempre al hijo izquierdo hasta que no haya más.
       </p>
     </div>
 
-    <!-- Phase 2b (two children — click predecessor) -->
+    <!-- Phase 2b (two children — click max of left subtree) -->
     <div id="area-p2b" hidden>
-      <span class="phase-badge">Fase 2b — Predecesor en inorden</span>
+      <span class="phase-badge">Fase 2b — Máx. subárbol izquierdo</span>
       <p class="instr-text" style="margin-top:.5rem">
-        Haz clic en el <b>predecesor en inorden</b> — el nodo más grande del <b>subárbol izquierdo</b>.
+        Haz clic en el <b>nodo más grande del subárbol izquierdo</b>: ve al hijo izquierdo y luego siempre al hijo derecho hasta que no haya más.
       </p>
     </div>
 
@@ -432,8 +432,8 @@
       var correctOpt, opts;
       var succKey = nodes[succIdx].key;
       var predKey = nodes[predIdx].key;
-      var optA = 'Sucesor — ' + succKey + '  ·  ' + stepsSucc + ' paso' + (stepsSucc > 1 ? 's' : '');
-      var optB = 'Predecesor — ' + predKey + '  ·  ' + stepsPred + ' paso' + (stepsPred > 1 ? 's' : '');
+      var optA = 'Mín. subárbol derecho — ' + succKey + '  ·  ' + stepsSucc + ' paso' + (stepsSucc > 1 ? 's' : '');
+      var optB = 'Máx. subárbol izquierdo — ' + predKey + '  ·  ' + stepsPred + ' paso' + (stepsPred > 1 ? 's' : '');
       var optC = 'Son equivalentes (' + stepsSucc + ' pasos)';
 
       if (stepsSucc < stepsPred)       { correctOpt = 'A'; }
@@ -447,8 +447,7 @@
       ];
 
       document.getElementById('p2c-instr').innerHTML =
-        '¿Qué nodo es <b>más eficiente</b> para sustituir a <b>' + nodes[targetIdx].key + '</b>? ' +
-        '(el que requiere menos pasos para localizarse desde el nodo eliminado)';
+        '¿Qué nodo requiere <b>menos pasos</b> para localizarse desde <b>' + nodes[targetIdx].key + '</b> y usarlo como sustituto?';
 
       var $choices = document.getElementById('p2c-choices');
       $choices.innerHTML = '';
@@ -541,7 +540,7 @@
             setTimeout(function () { setFb('', ''); startPhase('2b'); }, 700);
           } else {
             allCorrect = false;
-            setFb('✗ No es el mínimo del subárbol derecho. El sucesor correcto es ' + nodes[succIdx].key + '.', 'bad');
+            setFb('✗ No es el mínimo del subárbol derecho. El nodo correcto es ' + nodes[succIdx].key + '.', 'bad');
             setTimeout(function () { setFb('', ''); startPhase('2b'); }, 1200);
           }
         }
@@ -556,7 +555,7 @@
             setTimeout(function () { setFb('', ''); startPhase('2c'); }, 700);
           } else {
             allCorrect = false;
-            setFb('✗ No es el máximo del subárbol izquierdo. El predecesor correcto es ' + nodes[predIdx].key + '.', 'bad');
+            setFb('✗ No es el máximo del subárbol izquierdo. El nodo correcto es ' + nodes[predIdx].key + '.', 'bad');
             setTimeout(function () { setFb('', ''); startPhase('2c'); }, 1200);
           }
         }
@@ -578,8 +577,8 @@
       allCorrect = false;
       btns[choiceMap[chosen]].classList.add('bad');
       var msg = correct === 'C' ? 'Son equivalentes.' :
-                correct === 'A' ? 'El sucesor (' + nodes[succIdx].key + ') requiere menos pasos (' + stepsSucc + ' vs ' + stepsPred + ').' :
-                                  'El predecesor (' + nodes[predIdx].key + ') requiere menos pasos (' + stepsPred + ' vs ' + stepsSucc + ').';
+                correct === 'A' ? 'El mínimo del subárbol derecho (' + nodes[succIdx].key + ') requiere menos pasos (' + stepsSucc + ' vs ' + stepsPred + ').' :
+                                  'El máximo del subárbol izquierdo (' + nodes[predIdx].key + ') requiere menos pasos (' + stepsPred + ' vs ' + stepsSucc + ').';
       setFb('✗ ' + msg, 'bad');
     }
 
