@@ -33,17 +33,20 @@
 
     /* ── Header ─────────────────────────────────────────────── */
     .ex-header {
-      background: linear-gradient(135deg, #3e2000, #5d3a00);
+      background-color: #0a1e10;
+      background-image:
+        radial-gradient(ellipse at 20% 80%, rgba(20, 70, 30, 0.7) 0%, transparent 55%),
+        radial-gradient(ellipse at 80% 20%, rgba(10, 50, 20, 0.5) 0%, transparent 55%);
       color: #fff;
       padding: 1rem 1.5rem 1.1rem;
-      border-bottom: 4px solid var(--amber);
+      border-bottom: 1px solid rgba(255, 214, 0, 0.12);
       display: flex;
       flex-direction: column;
       gap: 0.3rem;
     }
 
     .back-link {
-      color: var(--amber-lt);
+      color: rgba(255, 255, 255, 0.6);
       text-decoration: none;
       font-size: 0.78rem;
       font-weight: 700;
@@ -54,13 +57,14 @@
     .ex-title {
       font-family: 'Press Start 2P', monospace;
       font-size: clamp(0.52rem, 2vw, 0.78rem);
-      color: #ffe082;
+      color: #ffd600;
+      text-shadow: 2px 2px 0 #3d1f00, 3px 3px 0 rgba(0, 0, 0, 0.5);
       line-height: 1.8;
     }
 
     .ex-desc {
       font-size: 0.82rem;
-      color: #ffcc80;
+      color: rgba(255, 255, 255, 0.5);
       line-height: 1.5;
       max-width: 64ch;
     }
