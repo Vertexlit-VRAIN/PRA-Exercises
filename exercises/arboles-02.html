@@ -192,14 +192,14 @@
       var par = nodes[nd.parent], line = document.createElementNS(NS, 'line');
       line.setAttribute('x1', par.x); line.setAttribute('y1', par.y);
       line.setAttribute('x2', nd.x);  line.setAttribute('y2', nd.y);
-      line.setAttribute('stroke', '#c8b89a'); line.setAttribute('stroke-width', '2');
+      line.setAttribute('stroke', '#c5a86e'); line.setAttribute('stroke-width', '2');
       svg.appendChild(line);
     });
     nodes.forEach(function(nd) {
       var g = document.createElementNS(NS, 'g');
       var c = document.createElementNS(NS, 'circle');
       c.setAttribute('cx', nd.x); c.setAttribute('cy', nd.y); c.setAttribute('r', R);
-      c.setAttribute('fill', '#fff8e1'); c.setAttribute('stroke', '#8d6e63'); c.setAttribute('stroke-width', '2.5');
+      c.setAttribute('fill', '#fff8e1'); c.setAttribute('stroke', '#9a6830'); c.setAttribute('stroke-width', '2.5');
       var t = document.createElementNS(NS, 'text');
       t.setAttribute('x', nd.x); t.setAttribute('y', nd.y + 5);
       t.setAttribute('text-anchor', 'middle'); t.setAttribute('font-size', '14');

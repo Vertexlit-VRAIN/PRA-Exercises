@@ -221,8 +221,8 @@
       var line     = document.createElementNS(NS, 'line');
       line.setAttribute('x1', par.x); line.setAttribute('y1', par.y);
       line.setAttribute('x2', nd.x);  line.setAttribute('y2', nd.y);
-      line.setAttribute('stroke',       isHLedge ? '#b35c00' : '#c8b89a');
-      line.setAttribute('stroke-width', isHLedge ? '3.5' : '2');
+      line.setAttribute('stroke',       isHLedge ? '#ffd600' : '#c5a86e');
+      line.setAttribute('stroke-width', isHLedge ? '4' : '2');
       svg.appendChild(line);
     });
 
@@ -232,8 +232,8 @@
       var circ = document.createElementNS(NS, 'circle');
       circ.setAttribute('cx', nd.x);  circ.setAttribute('cy', nd.y);
       circ.setAttribute('r', R);
-      circ.setAttribute('fill',         isH ? '#b35c00' : '#fff8e1');
-      circ.setAttribute('stroke',       isH ? '#5d3a00' : '#8d6e63');
+      circ.setAttribute('fill',         isH ? '#ffd600' : '#fff8e1');
+      circ.setAttribute('stroke',       isH ? '#0a1e10' : '#9a6830');
       circ.setAttribute('stroke-width', '2.5');
 
       var txt = document.createElementNS(NS, 'text');
@@ -401,6 +401,10 @@
     document.getElementById('btn-next').hidden = false;
     document.getElementById('score-ok').textContent    = scoreOk;
     document.getElementById('score-total').textContent = scoreAll;
+
+    var qPanel = document.querySelector('.q-panel');
+    qPanel.classList.add(chosen === correct ? 'panel-flash-ok' : 'panel-flash-bad');
+    setTimeout(function() { qPanel.classList.remove('panel-flash-ok', 'panel-flash-bad'); }, 700);
   }
 
   /* ── Events ───────────────────────────────────────────────── */

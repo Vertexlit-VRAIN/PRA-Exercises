@@ -259,7 +259,7 @@
       var line = document.createElementNS(NS, 'line');
       line.setAttribute('x1', par.x); line.setAttribute('y1', par.y);
       line.setAttribute('x2', nd.x);  line.setAttribute('y2', nd.y);
-      line.setAttribute('stroke', '#c8b89a');
+      line.setAttribute('stroke', '#c5a86e');
       line.setAttribute('stroke-width', '2');
       svg.appendChild(line);
     }
@@ -284,8 +284,8 @@
 
       var c = document.createElementNS(NS, 'circle');
       c.setAttribute('cx', nd2.x); c.setAttribute('cy', nd2.y); c.setAttribute('r', R);
-      c.setAttribute('fill',         isH ? '#b35c00' : '#fff8e1');
-      c.setAttribute('stroke',       nd2.parent === null ? '#b35c00' : (isH ? '#5d3a00' : '#8d6e63'));
+      c.setAttribute('fill',         isH ? '#ffd600' : '#fff8e1');
+      c.setAttribute('stroke',       nd2.parent === null ? '#b35c00' : (isH ? '#0a1e10' : '#9a6830'));
       c.setAttribute('stroke-width', nd2.parent === null ? '3' : '2.5');
       g.appendChild(c);
 
@@ -704,7 +704,7 @@
 
     var fb = document.getElementById('m2-feedback');
     fb.textContent = ''; fb.className = 'feedback';
-    document.getElementById('m2-btn-next').style.display = 'none';
+    document.getElementById('m2-btn-next').hidden = true;
     answered = false;
   }
 
@@ -731,8 +731,12 @@
       fb.className = 'feedback bad';
     }
 
-    document.getElementById('m2-btn-next').style.display = '';
+    document.getElementById('m2-btn-next').hidden = false;
     updateScore();
+
+    var rPanel = document.getElementById('right-panel');
+    rPanel.classList.add(String(chosen) === String(correct) ? 'panel-flash-ok' : 'panel-flash-bad');
+    setTimeout(function() { rPanel.classList.remove('panel-flash-ok', 'panel-flash-bad'); }, 700);
   }
 
   /* ── Score ────────────────────────────────────────────────── */
