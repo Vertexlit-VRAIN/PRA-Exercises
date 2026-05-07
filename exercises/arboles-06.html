@@ -298,6 +298,8 @@
   }
 
   function counterText(q, idx) {
+    if (idx === 0)
+      return 'Empieza por la raíz — haz clic en el nodo ' + nodes[q.trace[0]].key + '.';
     return 'Nodo ' + (idx + 1) + ' de ' + q.trace.length + ' — siguiente: clave ' + nodes[q.trace[idx]].key;
   }
 
