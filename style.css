@@ -14,6 +14,15 @@
   --nav-h:       60px;
   --transition:  0.3s ease;
   --max-w:       1040px;
+
+  /* Theme color tokens */
+  --hash-accent:    #1b5e20;
+  --hash-bg:        #f7fcf8;
+  --arboles-accent: #b35c00;
+  --arboles-dk:     #ffd600;
+  --arboles-bg:     #fdfdf5;
+  --grafos-accent:  #1a237e;
+  --grafos-bg:      #f4f5fb;
 }
 
 html {
@@ -124,18 +133,18 @@ body {
 
 /* Active tab states per theme */
 .nav-tab[aria-selected="true"][data-theme="hash"] {
-  color: #1b5e20;
-  border-bottom-color: #1b5e20;
+  color: var(--hash-accent);
+  border-bottom-color: var(--hash-accent);
 }
 
 .nav-tab[aria-selected="true"][data-theme="arboles"] {
-  color: #b35c00;
-  border-bottom-color: #b35c00;
+  color: var(--arboles-accent);
+  border-bottom-color: var(--arboles-accent);
 }
 
 .nav-tab[aria-selected="true"][data-theme="grafos"] {
-  color: #1a237e;
-  border-bottom-color: #1a237e;
+  color: var(--grafos-accent);
+  border-bottom-color: var(--grafos-accent);
 }
 
 /* ─── Hamburger (mobile) ────────────────────────────────────────────────────── */
@@ -280,12 +289,12 @@ body {
 /* ─── THEME 1: Tablas Hash — Matrix / Terminal ──────────────────────────────── */
 
 .theme-hash {
-  background: #f7fcf8;
+  background: var(--hash-bg);
 }
 
 .theme-hash .panel-title {
   font-family: var(--font-mono);
-  color: #1b5e20;
+  color: var(--hash-accent);
 }
 
 .theme-hash .panel-header {
@@ -302,7 +311,7 @@ body {
   border-color: rgba(27, 94, 32, 0.18);
 }
 
-.theme-hash .card-link { color: #1b5e20; }
+.theme-hash .card-link { color: var(--hash-accent); }
 
 @keyframes matrix-flicker {
   0%, 96%, 100% { opacity: 1; }
@@ -314,7 +323,7 @@ body {
 /* ─── THEME 2: Árboles — Donkey Kong Jungle ─────────────────────────────────── */
 
 .theme-arboles {
-  background: #fdfdf5;
+  background: var(--arboles-bg);
 }
 
 .theme-arboles .panel-desc {
@@ -339,7 +348,7 @@ body {
 .theme-arboles .dk-title-strip .panel-title {
   font-family: var(--font-pixel);
   font-size: clamp(0.9rem, 2.8vw, 1.5rem);
-  color: #ffd600;
+  color: var(--arboles-dk);
   text-shadow:
     3px 3px 0 #3d1f00,
     6px 6px 0 rgba(0, 0, 0, 0.5);
@@ -364,7 +373,7 @@ body {
   border-color: rgba(179, 92, 0, 0.18);
 }
 
-.theme-arboles .card-link { color: #b35c00; }
+.theme-arboles .card-link { color: var(--arboles-accent); }
 
 @keyframes banana-wobble {
   0%, 100% { transform: rotate(-1deg); }
@@ -374,12 +383,12 @@ body {
 /* ─── THEME 3: Grafos — Blueprint / Constelaciones ──────────────────────────── */
 
 .theme-grafos {
-  background: #f4f5fb;
+  background: var(--grafos-bg);
 }
 
 .theme-grafos .panel-title {
   font-family: var(--font-orbit);
-  color: #1a237e;
+  color: var(--grafos-accent);
   letter-spacing: 0.06em;
 }
 
@@ -400,7 +409,7 @@ body {
   background: #f8f9ff;
 }
 
-.theme-grafos .card-link { color: #1a237e; }
+.theme-grafos .card-link { color: var(--grafos-accent); }
 
 @keyframes pulse-node {
   0%, 100% { opacity: 0.5; }
@@ -467,9 +476,9 @@ body {
     font-size: 0.75rem;
   }
 
-  .nav-tab[aria-selected="true"][data-theme="hash"]   { border-left-color: #1b5e20; border-bottom: none; }
-  .nav-tab[aria-selected="true"][data-theme="arboles"]{ border-left-color: #b35c00; border-bottom: none; }
-  .nav-tab[aria-selected="true"][data-theme="grafos"] { border-left-color: #1a237e; border-bottom: none; }
+  .nav-tab[aria-selected="true"][data-theme="hash"]   { border-left-color: var(--hash-accent);    border-bottom: none; }
+  .nav-tab[aria-selected="true"][data-theme="arboles"]{ border-left-color: var(--arboles-accent); border-bottom: none; }
+  .nav-tab[aria-selected="true"][data-theme="grafos"] { border-left-color: var(--grafos-accent);  border-bottom: none; }
 
   .panel-inner { padding: 2.5rem 1.25rem 4rem; }
 }

@@ -7,139 +7,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="arboles.css" />
   <style>
-    :root {
-      --amber:      #b35c00;
-      --amber-dark: #7c3f00;
-      --amber-lt:   #ffe0b2;
-      --bg:         #fffde7;
-      --panel:      #fff8e1;
-      --text:       #3e2000;
-      --ok:         #2e7d32;
-      --bad:        #c62828;
-    }
+    /* ── Unique to arboles-01 ───────────────────────────────── */
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { font-size: 18px; }
+    .q-panel { padding: 1.5rem; position: sticky; top: 1.25rem; }
 
-    body {
-      font-family: 'Space Grotesk', system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
+    .btn-outline { width: 100%; }
 
-    /* ── Header ─────────────────────────────────────────────── */
-    .ex-header {
-      background-color: #0a1e10;
-      background-image:
-        radial-gradient(ellipse at 20% 80%, rgba(20, 70, 30, 0.7) 0%, transparent 55%),
-        radial-gradient(ellipse at 80% 20%, rgba(10, 50, 20, 0.5) 0%, transparent 55%);
-      color: #fff;
-      padding: 1rem 1.5rem 1.1rem;
-      border-bottom: 1px solid rgba(255, 214, 0, 0.12);
-      display: flex;
-      flex-direction: column;
-      gap: 0.3rem;
-    }
+    /* MCQ answers are single numbers — can afford larger text */
+    .choice-btn { font-size: 1.15rem; }
 
-    .back-link {
-      color: rgba(255, 255, 255, 0.6);
-      text-decoration: none;
-      font-size: 0.78rem;
-      font-weight: 700;
-      transition: opacity 0.15s;
-    }
-    .back-link:hover { opacity: 0.7; }
-
-    .ex-title {
-      font-family: 'Press Start 2P', monospace;
-      font-size: clamp(0.52rem, 2vw, 0.78rem);
-      color: #ffd600;
-      text-shadow: 2px 2px 0 #3d1f00, 3px 3px 0 rgba(0, 0, 0, 0.5);
-      line-height: 1.8;
-    }
-
-    .ex-desc {
-      font-size: 0.82rem;
-      color: rgba(255, 255, 255, 0.5);
-      line-height: 1.5;
-      max-width: 64ch;
-    }
-
-    /* ── Layout ─────────────────────────────────────────────── */
-    .ex-main {
-      flex: 1;
-      max-width: 1100px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 1.5rem;
-      display: grid;
-      grid-template-columns: 3fr 2fr;
-      gap: 1.25rem;
-      align-items: start;
-    }
-
-    /* ── Tree panel ──────────────────────────────────────────── */
-    .tree-panel {
-      background: var(--panel);
-      border: 1px solid rgba(179,92,0,0.3);
-      border-radius: 8px;
-      padding: 1.25rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      box-shadow: 0 2px 12px rgba(179,92,0,0.07);
-    }
-
-    .panel-label {
-      font-size: 0.85rem;
-      color: #9e6a2a;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
-    #tree-svg {
-      width: 100%;
-      border-radius: 8px;
-      background: #fffef5;
-      border: 1px solid rgba(179,92,0,0.1);
-    }
-
-    /* ── Question panel ──────────────────────────────────────── */
-    .q-panel {
-      background: var(--panel);
-      border: 1px solid rgba(179,92,0,0.3);
-      border-radius: 8px;
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      box-shadow: 0 2px 12px rgba(179,92,0,0.07);
-      position: sticky;
-      top: 1.25rem;
-    }
-
-    .q-concept {
-      display: inline-block;
-      background: var(--amber);
-      color: #fff;
-      font-family: 'Press Start 2P', monospace;
-      font-size: 0.75rem;
-      padding: 0.3rem 0.65rem;
-      border-radius: 4px;
-      letter-spacing: 0.05em;
-      align-self: flex-start;
-    }
-
-    .q-text {
-      font-size: 1rem;
-      font-weight: 700;
-      line-height: 1.55;
-    }
-
+    /* Hint / definition box */
     .q-def {
       font-size: 0.78rem;
       color: #7a4f1a;
@@ -167,92 +46,7 @@
     }
     .btn-hint:hover { background: rgba(179,92,0,0.07); border-color: var(--amber); }
 
-    /* ── Choices ─────────────────────────────────────────────── */
-    .choices {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.55rem;
-    }
-
-    .choice-btn {
-      padding: 0.65rem 0.5rem;
-      border: 2px solid rgba(179,92,0,0.25);
-      border-radius: 8px;
-      background: #fff;
-      color: var(--text);
-      font-family: 'Space Grotesk', system-ui, sans-serif;
-      font-size: 1.15rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: background 0.12s, border-color 0.12s, transform 0.1s;
-      text-align: center;
-    }
-    .choice-btn:hover:not(:disabled) {
-      background: rgba(179,92,0,0.08);
-      border-color: var(--amber);
-      transform: translateY(-2px);
-    }
-    .choice-btn:disabled { cursor: default; }
-    .choice-btn.ok  { background: #e8f5e9; border-color: var(--ok);  color: var(--ok);  }
-    .choice-btn.bad { background: #ffebee; border-color: var(--bad); color: var(--bad); }
-
-    /* ── Feedback ────────────────────────────────────────────── */
-    .feedback {
-      font-size: 0.9rem;
-      font-weight: 700;
-      min-height: 1.4em;
-    }
-    .feedback.ok  { color: var(--ok); }
-    .feedback.bad { color: var(--bad); }
-
-    /* ── Buttons ─────────────────────────────────────────────── */
-    .btn {
-      padding: 0.65rem 1.25rem;
-      border: none;
-      border-radius: 8px;
-      font-family: 'Space Grotesk', system-ui, sans-serif;
-      font-size: 0.9rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: opacity 0.15s, transform 0.1s;
-    }
-    .btn:hover  { opacity: 0.85; transform: translateY(-1px); }
-    .btn:active { transform: translateY(0); }
-
-    .btn-primary {
-      background: var(--amber);
-      color: #fff;
-    }
-
-    .btn-outline {
-      background: rgba(179,92,0,0.08);
-      color: var(--amber-dark);
-      border: 1.5px solid rgba(179,92,0,0.3);
-      width: 100%;
-    }
-
-    /* ── Score footer ────────────────────────────────────────── */
-    .score-bar {
-      border-top: 2px solid rgba(179,92,0,0.15);
-      background: rgba(255,253,231,0.95);
-      padding: 0.7rem 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem;
-      font-size: 0.88rem;
-      font-weight: 700;
-      color: var(--amber-dark);
-    }
-
-    .score-num {
-      font-size: 1.1rem;
-      color: var(--amber);
-    }
-
-    /* ── Responsive ──────────────────────────────────────────── */
     @media (max-width: 700px) {
-      .ex-main { grid-template-columns: 1fr; padding: 1rem; }
       .q-panel { position: static; }
     }
   </style>
