@@ -317,13 +317,6 @@ body {
   background: #fdfdf5;
 }
 
-.theme-arboles .panel-title {
-  font-family: var(--font-pixel);
-  font-size: clamp(0.7rem, 2vw, 0.9rem);
-  color: #b35c00;
-  line-height: 1.9;
-}
-
 .theme-arboles .panel-desc {
   color: #5d4037;
 }
@@ -344,6 +337,7 @@ body {
 }
 
 .theme-arboles .dk-title-strip .panel-title {
+  font-family: var(--font-pixel);
   font-size: clamp(0.9rem, 2.8vw, 1.5rem);
   color: #ffd600;
   text-shadow:
@@ -357,7 +351,6 @@ body {
 .theme-arboles .panel-inner {
   padding-top: 2.5rem;
 }
-
 
 .theme-arboles .placeholder-text {
   font-family: var(--font-pixel);

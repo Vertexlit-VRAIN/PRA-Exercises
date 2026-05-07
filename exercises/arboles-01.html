@@ -85,8 +85,8 @@
     /* ── Tree panel ──────────────────────────────────────────── */
     .tree-panel {
       background: var(--panel);
-      border: 2px solid rgba(179,92,0,0.2);
-      border-radius: 12px;
+      border: 1px solid rgba(179,92,0,0.3);
+      border-radius: 8px;
       padding: 1.25rem;
       display: flex;
       flex-direction: column;
@@ -95,7 +95,7 @@
     }
 
     .panel-label {
-      font-size: 0.7rem;
+      font-size: 0.85rem;
       color: #9e6a2a;
       letter-spacing: 0.08em;
       text-transform: uppercase;
@@ -111,8 +111,8 @@
     /* ── Question panel ──────────────────────────────────────── */
     .q-panel {
       background: var(--panel);
-      border: 2px solid rgba(179,92,0,0.2);
-      border-radius: 12px;
+      border: 1px solid rgba(179,92,0,0.3);
+      border-radius: 8px;
       padding: 1.5rem;
       display: flex;
       flex-direction: column;
@@ -127,7 +127,7 @@
       background: var(--amber);
       color: #fff;
       font-family: 'Press Start 2P', monospace;
-      font-size: 0.52rem;
+      font-size: 0.75rem;
       padding: 0.3rem 0.65rem;
       border-radius: 4px;
       letter-spacing: 0.05em;
@@ -280,7 +280,7 @@
     <p class="q-def" id="q-def" aria-live="polite"></p>
     <div class="choices" id="choices" role="group" aria-label="Opciones de respuesta"></div>
     <p class="feedback" id="feedback" aria-live="polite"></p>
-    <button class="btn btn-primary" id="btn-next" style="display:none">Siguiente pregunta →</button>
+    <button class="btn btn-primary" id="btn-next" hidden>Siguiente pregunta →</button>
   </section>
 
 </main>
@@ -573,7 +573,7 @@
     var fb = document.getElementById('feedback');
     fb.textContent = '';
     fb.className   = 'feedback';
-    document.getElementById('btn-next').style.display = 'none';
+    document.getElementById('btn-next').hidden = true;
     var hintEl = document.getElementById('q-def');
     hintEl.classList.remove('visible');
     document.getElementById('btn-hint').setAttribute('aria-expanded', 'false');
@@ -604,7 +604,7 @@
       fb.className   = 'feedback bad';
     }
 
-    document.getElementById('btn-next').style.display = '';
+    document.getElementById('btn-next').hidden = false;
     document.getElementById('score-ok').textContent    = scoreOk;
     document.getElementById('score-total').textContent = scoreAll;
   }
