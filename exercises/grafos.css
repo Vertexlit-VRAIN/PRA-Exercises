@@ -1,0 +1,230 @@
+/* ─── Grafos — Shared Exercise Stylesheet ────────────────────────────────────
+   All styles common to grafos-01 and beyond.
+   Each exercise links this file and keeps only its unique rules inline.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* ─── Design tokens ─────────────────────────────────────────────────────────── */
+
+:root {
+  --indigo:      #1a237e;
+  --indigo-dark: #0d1757;
+  --indigo-lt:   #c5cae9;
+  --bg:          #f4f5fb;
+  --panel:       #f8f9ff;
+  --text:        #1a237e;
+  --ok:          #2e7d32;
+  --bad:         #c62828;
+}
+
+/* ─── Reset & Base ──────────────────────────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 18px; }
+
+body {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  background-color: var(--bg);
+  background-image: linear-gradient(180deg, #050a1e 0px, transparent 320px);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ─── Exercise Header ───────────────────────────────────────────────────────── */
+
+.ex-header {
+  background-color: #050a1e;
+  background-image:
+    radial-gradient(ellipse at 20% 80%, rgba(26, 69, 171, 0.55) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 20%, rgba(21, 101, 192, 0.45) 0%, transparent 55%);
+  color: #fff;
+  padding: 1rem 1.5rem 1.1rem;
+  border-bottom: 1px solid rgba(124, 185, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.back-link {
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 700;
+  transition: opacity 0.15s;
+}
+.back-link:hover { opacity: 0.7; }
+
+.ex-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(0.52rem, 2vw, 0.85rem);
+  color: #7cb9ff;
+  text-shadow:
+    0 0 14px rgba(124, 185, 255, 0.8),
+    0 0 35px rgba(124, 185, 255, 0.35),
+    0 0 70px rgba(124, 185, 255, 0.12);
+  line-height: 1.8;
+  letter-spacing: 0.1em;
+}
+
+.ex-desc {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.5;
+  max-width: 64ch;
+}
+
+/* ─── Main Layout ───────────────────────────────────────────────────────────── */
+
+.ex-main {
+  flex: 1;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+/* ─── Panels ────────────────────────────────────────────────────────────────── */
+
+.graph-panel,
+.q-panel {
+  background: var(--panel);
+  border: 1px solid rgba(26, 35, 126, 0.2);
+  border-radius: 8px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 2px 12px rgba(26, 35, 126, 0.07);
+}
+
+.panel-label {
+  font-size: 0.85rem;
+  color: #5c6bc0;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.graph-svg {
+  width: 100%;
+  border-radius: 8px;
+  background: #f0f2ff;
+  border: 1px solid rgba(26, 35, 126, 0.1);
+}
+
+/* ─── Buttons ───────────────────────────────────────────────────────────────── */
+
+.btn {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 8px;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.btn:hover  { opacity: 0.85; transform: translateY(-1px); }
+.btn:active { transform: translateY(0); }
+
+.btn-primary { background: var(--indigo); color: #fff; }
+.btn-outline {
+  background: rgba(26, 35, 126, 0.07);
+  color: var(--indigo-dark);
+  border: 1.5px solid rgba(26, 35, 126, 0.25);
+}
+
+/* ─── Feedback ──────────────────────────────────────────────────────────────── */
+
+.feedback { font-size: 0.9rem; font-weight: 700; min-height: 1.4em; }
+.feedback.ok  { color: var(--ok); }
+.feedback.bad { color: var(--bad); }
+
+/* ─── Score bar ─────────────────────────────────────────────────────────────── */
+
+.score-bar {
+  border-top: 2px solid rgba(26, 35, 126, 0.15);
+  background: rgba(244, 245, 251, 0.97);
+  padding: 0.7rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--indigo-dark);
+}
+.score-num { font-size: 1.4rem; color: var(--indigo); font-weight: 700; }
+
+/* ─── Quiz / MCQ components ─────────────────────────────────────────────────── */
+
+.q-concept {
+  display: inline-block;
+  background: var(--indigo);
+  color: #fff;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.65rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 4px;
+  letter-spacing: 0.07em;
+  align-self: flex-start;
+}
+
+.q-text {
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.55rem;
+}
+
+.choice-btn {
+  padding: 0.65rem 0.5rem;
+  border: 2px solid rgba(26, 35, 126, 0.2);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--text);
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, transform 0.1s;
+  text-align: center;
+  word-break: break-word;
+}
+.choice-btn:hover:not(:disabled) {
+  background: rgba(26, 35, 126, 0.07);
+  border-color: var(--indigo);
+  transform: translateY(-2px);
+}
+.choice-btn:disabled { cursor: default; }
+.choice-btn.ok  { background: #e8f5e9; border-color: var(--ok);  color: var(--ok);  }
+.choice-btn.bad { background: #ffebee; border-color: var(--bad); color: var(--bad); }
+
+/* ─── Flash animations ──────────────────────────────────────────────────────── */
+
+@keyframes flash-ok {
+  0%, 100% { box-shadow: 0 2px 12px rgba(26, 35, 126, 0.07); }
+  35%       { box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.4), 0 4px 28px rgba(46, 125, 50, 0.25); }
+}
+@keyframes flash-bad {
+  0%, 100% { box-shadow: 0 2px 12px rgba(26, 35, 126, 0.07); }
+  35%       { box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.35), 0 4px 28px rgba(198, 40, 40, 0.2); }
+}
+.panel-flash-ok  { animation: flash-ok  0.65s ease; }
+.panel-flash-bad { animation: flash-bad 0.65s ease; }
+
+/* ─── Responsive ────────────────────────────────────────────────────────────── */
+
+@media (max-width: 700px) {
+  .ex-main { grid-template-columns: 1fr; padding: 1rem; }
+  .q-panel { position: static; }
+}

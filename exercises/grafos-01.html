@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>01 · Conceptos Básicos — Grafos · PRA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="grafos.css" />
+  <style>
+    /* ── Unique to grafos-01 ───────────────────────────────── */
+
+    .q-panel { padding: 1.5rem; position: sticky; top: 1.25rem; }
+
+    .btn-outline { width: 100%; }
+
+    .choice-btn { font-size: 1.05rem; }
+
+    .q-def {
+      font-size: 0.78rem;
+      color: #283593;
+      background: rgba(26, 35, 126, 0.05);
+      border-left: 3px solid var(--indigo);
+      padding: 0.55rem 0.75rem;
+      border-radius: 0 4px 4px 0;
+      line-height: 1.6;
+      display: none;
+    }
+    .q-def.visible { display: block; }
+
+    .btn-hint {
+      align-self: flex-start;
+      background: none;
+      border: 1.5px dashed rgba(26, 35, 126, 0.35);
+      border-radius: 6px;
+      color: var(--indigo-dark);
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.3rem 0.7rem;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .btn-hint:hover { background: rgba(26, 35, 126, 0.06); border-color: var(--indigo); }
+
+    @media (max-width: 700px) {
+      .q-panel { position: static; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="ex-header">
+  <a class="back-link" href="../index.html#grafos">← Grafos</a>
+  <h1 class="ex-title">01 — CONCEPTOS BÁSICOS</h1>
+  <p class="ex-desc">Identifica caminos, su longitud, ciclos y bucles en grafos dirigidos generados aleatoriamente.</p>
+</header>
+
+<main class="ex-main">
+
+  <section class="graph-panel" aria-label="Grafo">
+    <p class="panel-label">Grafo dirigido</p>
+    <svg id="graph-svg" class="graph-svg" viewBox="0 0 560 340"
+         role="img" aria-label="Grafo aleatorio dirigido"></svg>
+    <button class="btn btn-outline" id="btn-new-graph">✦ Nuevo grafo</button>
+  </section>
+
+  <section class="q-panel" aria-label="Pregunta">
+    <span class="q-concept" id="q-concept">—</span>
+    <p class="q-text" id="q-text"></p>
+    <button class="btn-hint" id="btn-hint" aria-expanded="false">💡 Ver pista</button>
+    <p class="q-def" id="q-def" aria-live="polite"></p>
+    <div class="choices" id="choices" role="group" aria-label="Opciones de respuesta"></div>
+    <p class="feedback" id="feedback" aria-live="polite"></p>
+    <button class="btn btn-primary" id="btn-next" hidden>Siguiente pregunta →</button>
+  </section>
+
+</main>
+
+<footer class="score-bar" aria-label="Puntuación">
+  Correctas: <span class="score-num" id="score-ok">0</span> / <span id="score-total">0</span>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Constants ────────────────────────────────────────────── */
+  var SVG_W = 560, SVG_H = 340;
+  var R  = 20;
+  var NS = 'http://www.w3.org/2000/svg';
+
+  /* ── State ────────────────────────────────────────────────── */
+  var graph    = null;
+  var currentQ = null;
+  var answered = false;
+  var scoreOk  = 0, scoreAll = 0;
+
+  /* ── Utils ────────────────────────────────────────────────── */
+  function rand(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = rand(0, i);
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  /* ── Graph generation ─────────────────────────────────────── */
+  function generateGraph() {
+    var n = rand(5, 7);
+    var nodes = [];
+    for (var i = 0; i < n; i++) {
+      nodes.push({ id: i, label: String(i + 1), x: 0, y: 0 });
+    }
+
+    /* Circular layout — center offset down to leave room for top-node self-loops */
+    var cx = SVG_W / 2, cy = 182;
+    var lr = 125;
+    for (var i = 0; i < n; i++) {
+      var angle  = (2 * Math.PI * i) / n - Math.PI / 2;
+      nodes[i].x = cx + lr * Math.cos(angle);
+      nodes[i].y = cy + lr * Math.sin(angle);
+    }
+
+    /* Random spanning-tree base: always goes from earlier to later in shuffle order */
+    var edges  = [];
+    var added  = new Set();
+    var order  = shuffle(nodes.map(function (nd) { return nd.id; }));
+    for (var i = 1; i < order.length; i++) {
+      var from = order[rand(0, i - 1)];
+      var to   = order[i];
+      edges.push({ from: from, to: to });
+      added.add(from + ',' + to);
+    }
+
+    /* 2–3 extra random directed edges (can create cycles) */
+    var extra = rand(2, 3), attempts = 0;
+    while (extra > 0 && attempts < 60) {
+      var from = rand(0, n - 1);
+      var to   = rand(0, n - 1);
+      var key  = from + ',' + to;
+      if (from !== to && !added.has(key)) {
+        edges.push({ from: from, to: to });
+        added.add(key);
+        extra--;
+      }
+      attempts++;
+    }
+
+    /* 40 % chance of one self-loop */
+    if (Math.random() < 0.4) {
+      var v = rand(0, n - 1);
+      edges.push({ from: v, to: v });
+    }
+
+    return { nodes: nodes, edges: edges };
+  }
+
+  /* ── Graph algorithms ─────────────────────────────────────── */
+  function hasLoop(edges) {
+    for (var i = 0; i < edges.length; i++) {
+      if (edges[i].from === edges[i].to) return true;
+    }
+    return false;
+  }
+
+  function hasCycle(nodes, edges) {
+    if (hasLoop(edges)) return true;
+    var n     = nodes.length;
+    var WHITE = 0, GRAY = 1, BLACK = 2;
+    var color = [];
+    for (var i = 0; i < n; i++) color.push(WHITE);
+
+    function dfs(u) {
+      color[u] = GRAY;
+      var nexts = edges.filter(function (e) { return e.from === u; });
+      for (var i = 0; i < nexts.length; i++) {
+        var v = nexts[i].to;
+        if (color[v] === GRAY) return true;
+        if (color[v] === WHITE && dfs(v)) return true;
+      }
+      color[u] = BLACK;
+      return false;
+    }
+
+    for (var i = 0; i < n; i++) {
+      if (color[i] === WHITE && dfs(i)) return true;
+    }
+    return false;
+  }
+
+  function findCycleNodes(nodes, edges) {
+    /* Self-loop is the trivial case */
+    for (var i = 0; i < edges.length; i++) {
+      if (edges[i].from === edges[i].to) return [edges[i].from];
+    }
+
+    var n      = nodes.length;
+    var WHITE  = 0, GRAY = 1, BLACK = 2;
+    var color  = [], parent = [];
+    for (var i = 0; i < n; i++) { color.push(WHITE); parent.push(-1); }
+    var cStart = -1, cEnd = -1;
+
+    function dfs(u) {
+      color[u] = GRAY;
+      var nexts = edges.filter(function (e) { return e.from === u; });
+      for (var i = 0; i < nexts.length; i++) {
+        var v = nexts[i].to;
+        if (color[v] === GRAY && cStart === -1) { cStart = v; cEnd = u; return true; }
+        if (color[v] === WHITE) { parent[v] = u; if (dfs(v)) return true; }
+      }
+      color[u] = BLACK;
+      return false;
+    }
+
+    for (var i = 0; i < n; i++) {
+      if (color[i] === WHITE) { parent[i] = -1; if (dfs(i)) break; }
+    }
+
+    if (cStart === -1) return [];
+    var cycle = [cStart], cur = cEnd;
+    while (cur !== cStart) { cycle.push(cur); cur = parent[cur]; }
+    return cycle;
+  }
+
+  function findPath(nodes, edges, startId, minLen, maxLen) {
+    var queue = [[startId]];
+    while (queue.length > 0) {
+      var path = queue.shift();
+      var last = path[path.length - 1];
+      var len  = path.length - 1;
+      if (len >= minLen && len <= maxLen) return path;
+      if (len < maxLen) {
+        var nexts = edges.filter(function (e) { return e.from === last && e.to !== last; });
+        for (var i = 0; i < nexts.length; i++) {
+          var v = nexts[i].to;
+          if (path.indexOf(v) === -1) queue.push(path.concat([v]));
+        }
+      }
+    }
+    return null;
+  }
+
+  /* ── Options helper ───────────────────────────────────────── */
+  function makeOptions(correct, min, max) {
+    var pool  = new Set([correct]);
+    var cands = [];
+    for (var v = Math.max(min, correct - 3); v <= Math.min(max, correct + 4); v++) {
+      if (v !== correct) cands.push(v);
+    }
+    shuffle(cands);
+    cands.forEach(function (c) { if (pool.size < 4) pool.add(c); });
+    var off = 1;
+    while (pool.size < 4) {
+      var v = correct + off;
+      if (v >= 0 && !pool.has(v)) pool.add(v);
+      off++;
+    }
+    return Array.from(pool).sort(function (a, b) { return a - b; });
+  }
+
+  /* ── Question generation ──────────────────────────────────── */
+  var TYPES = ['path-length', 'valid-path', 'has-cycle', 'has-loop'];
+
+  function generateQuestion(g) {
+    var type  = TYPES[rand(0, TYPES.length - 1)];
+    var nodes = g.nodes, edges = g.edges;
+
+    switch (type) {
+
+      case 'path-length': {
+        var starts = shuffle(nodes.map(function (nd) { return nd.id; }));
+        var path   = null;
+        for (var i = 0; i < starts.length && !path; i++) {
+          path = findPath(nodes, edges, starts[i], 2, 4);
+        }
+        if (!path) {
+          var nonLoop = edges.filter(function (e) { return e.from !== e.to; });
+          if (!nonLoop.length) return generateQuestion(g);
+          var e = nonLoop[rand(0, nonLoop.length - 1)];
+          path  = [e.from, e.to];
+        }
+        var len     = path.length - 1;
+        var labels  = path.map(function (id) { return nodes[id].label; });
+        var hlEdges = [];
+        for (var i = 0; i < path.length - 1; i++) {
+          hlEdges.push({ from: path[i], to: path[i + 1] });
+        }
+        return {
+          type:    'path-length',
+          concept: 'Longitud',
+          text:    '¿Cuál es la <b>longitud</b> del camino resaltado [' + labels.join(', ') + ']?',
+          def:     'La longitud de un camino es el número de aristas que lo forman. Un camino de k+1 vértices tiene longitud k.',
+          correct: len,
+          opts:    makeOptions(len, 1, len + 3),
+          hlNodes: new Set(path),
+          hlEdges: hlEdges,
+          isYesNo: false
+        };
+      }
+
+      case 'valid-path': {
+        var starts = shuffle(nodes.map(function (nd) { return nd.id; }));
+        var path   = null;
+        for (var i = 0; i < starts.length && !path; i++) {
+          path = findPath(nodes, edges, starts[i], 2, 3);
+        }
+        if (!path) return generateQuestion(g);
+
+        var isValid = Math.random() < 0.5;
+        var labels, hlNodes, hlEdges;
+
+        if (isValid) {
+          labels  = path.map(function (id) { return nodes[id].label; });
+          hlNodes = new Set(path);
+          hlEdges = [];
+          for (var i = 0; i < path.length - 1; i++) {
+            hlEdges.push({ from: path[i], to: path[i + 1] });
+          }
+        } else {
+          /* Replace last node with one not reachable from predecessor */
+          var base  = path.slice(0, -1);
+          var prev  = base[base.length - 1];
+          var succs = edges
+            .filter(function (e) { return e.from === prev && e.to !== prev; })
+            .map(function (e) { return e.to; });
+          var nonSuccs = nodes
+            .map(function (nd) { return nd.id; })
+            .filter(function (id) { return id !== prev && succs.indexOf(id) === -1 && base.indexOf(id) === -1; });
+          if (!nonSuccs.length) { isValid = true; }  /* can't corrupt — fall back to valid */
+
+          if (!isValid) {
+            base.push(nonSuccs[rand(0, nonSuccs.length - 1)]);
+            path = base;
+          }
+          labels  = path.map(function (id) { return nodes[id].label; });
+          hlNodes = new Set(path);
+          hlEdges = [];
+          for (var i = 0; i < path.length - (isValid ? 1 : 2); i++) {
+            hlEdges.push({ from: path[i], to: path[i + 1] });
+          }
+        }
+
+        return {
+          type:    'valid-path',
+          concept: 'Camino',
+          text:    '¿Es la secuencia [' + labels.join(', ') + '] un <b>camino válido</b> en el grafo?',
+          def:     'Un camino válido requiere que exista una arista dirigida entre cada par de vértices consecutivos de la secuencia.',
+          correct: isValid ? 'Sí' : 'No',
+          opts:    ['Sí', 'No'],
+          hlNodes: hlNodes,
+          hlEdges: hlEdges,
+          isYesNo: true
+        };
+      }
+
+      case 'has-cycle': {
+        var cycle    = hasCycle(nodes, edges);
+        var cycleIds = cycle ? findCycleNodes(nodes, edges) : [];
+        return {
+          type:        'has-cycle',
+          concept:     'Ciclo',
+          text:        '¿Contiene el grafo algún <b>ciclo</b>?',
+          def:         'Un ciclo es un camino [v₀, v₁, …, vₖ] donde v₀ = vₖ y k ≥ 1. Un bucle también es un ciclo (k = 1).',
+          correct:     cycle ? 'Sí' : 'No',
+          opts:        ['Sí', 'No'],
+          hlNodes:     new Set(),
+          hlEdges:     [],
+          isYesNo:     true,
+          revealNodes: cycleIds,
+          revealEdges: []
+        };
+      }
+
+      case 'has-loop': {
+        var loop     = hasLoop(edges);
+        var loopNode = -1;
+        for (var i = 0; i < edges.length; i++) {
+          if (edges[i].from === edges[i].to) { loopNode = edges[i].from; break; }
+        }
+        return {
+          type:        'has-loop',
+          concept:     'Bucle',
+          text:        '¿Contiene el grafo algún <b>bucle</b>?',
+          def:         'Un bucle es una arista que va de un vértice a sí mismo: (v, v) ∈ E. Es un ciclo de longitud 1.',
+          correct:     loop ? 'Sí' : 'No',
+          opts:        ['Sí', 'No'],
+          hlNodes:     new Set(),
+          hlEdges:     [],
+          isYesNo:     true,
+          revealNodes: loop ? [loopNode] : [],
+          revealEdges: loop ? [{ from: loopNode, to: loopNode }] : []
+        };
+      }
+    }
+  }
+
+  /* ── SVG rendering ────────────────────────────────────────── */
+  function renderGraph(g, q) {
+    var svg = document.getElementById('graph-svg');
+    svg.innerHTML = '';
+
+    var nodes     = g.nodes, edges = g.edges;
+    var hlNodes   = (q && q.hlNodes) ? q.hlNodes : new Set();
+    var hlEdgeSet = new Set();
+    if (q && q.hlEdges) {
+      q.hlEdges.forEach(function (e) { hlEdgeSet.add(e.from + ',' + e.to); });
+    }
+
+    /* Arrow markers */
+    var defs = document.createElementNS(NS, 'defs');
+    function mkMarker(id, color) {
+      var m = document.createElementNS(NS, 'marker');
+      m.setAttribute('id', id);
+      m.setAttribute('markerWidth', '7');
+      m.setAttribute('markerHeight', '5');
+      m.setAttribute('refX', '6');
+      m.setAttribute('refY', '2.5');
+      m.setAttribute('orient', 'auto');
+      var p = document.createElementNS(NS, 'polygon');
+      p.setAttribute('points', '0 0, 7 2.5, 0 5');
+      p.setAttribute('fill', color);
+      m.appendChild(p);
+      return m;
+    }
+    defs.appendChild(mkMarker('arr',    '#3949ab'));
+    defs.appendChild(mkMarker('arr-hl', '#0d47a1'));
+    svg.appendChild(defs);
+
+    /* Edges */
+    edges.forEach(function (e) {
+      var isHL   = hlEdgeSet.has(e.from + ',' + e.to);
+      var stroke = isHL ? '#7cb9ff' : '#3949ab';
+      var sw     = isHL ? '3' : '2';
+      var marker = isHL ? 'url(#arr-hl)' : 'url(#arr)';
+
+      if (e.from === e.to) {
+        /* Self-loop: cubic bezier arch above the node */
+        var nx = nodes[e.from].x, ny = nodes[e.from].y;
+        var d  = 'M ' + (nx - 7)        + ',' + (ny - R + 2)
+               + ' C ' + (nx - R * 1.5) + ',' + (ny - R * 2.4)
+               + ' '   + (nx + R * 1.5) + ',' + (ny - R * 2.4)
+               + ' '   + (nx + 7)       + ',' + (ny - R + 2);
+        var path = document.createElementNS(NS, 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', stroke);
+        path.setAttribute('stroke-width', sw);
+        path.setAttribute('marker-end', marker);
+        svg.appendChild(path);
+        return;
+      }
+
+      var fn = nodes[e.from], tn = nodes[e.to];
+      var dx = tn.x - fn.x, dy = tn.y - fn.y;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist === 0) return;
+      var ux = dx / dist, uy = dy / dist;
+
+      /* Check for a mutual reverse edge — if found, bow both curves apart */
+      var hasMutual = false;
+      for (var j = 0; j < edges.length; j++) {
+        if (edges[j].from === e.to && edges[j].to === e.from) { hasMutual = true; break; }
+      }
+
+      if (hasMutual) {
+        /* Quadratic bezier offset to the right of the A→B direction */
+        var mx = (fn.x + tn.x) / 2, my = (fn.y + tn.y) / 2;
+        var cpx = mx + uy * 24, cpy = my - ux * 24;
+
+        /* Depart fn toward control point */
+        var d0x = cpx - fn.x, d0y = cpy - fn.y;
+        var d0l = Math.sqrt(d0x * d0x + d0y * d0y);
+        /* Arrive at tn from control point */
+        var d1x = tn.x - cpx, d1y = tn.y - cpy;
+        var d1l = Math.sqrt(d1x * d1x + d1y * d1y);
+
+        var arc = document.createElementNS(NS, 'path');
+        arc.setAttribute('d',
+          'M ' + (fn.x + (d0x / d0l) * (R + 2))  + ',' + (fn.y + (d0y / d0l) * (R + 2)) +
+          ' Q ' + cpx + ',' + cpy +
+          ' '   + (tn.x - (d1x / d1l) * (R + 7)) + ',' + (tn.y - (d1y / d1l) * (R + 7)));
+        arc.setAttribute('fill',         'none');
+        arc.setAttribute('stroke',       stroke);
+        arc.setAttribute('stroke-width', sw);
+        arc.setAttribute('marker-end',   marker);
+        svg.appendChild(arc);
+      } else {
+        var line = document.createElementNS(NS, 'line');
+        line.setAttribute('x1', fn.x + ux * (R + 2));
+        line.setAttribute('y1', fn.y + uy * (R + 2));
+        line.setAttribute('x2', tn.x - ux * (R + 7));
+        line.setAttribute('y2', tn.y - uy * (R + 7));
+        line.setAttribute('stroke',       stroke);
+        line.setAttribute('stroke-width', sw);
+        line.setAttribute('marker-end',   marker);
+        svg.appendChild(line);
+      }
+    });
+
+    /* Nodes */
+    nodes.forEach(function (nd) {
+      var isHL = hlNodes.has(nd.id);
+      var grp  = document.createElementNS(NS, 'g');
+
+      var circ = document.createElementNS(NS, 'circle');
+      circ.setAttribute('cx',           nd.x);
+      circ.setAttribute('cy',           nd.y);
+      circ.setAttribute('r',            R);
+      circ.setAttribute('fill',         isHL ? '#7cb9ff' : '#e8eaf6');
+      circ.setAttribute('stroke',       isHL ? '#0d47a1' : '#1a237e');
+      circ.setAttribute('stroke-width', '2.5');
+
+      var txt = document.createElementNS(NS, 'text');
+      txt.setAttribute('x',              nd.x);
+      txt.setAttribute('y',              nd.y + 5);
+      txt.setAttribute('text-anchor',    'middle');
+      txt.setAttribute('font-size',      '14');
+      txt.setAttribute('font-family',    'Space Grotesk, sans-serif');
+      txt.setAttribute('font-weight',    '700');
+      txt.setAttribute('fill',           isHL ? '#0d1757' : '#1a237e');
+      txt.setAttribute('pointer-events', 'none');
+      txt.textContent = nd.label;
+
+      grp.appendChild(circ);
+      grp.appendChild(txt);
+      svg.appendChild(grp);
+    });
+  }
+
+  /* ── Render question ──────────────────────────────────────── */
+  function renderQuestion(q) {
+    document.getElementById('q-concept').textContent = q.concept;
+    document.getElementById('q-text').innerHTML      = q.text;
+    document.getElementById('q-def').textContent     = q.def;
+    document.getElementById('q-def').classList.remove('visible');
+    document.getElementById('btn-hint').setAttribute('aria-expanded', 'false');
+    document.getElementById('btn-hint').textContent = '💡 Ver pista';
+
+    var choicesEl    = document.getElementById('choices');
+    choicesEl.innerHTML = '';
+    choicesEl.className = 'choices';
+
+    q.opts.forEach(function (opt) {
+      var btn = document.createElement('button');
+      btn.className   = 'choice-btn';
+      btn.textContent = String(opt);
+      btn.addEventListener('click', function () { handleAnswer(opt, q); });
+      choicesEl.appendChild(btn);
+    });
+
+    document.getElementById('feedback').textContent = '';
+    document.getElementById('feedback').className   = 'feedback';
+    document.getElementById('btn-next').hidden      = true;
+    answered = false;
+  }
+
+  /* ── Answer handler ───────────────────────────────────────── */
+  function handleAnswer(chosen, q) {
+    if (answered) return;
+    answered = true;
+    scoreAll++;
+
+    var isCorrect = String(chosen) === String(q.correct);
+
+    document.querySelectorAll('.choice-btn').forEach(function (btn) {
+      btn.disabled = true;
+      if (btn.textContent === String(q.correct))              btn.classList.add('ok');
+      else if (btn.textContent === String(chosen) && !isCorrect) btn.classList.add('bad');
+    });
+
+    var fb = document.getElementById('feedback');
+    if (isCorrect) {
+      scoreOk++;
+      fb.textContent = '¡Correcto!';
+      fb.className   = 'feedback ok';
+    } else {
+      fb.textContent = 'Incorrecto — la respuesta es ' + q.correct + '.';
+      fb.className   = 'feedback bad';
+    }
+
+    document.getElementById('btn-next').hidden          = false;
+    document.getElementById('score-ok').textContent     = scoreOk;
+    document.getElementById('score-total').textContent  = scoreAll;
+
+    var qPanel = document.querySelector('.q-panel');
+    qPanel.classList.add(isCorrect ? 'panel-flash-ok' : 'panel-flash-bad');
+    setTimeout(function () {
+      qPanel.classList.remove('panel-flash-ok', 'panel-flash-bad');
+    }, 700);
+
+    /* Reveal cycle / loop nodes after answer */
+    if (q.revealNodes && q.revealNodes.length > 0) {
+      renderGraph(graph, {
+        hlNodes: new Set(q.revealNodes),
+        hlEdges: q.revealEdges || []
+      });
+    }
+  }
+
+  /* ── Events ───────────────────────────────────────────────── */
+  document.getElementById('btn-hint').addEventListener('click', function () {
+    var hintEl  = document.getElementById('q-def');
+    var visible = hintEl.classList.toggle('visible');
+    this.setAttribute('aria-expanded', String(visible));
+    this.textContent = visible ? '💡 Ocultar pista' : '💡 Ver pista';
+  });
+
+  document.getElementById('btn-next').addEventListener('click', function () {
+    if (Math.random() < 0.5) graph = generateGraph();
+    currentQ = generateQuestion(graph);
+    renderGraph(graph, currentQ);
+    renderQuestion(currentQ);
+  });
+
+  document.getElementById('btn-new-graph').addEventListener('click', function () {
+    graph    = generateGraph();
+    currentQ = generateQuestion(graph);
+    renderGraph(graph, currentQ);
+    renderQuestion(currentQ);
+  });
+
+  /* ── Boot ─────────────────────────────────────────────────── */
+  graph    = generateGraph();
+  currentQ = generateQuestion(graph);
+  renderGraph(graph, currentQ);
+  renderQuestion(currentQ);
+
+}());
+</script>
+</body>
+</html>
