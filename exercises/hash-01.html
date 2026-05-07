@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>01 · Sondeo Lineal — Tablas Hash · PRA</title>
+  <title>01 · Direccionamiento Abierto — Tablas Hash · PRA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
@@ -188,6 +188,15 @@
     .btn-primary { background: var(--green); color: #fff; }
 
     /* ── Right panel ─────────────────────────────────────── */
+    .table-card {
+      background: var(--panel);
+      border: 1px solid rgba(0,130,40,0.2);
+      border-radius: 8px;
+      padding: 1rem 1.1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
     .panel-label {
       font-family: 'Share Tech Mono', monospace;
       font-size: 0.72rem;
@@ -293,7 +302,7 @@
 
 <header class="ex-header">
   <a class="back-link" href="../index.html#hash">← Tablas Hash</a>
-  <h1 class="ex-title">01 — Sondeo Lineal</h1>
+  <h1 class="ex-title">01 — Direccionamiento Abierto</h1>
   <p class="ex-desc">// h(k) = k mod m &nbsp;·&nbsp; colisión → (h(k) + i) mod m</p>
 </header>
 
@@ -327,9 +336,11 @@
   </section>
 
   <aside class="right-panel" aria-label="Tabla hash">
-    <p class="panel-label" id="m-label">Tabla hash</p>
-    <div class="hash-table" id="hash-table" role="grid"
-         aria-label="Celdas de la tabla hash"></div>
+    <div class="table-card">
+      <p class="panel-label" id="m-label">Tabla hash</p>
+      <div class="hash-table" id="hash-table" role="grid"
+           aria-label="Celdas de la tabla hash"></div>
+    </div>
   </aside>
 
 </main>
