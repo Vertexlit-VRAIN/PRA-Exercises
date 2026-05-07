@@ -161,15 +161,15 @@
   }
 
   function maxPath() {
-    var path = [], idx = 0;
-    while (idx !== null) { path.push(idx); idx = nodes[idx].right; }
-    return path;
+    var idx = 0;
+    while (nodes[idx].right !== null) idx = nodes[idx].right;
+    return [idx];
   }
 
   function minPath() {
-    var path = [], idx = 0;
-    while (idx !== null) { path.push(idx); idx = nodes[idx].left; }
-    return path;
+    var idx = 0;
+    while (nodes[idx].left !== null) idx = nodes[idx].left;
+    return [idx];
   }
 
   function notFoundKey() {
@@ -209,7 +209,7 @@
    * visitedSet: Set of node indices already clicked (gold fill)
    * nextIdx   : index of the "correct next" node (amber ring)
    */
-  function renderTree(visitedSet, nextIdx) {
+  function renderTree(visitedSet) {
     $svg.innerHTML = '';
 
     var maxD = 0;
@@ -235,16 +235,15 @@
     /* nodes */
     nodes.forEach(function (nd, i) {
       var visited = visitedSet && visitedSet.has(i);
-      var isNext  = i === nextIdx;
       var g = mk('g');
       g.setAttribute('data-node-idx', i);
       g.style.cursor = 'pointer';
 
       var c = mk('circle');
       c.setAttribute('cx', nd.x); c.setAttribute('cy', nd.y); c.setAttribute('r', R);
-      c.setAttribute('fill',   visited ? '#ffd600' : '#fff8e1');
-      c.setAttribute('stroke', visited ? '#3d1f00' : (isNext ? '#b35c00' : '#9a6830'));
-      c.setAttribute('stroke-width', isNext ? '3.5' : '2.5');
+      c.setAttribute('fill',         visited ? '#ffd600' : '#fff8e1');
+      c.setAttribute('stroke',       visited ? '#3d1f00' : '#9a6830');
+      c.setAttribute('stroke-width', '2.5');
 
       var t = mk('text');
       t.setAttribute('x', nd.x); t.setAttribute('y', nd.y + 5);
@@ -293,11 +292,12 @@
     if (q.type === 'search' && !q.found)
       return 'Traza <b>search(' + q.key + ')</b> — la clave <b>no está</b> en el árbol. Haz clic en cada nodo visitado antes de llegar a null.';
     if (q.type === 'max')
-      return 'Traza <b>max()</b>. Haz clic en los nodos que visita el algoritmo hasta alcanzar el máximo.';
-    return 'Traza <b>min()</b>. Haz clic en los nodos que visita el algoritmo hasta alcanzar el mínimo.';
+      return '¿Cuál es el <b>máximo</b> del ABB? Haz clic en él.';
+    return '¿Cuál es el <b>mínimo</b> del ABB? Haz clic en él.';
   }
 
   function counterText(q, idx) {
+    if (q.type === 'max' || q.type === 'min') return '';
     if (idx === 0)
       return 'Empieza por la raíz — haz clic en el nodo ' + nodes[q.trace[0]].key + '.';
     return 'Nodo ' + (idx + 1) + ' de ' + q.trace.length + ' — siguiente: clave ' + nodes[q.trace[idx]].key;
@@ -326,7 +326,7 @@
     $fb.textContent      = '';
     $fb.className        = 'feedback';
     $btnNext.hidden      = true;
-    renderTree(new Set(), q.trace[0]);
+    renderTree(new Set());
   }
 
   /* ── Click handler ──────────────────────────────────────────── */
@@ -349,7 +349,7 @@
         if (!hadWrong) { gOk++; roundOk++; }
         $scoreOk.textContent  = gOk;
         $scoreAll.textContent = gTotal;
-        renderTree(visited, null);
+        renderTree(visited);
         $counter.textContent = '';
         setFb(successText(q), 'ok');
         var qPanel = document.querySelector('.q-panel');
@@ -362,7 +362,7 @@
           $btnNext.hidden = false;
         }
       } else {
-        renderTree(visited, q.trace[traceIdx]);
+        renderTree(visited);
         $counter.textContent = counterText(q, traceIdx);
         setFb('✓ Nodo ' + nodes[correct].key + ' visitado. Continúa.', 'ok');
       }
