@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>02 · Encadenamiento — Tablas Hash · PRA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --green:      #1b5e20;
+      --green-lt:   #4caf50;
+      --green-glow: #00cc44;
+      --bg:         #f0fff4;
+      --panel:      #e8f5e9;
+      --text:       #0d1f0d;
+      --ok:         #2e7d32;
+      --bad:        #c62828;
+      --terminal:   #001a0a;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    [hidden] { display: none !important; }
+    html { font-size: 18px; }
+
+    body {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      background-color: var(--bg);
+      background-image: linear-gradient(180deg, var(--terminal) 0px, transparent 320px);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ──────────────────────────────────────────── */
+    .ex-header {
+      background-color: var(--terminal);
+      background-image: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,200,50,0.07) 2px, rgba(0,200,50,0.07) 3px
+      );
+      color: #fff;
+      padding: 1rem 1.5rem 1.1rem;
+      border-bottom: 1px solid rgba(0,200,50,0.15);
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .back-link {
+      color: rgba(255,255,255,0.55);
+      text-decoration: none;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 700;
+      transition: opacity 0.15s;
+    }
+    .back-link:hover { opacity: 0.7; }
+    .ex-title {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: clamp(0.78rem, 2.5vw, 1.05rem);
+      color: #00cc44;
+      text-shadow: 0 0 14px rgba(0,204,68,0.45);
+      line-height: 1.6;
+    }
+    .ex-desc {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.4);
+    }
+
+    /* ── Layout ──────────────────────────────────────────── */
+    .ex-main {
+      flex: 1;
+      max-width: 1100px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+    .left-panel  { display: flex; flex-direction: column; gap: 1rem; }
+    .right-panel { display: flex; flex-direction: column; gap: 0.75rem; position: sticky; top: 1.25rem; }
+
+    /* ── Badges ──────────────────────────────────────────── */
+    .badge-row { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .round-badge {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--green-glow);
+      letter-spacing: 0.08em;
+      background: rgba(0,204,68,0.07);
+      border: 1px solid rgba(0,204,68,0.2);
+      border-radius: 4px;
+      padding: 0.25rem 0.65rem;
+    }
+    .phase-badge {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.22rem 0.6rem;
+      border-radius: 4px;
+    }
+    .phase-badge.build  {
+      background: rgba(0,130,40,0.1); color: var(--green);
+      border: 1px solid rgba(0,130,40,0.2);
+    }
+    .phase-badge.search {
+      background: rgba(21,101,192,0.1); color: #1565c0;
+      border: 1px solid rgba(21,101,192,0.3);
+    }
+
+    /* ── Key / search card ───────────────────────────────── */
+    .key-card {
+      background: var(--panel);
+      border: 1px solid rgba(0,130,40,0.2);
+      border-radius: 8px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .key-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem;
+      color: #4a7a42;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .key-value {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 3.5rem;
+      line-height: 1;
+      color: var(--green-glow);
+      text-shadow: 0 0 16px rgba(0,204,68,0.35);
+      letter-spacing: 0.05em;
+    }
+    .key-formula {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.82rem;
+      color: #3a7a34;
+      margin-top: 0.1rem;
+      text-align: center;
+    }
+
+    /* ── Progress dots ───────────────────────────────────── */
+    .progress-dots { display: flex; gap: 0.45rem; justify-content: center; }
+    .dot {
+      width: 0.7rem; height: 0.7rem;
+      border-radius: 50%;
+      border: 2px solid rgba(0,130,40,0.25);
+      background: transparent;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .dot.done    { background: var(--green-lt); border-color: var(--green-lt); }
+    .dot.current { border-color: var(--green-glow); background: rgba(0,204,68,0.15); }
+    .dot.s-done    { background: #1976d2; border-color: #1976d2; }
+    .dot.s-current { border-color: #1976d2; background: rgba(21,101,192,0.15); }
+    .dot.s-pending { border-color: rgba(21,101,192,0.25); }
+
+    /* ── Answer buttons ──────────────────────────────────── */
+    .answer-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .answer-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.68rem;
+      color: #4a7a42;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .answer-btns {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+    .answer-btn {
+      width: 3rem; height: 3rem;
+      border-radius: 50%;
+      border: 2px solid rgba(0,130,40,0.3);
+      background: #fff;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--green);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .answer-btn:hover:not(:disabled) {
+      border-color: var(--green-glow);
+      background: rgba(0,204,68,0.07);
+      transform: scale(1.08);
+    }
+    .answer-btn:disabled { opacity: 0.45; cursor: default; transform: none; }
+    .answer-btn.a-correct { background: rgba(46,125,50,0.15); border-color: var(--ok); color: var(--ok); }
+    .answer-btn.a-wrong   { animation: flash-bad 0.4s ease-out; }
+
+    /* ── Instruction & feedback ──────────────────────────── */
+    .instr-text {
+      font-size: 0.88rem;
+      color: #2a5c24;
+      line-height: 1.65;
+      background: rgba(0,130,40,0.05);
+      border-left: 3px solid var(--green-lt);
+      padding: 0.6rem 0.8rem;
+      border-radius: 0 4px 4px 0;
+    }
+    .feedback { font-size: 0.85rem; font-weight: 700; min-height: 1.4em; line-height: 1.55; }
+    .feedback.ok  { color: var(--ok); }
+    .feedback.bad { color: var(--bad); }
+
+    /* ── Round result ────────────────────────────────────── */
+    .round-result {
+      display: none;
+      background: rgba(0,204,68,0.06);
+      border: 1px solid rgba(0,204,68,0.2);
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+    .round-result.visible { display: flex; }
+    .result-line { font-family: 'Share Tech Mono', monospace; font-size: 0.85rem; color: var(--green); }
+    .result-line strong { color: var(--green-glow); font-size: 1.05rem; }
+
+    /* ── Button ──────────────────────────────────────────── */
+    .btn {
+      padding: 0.6rem 1.25rem;
+      border: none; border-radius: 6px;
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 0.88rem; font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      align-self: flex-start;
+    }
+    .btn:hover  { opacity: 0.85; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary { background: var(--green); color: #fff; }
+
+    /* ── Right panel / table card ────────────────────────── */
+    .table-card {
+      background: var(--panel);
+      border: 1px solid rgba(0,130,40,0.2);
+      border-radius: 8px;
+      padding: 1rem 1.1rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .panel-label {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.72rem;
+      color: #4a7a42;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .hash-table { display: flex; flex-direction: column; gap: 0.3rem; }
+
+    /* ── Hash table rows ─────────────────────────────────── */
+    .ht-row {
+      display: flex;
+      align-items: stretch;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1.5px solid rgba(0,130,40,0.18);
+      background: #fff;
+      min-height: 3rem;
+      transition: border-color 0.15s, background 0.15s;
+      user-select: none;
+    }
+    .ht-row.clickable { cursor: pointer; }
+    .ht-row.clickable:hover {
+      border-color: var(--green-lt);
+      background: rgba(0,204,68,0.04);
+    }
+    .ht-row.flash-ok  { animation: flash-ok  0.5s ease-out; }
+    .ht-row.flash-bad { animation: flash-bad 0.4s ease-out; }
+
+    .ht-idx {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 2.5rem;
+      padding: 0 0.5rem;
+      background: rgba(0,130,40,0.07);
+      border-right: 1px solid rgba(0,130,40,0.12);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--green);
+      flex-shrink: 0;
+    }
+
+    /* ── Chain ───────────────────────────────────────────── */
+    .ht-chain {
+      display: flex;
+      align-items: center;
+      flex: 1;
+      padding: 0.4rem 0.5rem;
+      gap: 0.2rem;
+      overflow-x: auto;
+      min-height: 2.8rem;
+    }
+    .chain-ptr {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.78rem;
+      color: rgba(0,130,40,0.45);
+      flex-shrink: 0;
+      padding: 0 0.05rem;
+    }
+    .chain-node {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 2.4rem;
+      height: 2.2rem;
+      background: #fff;
+      border: 1.5px solid rgba(0,130,40,0.3);
+      border-radius: 4px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text);
+      flex-shrink: 0;
+      transition: background 0.2s, border-color 0.2s, opacity 0.2s;
+    }
+    .chain-node.new-node    { animation: pop-in 0.35s ease-out; }
+    .chain-node.comparing   {
+      background: rgba(255,193,7,0.3);
+      border-color: #f9a825;
+      box-shadow: 0 0 6px rgba(249,168,37,0.4);
+    }
+    .chain-node.found-node  {
+      background: rgba(46,125,50,0.18);
+      border-color: var(--ok);
+      box-shadow: 0 0 6px rgba(46,125,50,0.3);
+    }
+    .chain-node.visited-node { opacity: 0.38; }
+    .chain-null {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.82rem;
+      color: rgba(0,130,40,0.35);
+      flex-shrink: 0;
+    }
+
+    /* ── Score footer ────────────────────────────────────── */
+    .score-bar {
+      border-top: 2px solid rgba(0,130,40,0.12);
+      background: rgba(232,245,233,0.95);
+      padding: 0.65rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--green);
+    }
+    .score-num { font-size: 1.4rem; font-weight: 700; color: var(--green-glow); }
+
+    /* ── Animations ──────────────────────────────────────── */
+    @keyframes flash-ok {
+      0%, 100% { background: #fff; }
+      40%       { background: rgba(46,125,50,0.12); border-color: var(--ok); }
+    }
+    @keyframes flash-bad {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-4px); }
+      40%, 80% { transform: translateX(4px); }
+    }
+    @keyframes pop-in {
+      0%   { transform: scale(1.4); opacity: 0.3; }
+      65%  { transform: scale(0.93); }
+      100% { transform: scale(1);   opacity: 1; }
+    }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width: 720px) {
+      .ex-main { grid-template-columns: 1fr; padding: 1rem; }
+      .right-panel { position: static; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="ex-header">
+  <a class="back-link" href="../index.html#hash">← Tablas Hash</a>
+  <h1 class="ex-title">02 — Encadenamiento</h1>
+  <p class="ex-desc">// h(k) = k mod m &nbsp;·&nbsp; colisión → insertar al frente de la lista</p>
+</header>
+
+<main class="ex-main">
+
+  <section class="left-panel" aria-label="Clave actual y controles">
+
+    <div class="badge-row">
+      <div class="round-badge" id="round-badge">Ronda 1</div>
+      <div class="phase-badge build" id="phase-badge">Fase 1: Inserción</div>
+    </div>
+
+    <!-- Phase 1: key card -->
+    <div class="key-card" id="p1-card">
+      <span class="key-label">Clave a insertar</span>
+      <span class="key-value" id="key-value">—</span>
+      <span class="key-formula" id="key-formula">h(k) = k mod m</span>
+    </div>
+
+    <!-- Phase 2: search card -->
+    <div class="key-card" id="p2-card" hidden>
+      <span class="key-label">Buscar clave</span>
+      <span class="key-value" id="search-value">—</span>
+      <span class="key-formula" id="search-formula">—</span>
+    </div>
+
+    <div class="progress-dots" id="progress-dots" aria-label="Progreso"></div>
+
+    <!-- Phase 2 answer buttons -->
+    <div class="answer-wrap" id="answer-wrap" hidden>
+      <span class="answer-label">Nº de comparaciones:</span>
+      <div class="answer-btns" id="answer-btns"></div>
+    </div>
+
+    <p class="instr-text" id="instr-text">
+      Clica la fila donde debe insertarse la clave.
+    </p>
+
+    <p class="feedback" id="feedback" aria-live="polite"></p>
+
+    <div class="round-result" id="round-result">
+      <p class="result-line" id="result-line-1"></p>
+      <p class="result-line" id="result-line-2"></p>
+    </div>
+
+    <button class="btn btn-primary" id="btn-next" hidden>Nueva tabla →</button>
+
+  </section>
+
+  <aside class="right-panel" aria-label="Tabla hash">
+    <div class="table-card">
+      <p class="panel-label" id="m-label">Tabla hash</p>
+      <div class="hash-table" id="hash-table" role="grid"
+           aria-label="Celdas de la tabla hash"></div>
+    </div>
+  </aside>
+
+</main>
+
+<footer class="score-bar" aria-label="Puntuación global">
+  Correctas a la primera: <span class="score-num" id="score-ok">0</span>
+  / <span id="score-total">0</span>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Global score ───────────────────────────────────────── */
+  var gOk = 0, gTotal = 0;
+
+  /* ── Round state ────────────────────────────────────────── */
+  var round    = null;   // { m, keys, chains[], phase, keyIdx, roundOk1,
+                         //   searches[], searchIdx, roundOk2 }
+  var roundNum = 0;
+  var attempts = 0;
+
+  /* ── DOM ────────────────────────────────────────────────── */
+  var $badge      = document.getElementById('round-badge');
+  var $phaseBadge = document.getElementById('phase-badge');
+  var $keyVal     = document.getElementById('key-value');
+  var $keyFml     = document.getElementById('key-formula');
+  var $srchVal    = document.getElementById('search-value');
+  var $srchFml    = document.getElementById('search-formula');
+  var $dots       = document.getElementById('progress-dots');
+  var $ansWrap    = document.getElementById('answer-wrap');
+  var $ansBtns    = document.getElementById('answer-btns');
+  var $p1card     = document.getElementById('p1-card');
+  var $p2card     = document.getElementById('p2-card');
+  var $instr      = document.getElementById('instr-text');
+  var $fb         = document.getElementById('feedback');
+  var $result     = document.getElementById('round-result');
+  var $res1       = document.getElementById('result-line-1');
+  var $res2       = document.getElementById('result-line-2');
+  var $btn        = document.getElementById('btn-next');
+  var $mLabel     = document.getElementById('m-label');
+  var $table      = document.getElementById('hash-table');
+  var $scoreOk    = document.getElementById('score-ok');
+  var $scoreAll   = document.getElementById('score-total');
+
+  /* ── Util ───────────────────────────────────────────────── */
+  function rand(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+  }
+
+  /* ── Key generation ─────────────────────────────────────── */
+  function buildKeys(m, count) {
+    var keys = [], used = new Set(), tries = 0;
+    while (keys.length < count && tries++ < 400) {
+      var k = rand(10, 99);
+      if (!used.has(k)) { used.add(k); keys.push(k); }
+    }
+    /* Ensure ≥1 hash-level collision */
+    var buckets = {}, hasCol = false;
+    for (var i = 0; i < keys.length; i++) {
+      var h = keys[i] % m;
+      if (buckets[h] !== undefined) { hasCol = true; break; }
+      buckets[h] = keys[i];
+    }
+    if (!hasCol && keys.length >= 3) {
+      var target = keys[0] % m;
+      for (var d = m; d <= 89; d += m) {
+        var c = target + d;
+        if (c >= 10 && c <= 99 && !used.has(c)) {
+          used.delete(keys[keys.length - 1]);
+          keys[keys.length - 1] = c;
+          break;
+        }
+      }
+    }
+    return keys;
+  }
+
+  /* ── Search query generation ────────────────────────────── */
+  function generateSearches(chains, keys, m) {
+    var keySet = new Set(keys);
+    var queries = [];
+
+    /* Up to 2 successful searches — prefer keys deeper in their chain */
+    var found = keys.map(function (k) {
+      var slot = k % m;
+      return { key: k, found: true, answer: chains[slot].indexOf(k) + 1, slot: slot };
+    });
+    found.sort(function (a, b) { return b.answer - a.answer; });
+    for (var i = 0; i < Math.min(2, found.length); i++) queries.push(found[i]);
+
+    /* Up to 2 unsuccessful searches — non-empty slot only */
+    var notFound = [];
+    for (var k2 = 10; k2 <= 99; k2++) {
+      if (!keySet.has(k2)) {
+        var s = k2 % m;
+        if (chains[s].length > 0)
+          notFound.push({ key: k2, found: false, answer: chains[s].length, slot: s });
+      }
+    }
+    shuffle(notFound);
+    for (var j = 0; j < Math.min(2, notFound.length); j++) queries.push(notFound[j]);
+
+    shuffle(queries);
+    return queries.slice(0, 4);
+  }
+
+  /* ── Round generation ───────────────────────────────────── */
+  function generateRound() {
+    var mOpts = [5, 7, 8, 9, 11];
+    var m     = mOpts[rand(0, mOpts.length - 1)];
+    var count = 5 + rand(0, 1);
+    var keys  = buildKeys(m, count);
+    var chains = [];
+    for (var i = 0; i < m; i++) chains.push([]);
+    return {
+      m: m, keys: keys, chains: chains,
+      phase: 1, keyIdx: 0, roundOk1: 0,
+      searches: [], searchIdx: 0, roundOk2: 0
+    };
+  }
+
+  /* ── Render table ───────────────────────────────────────── */
+  function renderTable() {
+    $table.innerHTML = '';
+    for (var i = 0; i < round.m; i++) {
+      var row = document.createElement('div');
+      row.className = 'ht-row' + (round.phase === 1 ? ' clickable' : '');
+      row.dataset.idx = i;
+      row.setAttribute('role', 'row');
+
+      var idx = document.createElement('div');
+      idx.className = 'ht-idx';
+      idx.textContent = i;
+
+      var chain = document.createElement('div');
+      chain.className = 'ht-chain';
+      buildChainDOM(chain, round.chains[i]);
+
+      row.appendChild(idx);
+      row.appendChild(chain);
+      $table.appendChild(row);
+    }
+  }
+
+  function buildChainDOM(container, chainArr) {
+    container.innerHTML = '';
+    var p0 = document.createElement('span');
+    p0.className = 'chain-ptr'; p0.textContent = '→';
+    container.appendChild(p0);
+
+    for (var j = 0; j < chainArr.length; j++) {
+      var node = document.createElement('div');
+      node.className = 'chain-node';
+      node.dataset.key = chainArr[j];
+      node.textContent = chainArr[j];
+      container.appendChild(node);
+
+      var arr = document.createElement('span');
+      arr.className = 'chain-ptr'; arr.textContent = '→';
+      container.appendChild(arr);
+    }
+
+    var nil = document.createElement('span');
+    nil.className = 'chain-null'; nil.textContent = '∅';
+    container.appendChild(nil);
+  }
+
+  /* ── Left-panel renderers ───────────────────────────────── */
+  function renderKey() {
+    var k = round.keys[round.keyIdx];
+    $keyVal.textContent = k;
+    $keyFml.textContent = 'h(k) = k mod ' + round.m;
+    renderDots(round.keys.length, round.keyIdx, false);
+    clearFb();
+  }
+
+  function renderSearch() {
+    var s = round.searches[round.searchIdx];
+    $srchVal.textContent = s.key;
+    $srchFml.textContent = 'h(' + s.key + ') = ' + s.key + ' mod ' + round.m + ' = ' + (s.key % round.m);
+    renderDots(round.searches.length, round.searchIdx, true);
+    renderAnswerBtns();
+    clearFb();
+  }
+
+  function renderDots(total, current, isSearch) {
+    $dots.innerHTML = '';
+    for (var i = 0; i < total; i++) {
+      var d = document.createElement('span');
+      var cls = 'dot';
+      if (isSearch) {
+        cls += i < current ? ' s-done' : i === current ? ' s-current' : ' s-pending';
+      } else {
+        cls += i < current ? ' done' : i === current ? ' current' : '';
+      }
+      d.className = cls;
+      d.setAttribute('aria-hidden', 'true');
+      $dots.appendChild(d);
+    }
+  }
+
+  function renderAnswerBtns() {
+    $ansBtns.innerHTML = '';
+    /* Max comparisons = length of longest chain (all keys in one slot) */
+    var maxLen = 0;
+    for (var i = 0; i < round.m; i++)
+      if (round.chains[i].length > maxLen) maxLen = round.chains[i].length;
+    var max = Math.max(maxLen, 4);
+    for (var n = 1; n <= max; n++) {
+      var btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.textContent = n;
+      btn.dataset.answer = n;
+      $ansBtns.appendChild(btn);
+    }
+  }
+
+  /* ── Phase 1: click a table row ─────────────────────────── */
+  $table.addEventListener('click', function (e) {
+    if (round.phase !== 1 || round.keyIdx >= round.keys.length) return;
+    var row = e.target.closest('.ht-row');
+    if (!row) return;
+
+    var clicked = parseInt(row.dataset.idx, 10);
+    var key     = round.keys[round.keyIdx];
+    var correct = key % round.m;
+
+    if (clicked === correct) {
+      var wasFirst = (attempts === 0);
+      attempts = 0;
+      if (wasFirst) { round.roundOk1++; gOk++; }
+      gTotal++;
+
+      /* Insert at front of chain */
+      round.chains[correct].unshift(key);
+
+      /* Re-render that row, animate the new front node */
+      var targetRow = $table.querySelector('[data-idx="' + correct + '"]');
+      if (targetRow) {
+        buildChainDOM(targetRow.querySelector('.ht-chain'), round.chains[correct]);
+        var front = targetRow.querySelector('.chain-node');
+        if (front) front.classList.add('new-node');
+        targetRow.classList.add('flash-ok');
+        setTimeout(function () { targetRow.classList.remove('flash-ok'); }, 550);
+      }
+
+      var len = round.chains[correct].length;
+      var msg = '✓  h(' + key + ') = ' + key + ' mod ' + round.m + ' = ' + correct;
+      msg += len > 1 ? ' — insertado al frente (cadena: ' + len + ' nodos).' : ' — primer nodo.';
+      setFb(msg, 'ok');
+      $scoreOk.textContent  = gOk;
+      $scoreAll.textContent = gTotal;
+
+      round.keyIdx++;
+      if (round.keyIdx >= round.keys.length) {
+        setTimeout(toPhase2, 1000);
+      } else {
+        setTimeout(renderKey, 800);
+      }
+    } else {
+      attempts++;
+      flashRow(clicked, 'bad');
+      setFb('h(' + key + ') = ' + key + ' mod ' + round.m + ' = ' + correct +
+            '. Clica la fila ' + correct + '.', 'bad');
+    }
+  });
+
+  /* ── Transition to phase 2 ──────────────────────────────── */
+  function toPhase2() {
+    round.phase = 2;
+    round.searches = generateSearches(round.chains, round.keys, round.m);
+    if (round.searches.length === 0) { showRoundEnd(); return; }
+    round.searchIdx = 0;
+    attempts = 0;
+
+    $phaseBadge.textContent = 'Fase 2: Búsqueda';
+    $phaseBadge.className   = 'phase-badge search';
+    $p1card.hidden = true;
+    $p2card.hidden = false;
+    $ansWrap.hidden = false;
+
+    $table.querySelectorAll('.ht-row').forEach(function (r) {
+      r.classList.remove('clickable');
+    });
+
+    $instr.textContent = '¿Cuántas comparaciones necesita la búsqueda de esta clave?';
+    clearFb();
+    renderSearch();
+  }
+
+  /* ── Phase 2: click an answer button ────────────────────── */
+  $ansBtns.addEventListener('click', function (e) {
+    if (round.phase !== 2) return;
+    var btn = e.target.closest('.answer-btn');
+    if (!btn || btn.disabled) return;
+
+    var given   = parseInt(btn.dataset.answer, 10);
+    var s       = round.searches[round.searchIdx];
+    var correct = s.answer;
+
+    var allBtns = $ansBtns.querySelectorAll('.answer-btn');
+    allBtns.forEach(function (b) { b.disabled = true; });
+
+    if (given === correct) {
+      var wasFirst = (attempts === 0);
+      attempts = 0;
+      if (wasFirst) { round.roundOk2++; gOk++; }
+      gTotal++;
+      $scoreOk.textContent  = gOk;
+      $scoreAll.textContent = gTotal;
+      btn.classList.add('a-correct');
+
+      animateTraversal(s.slot, s.found ? s.key : -1, function () {
+        var plural = correct === 1 ? '' : 'es';
+        var msg = s.found
+          ? '✓  Clave ' + s.key + ' hallada en posición ' + correct + ': ' + correct + ' comparación' + plural + '.'
+          : '✓  Clave ' + s.key + ' no está. Se recorren ' + correct + ' nodo' + (correct === 1 ? '' : 's') + ' del slot ' + s.slot + ' (todas fallan).';
+        setFb(msg, 'ok');
+
+        round.searchIdx++;
+        if (round.searchIdx >= round.searches.length) {
+          setTimeout(showRoundEnd, 1000);
+        } else {
+          setTimeout(function () {
+            clearHighlights();
+            attempts = 0;
+            allBtns.forEach(function (b) {
+              b.disabled = false;
+              b.classList.remove('a-correct');
+            });
+            renderSearch();
+          }, 1000);
+        }
+      });
+    } else {
+      attempts++;
+      btn.classList.add('a-wrong');
+      setTimeout(function () {
+        btn.classList.remove('a-wrong');
+        allBtns.forEach(function (b) { b.disabled = false; });
+      }, 500);
+
+      var hint = s.found
+        ? 'Localiza ' + s.key + ' en el slot ' + s.slot + ': ¿en qué posición está?'
+        : 'La clave ' + s.key + ' no está. Cuenta cuántos nodos hay en el slot ' + s.slot + '.';
+      setFb(hint, 'bad');
+    }
+  });
+
+  /* ── Chain traversal animation ───────────────────────────── */
+  function animateTraversal(slot, targetKey, onDone) {
+    var row   = $table.querySelector('[data-idx="' + slot + '"]');
+    var nodes = row ? Array.prototype.slice.call(row.querySelectorAll('.chain-node')) : [];
+    var i = 0;
+
+    function step() {
+      if (i >= nodes.length) { setTimeout(onDone, 200); return; }
+      nodes[i].classList.add('comparing');
+      var ci = i;
+      setTimeout(function () {
+        if (parseInt(nodes[ci].dataset.key) === targetKey) {
+          nodes[ci].classList.remove('comparing');
+          nodes[ci].classList.add('found-node');
+          setTimeout(onDone, 500);
+          return;
+        }
+        nodes[ci].classList.remove('comparing');
+        nodes[ci].classList.add('visited-node');
+        i++;
+        setTimeout(step, 380);
+      }, 380);
+    }
+    step();
+  }
+
+  function clearHighlights() {
+    $table.querySelectorAll('.chain-node').forEach(function (n) {
+      n.classList.remove('comparing', 'found-node', 'visited-node');
+    });
+  }
+
+  /* ── Round end ──────────────────────────────────────────── */
+  function showRoundEnd() {
+    clearFb();
+    $p2card.hidden = true;
+    $ansWrap.hidden = true;
+    $dots.innerHTML = '';
+    $instr.textContent = '';
+
+    var p1pct = Math.round(100 * round.roundOk1 / round.keys.length);
+    var sLen  = round.searches.length;
+    var p2pct = sLen > 0 ? Math.round(100 * round.roundOk2 / sLen) : 100;
+    $res1.innerHTML = 'Inserción: <strong>' + round.roundOk1 + ' / ' + round.keys.length +
+                      '</strong> &nbsp;(' + p1pct + '%)';
+    $res2.innerHTML = 'Búsqueda: <strong>' + round.roundOk2 + ' / ' + sLen +
+                      '</strong> &nbsp;(' + p2pct + '%)';
+    $result.classList.add('visible');
+    $btn.hidden = false;
+  }
+
+  /* ── New round ──────────────────────────────────────────── */
+  $btn.addEventListener('click', function () {
+    $btn.hidden = true;
+    $result.classList.remove('visible');
+    $p1card.hidden = false;
+    $p2card.hidden = true;
+    $ansWrap.hidden = true;
+    $phaseBadge.textContent = 'Fase 1: Inserción';
+    $phaseBadge.className   = 'phase-badge build';
+    startRound();
+  });
+
+  /* ── Helpers ────────────────────────────────────────────── */
+  function setFb(text, type) {
+    $fb.textContent = text;
+    $fb.className   = 'feedback' + (type ? ' ' + type : '');
+  }
+  function clearFb() { $fb.textContent = ''; $fb.className = 'feedback'; }
+
+  function flashRow(i, type) {
+    var row = $table.querySelector('[data-idx="' + i + '"]');
+    if (!row) return;
+    row.classList.add('flash-' + type);
+    setTimeout(function () { row.classList.remove('flash-' + type); }, 550);
+  }
+
+  /* ── Init ───────────────────────────────────────────────── */
+  function startRound() {
+    roundNum++;
+    round    = generateRound();
+    attempts = 0;
+    $badge.textContent  = 'Ronda ' + roundNum;
+    $mLabel.textContent = 'Tabla hash  ·  m = ' + round.m;
+    $instr.textContent  = 'Clica la fila donde debe insertarse la clave.';
+    renderTable();
+    renderKey();
+  }
+
+  startRound();
+}());
+</script>
+</body>
+</html>
