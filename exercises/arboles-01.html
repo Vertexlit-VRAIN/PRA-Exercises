@@ -416,6 +416,8 @@
   });
 
   document.getElementById('btn-next').addEventListener('click', function () {
+    tree     = generateTree();
+    computeLayout(tree);
     currentQ = generateQuestion(tree);
     renderTree(tree, currentQ.hl);
     renderQuestion(currentQ);
