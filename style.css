@@ -192,24 +192,11 @@ body {
   padding: 2.5rem 2rem 5.5rem;
 }
 
-.panel-header {
-  margin-bottom: 3rem;
-  padding-bottom: 1.75rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
-}
-
 .panel-title {
   font-size: clamp(1.6rem, 4vw, 2.2rem);
   font-weight: 700;
   letter-spacing: -0.01em;
   margin-bottom: 0.6rem;
-}
-
-.panel-desc {
-  font-size: 0.94rem;
-  color: #666;
-  line-height: 1.75;
-  max-width: 60ch;
 }
 
 /* ─── Exercise Grid ─────────────────────────────────────────────────────────── */
@@ -416,10 +403,6 @@ body {
   color: var(--hash-accent);
 }
 
-.theme-hash .panel-header {
-  border-bottom-color: rgba(27, 94, 32, 0.12);
-}
-
 .theme-hash .placeholder-text {
   font-family: var(--font-mono);
   color: #4caf50;
@@ -447,14 +430,6 @@ body {
 
 .theme-arboles {
   background: var(--arboles-bg);
-}
-
-.theme-arboles .panel-desc {
-  color: #5d4037;
-}
-
-.theme-arboles .panel-header {
-  border-bottom-color: rgba(179, 92, 0, 0.15);
 }
 
 .theme-arboles .section-title-strip {
@@ -535,12 +510,6 @@ body {
   font-family: var(--font-orbit);
   color: var(--grafos-accent);
   letter-spacing: 0.06em;
-}
-
-.theme-grafos .panel-desc { color: #3949ab; }
-
-.theme-grafos .panel-header {
-  border-bottom-color: rgba(57, 73, 171, 0.15);
 }
 
 .theme-grafos .placeholder-text {
