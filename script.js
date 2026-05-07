@@ -44,4 +44,29 @@
   var validIds = Array.prototype.map.call(panels, function (p) { return p.id; });
   activateTab(validIds.indexOf(hash) !== -1 ? hash : validIds[0]);
 
+  // ─── Card scroll-in animation ────────────────────────────────────────────────
+  var STAGGER_MS       = 80;
+  var TRANSITION_MS    = 450;
+
+  var cardObserver = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) return;
+      var card  = entry.target;
+      var delay = parseInt(card.dataset.staggerDelay || '0', 10);
+      card.classList.add('is-visible');
+      cardObserver.unobserve(card);
+      setTimeout(function () { card.style.transitionDelay = ''; }, delay + TRANSITION_MS);
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.exercise-card').forEach(function (card) {
+    var siblings = Array.prototype.slice.call(
+      card.parentNode.querySelectorAll('.exercise-card')
+    );
+    var delay = siblings.indexOf(card) * STAGGER_MS;
+    card.dataset.staggerDelay    = delay;
+    card.style.transitionDelay   = delay + 'ms';
+    cardObserver.observe(card);
+  });
+
 })();
