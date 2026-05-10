@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>04 · Interpreta la Matriz — Grafos · PRA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="grafos.css" />
+  <style>
+    .q-panel { padding: 1.5rem; position: sticky; top: 1.25rem; }
+    .btn-outline { width: 100%; }
+    .choice-btn { font-size: 1.05rem; }
+
+    .mode-row { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.25rem; }
+    .mode-sel {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 0.82rem; font-weight: 700;
+      padding: 0.3rem 0.65rem;
+      border: 1.5px solid rgba(26,35,126,0.3); border-radius: 6px;
+      background: #fff; color: var(--indigo-dark);
+      cursor: pointer; transition: border-color 0.12s;
+    }
+    .mode-sel:focus { outline: none; border-color: var(--indigo); }
+
+    /* Matrix display (read-only) */
+    .matrix-wrap { overflow-x: auto; }
+    table.adj-matrix {
+      border-collapse: separate; border-spacing: 3px; margin: 0 auto;
+    }
+    table.adj-matrix th {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.88rem; font-weight: 700; color: var(--indigo-dark);
+      text-align: center; width: 44px; height: 44px;
+      transition: color 0.2s;
+    }
+    table.adj-matrix th.hl { color: #0d47a1; }
+    table.adj-matrix th.corner { color: #9fa8da; font-size: 0.8rem; }
+    td.mcell {
+      width: 44px; height: 44px; border-radius: 6px;
+      border: 2px solid rgba(26,35,126,0.14);
+      background: #fff; text-align: center; vertical-align: middle;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem; font-weight: 700;
+      color: #bdbdbd; cursor: default;
+      transition: background 0.2s, border-color 0.2s, color 0.2s;
+      user-select: none;
+    }
+    td.mcell.filled { color: var(--indigo-dark); background: rgba(26,35,126,0.08); border-color: rgba(26,35,126,0.3); }
+    td.mcell.diagonal { background: #e8eaf6; color: #9fa8da; border-color: transparent; }
+    td.mcell.hl-row { background: rgba(124,185,255,0.18); border-color: rgba(13,71,161,0.35); }
+    td.mcell.hl-col { background: rgba(124,185,255,0.18); border-color: rgba(13,71,161,0.35); }
+    td.mcell.hl-cell { background: #7cb9ff; border-color: #0d47a1; color: #0d1757; }
+    td.mcell.filled.hl-row,
+    td.mcell.filled.hl-col { background: rgba(26,35,126,0.18); }
+    td.mcell.filled.hl-cell { background: #7cb9ff; color: #0d1757; }
+
+    .q-def {
+      font-size: 0.78rem; color: #283593;
+      background: rgba(26,35,126,0.05);
+      border-left: 3px solid var(--indigo);
+      padding: 0.55rem 0.75rem; border-radius: 0 4px 4px 0;
+      line-height: 1.6; display: none;
+    }
+    .q-def.visible { display: block; }
+    .btn-hint {
+      align-self: flex-start; background: none;
+      border: 1.5px dashed rgba(26,35,126,0.35); border-radius: 6px;
+      color: var(--indigo-dark);
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 0.78rem; font-weight: 700; padding: 0.3rem 0.7rem;
+      cursor: pointer; transition: background 0.12s, border-color 0.12s;
+    }
+    .btn-hint:hover { background: rgba(26,35,126,0.06); border-color: var(--indigo); }
+
+    @media (max-width: 700px) {
+      .q-panel { position: static; }
+      td.mcell, table.adj-matrix th { width: 38px; height: 38px; }
+      td.mcell { font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="ex-header">
+  <a class="back-link" href="../index.html#grafos">← Grafos</a>
+  <h1 class="ex-title">04 — INTERPRETA LA MATRIZ</h1>
+  <p class="ex-desc">Lee la matriz de adyacencia y responde preguntas sobre el grafo sin verlo dibujado. Practica con grafos no dirigidos, dirigidos y ponderados.</p>
+</header>
+
+<main class="ex-main">
+
+  <section class="graph-panel" aria-label="Matriz">
+    <div class="mode-row">
+      <label class="panel-label" for="mode-sel" style="white-space:nowrap">Modo</label>
+      <select class="mode-sel" id="mode-sel">
+        <option value="undirected">No dirigido</option>
+        <option value="directed">Dirigido</option>
+        <option value="weighted">Ponderado (dirigido)</option>
+      </select>
+    </div>
+    <p class="panel-label" id="mat-label">Matriz de adyacencia</p>
+    <div class="matrix-wrap">
+      <table class="adj-matrix" id="adj-matrix" aria-label="Matriz de adyacencia"></table>
+    </div>
+    <button class="btn btn-outline" id="btn-new-mat">✦ Nueva matriz</button>
+  </section>
+
+  <section class="q-panel" aria-label="Pregunta">
+    <span class="q-concept" id="q-concept">—</span>
+    <p class="q-text" id="q-text"></p>
+    <button class="btn-hint" id="btn-hint" aria-expanded="false">💡 Ver pista</button>
+    <p class="q-def" id="q-def" aria-live="polite"></p>
+    <div class="choices" id="choices" role="group" aria-label="Opciones de respuesta"></div>
+    <p class="feedback" id="feedback" aria-live="polite"></p>
+    <button class="btn btn-primary" id="btn-next" hidden>Siguiente pregunta →</button>
+  </section>
+
+</main>
+
+<footer class="score-bar" aria-label="Puntuación">
+  Correctas: <span class="score-num" id="score-ok">0</span> / <span id="score-total">0</span>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var LABELS = ['A', 'B', 'C', 'D', 'E'];
+  var N = 5;
+
+  var mode = 'undirected';
+  var adjMatrix = null;
+  var currentQ = null;
+  var answered = false;
+  var scoreOk = 0, scoreAll = 0;
+
+  /* ── Utils ─────────────────────────────────────────────────── */
+  function rand(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = rand(0, i), t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  function makeOptions(correct, min, max) {
+    var pool = new Set([correct]);
+    var cands = [];
+    for (var v = Math.max(min, correct-3); v <= Math.min(max, correct+4); v++) {
+      if (v !== correct) cands.push(v);
+    }
+    shuffle(cands);
+    cands.forEach(function(c) { if (pool.size < 4) pool.add(c); });
+    var off = 1;
+    while (pool.size < 4) {
+      var v = correct + off;
+      if (v >= min && !pool.has(v)) pool.add(v);
+      else { v = correct - off; if (v >= min && !pool.has(v)) pool.add(v); }
+      off++;
+    }
+    return Array.from(pool).sort(function(a,b){ return a-b; });
+  }
+
+  /* ── Matrix generation ─────────────────────────────────────── */
+  function generateMatrix() {
+    var mat = [];
+    for (var i = 0; i < N; i++) mat.push([0,0,0,0,0]);
+
+    var added = new Set(), order = shuffle([0,1,2,3,4]);
+
+    if (mode === 'undirected') {
+      for (var i = 1; i < N; i++) {
+        var u = order[rand(0,i-1)], v = order[i];
+        var k = Math.min(u,v)+','+Math.max(u,v);
+        if (!added.has(k)) { mat[u][v] = 1; mat[v][u] = 1; added.add(k); }
+      }
+      var ex = rand(1,3), att = 0;
+      while (ex > 0 && att < 50) {
+        var u = rand(0,N-1), v = rand(0,N-1);
+        var k = Math.min(u,v)+','+Math.max(u,v);
+        if (u !== v && !added.has(k)) { mat[u][v] = 1; mat[v][u] = 1; added.add(k); ex--; }
+        att++;
+      }
+    } else if (mode === 'directed') {
+      for (var i = 1; i < N; i++) {
+        var u = order[rand(0,i-1)], v = order[i], k = u+','+v;
+        if (!added.has(k)) { mat[u][v] = 1; added.add(k); }
+      }
+      var ex = rand(2,3), att = 0;
+      while (ex > 0 && att < 60) {
+        var u = rand(0,N-1), v = rand(0,N-1), k = u+','+v;
+        if (u !== v && !added.has(k)) { mat[u][v] = 1; added.add(k); ex--; }
+        att++;
+      }
+    } else {
+      for (var i = 1; i < N; i++) {
+        var u = order[rand(0,i-1)], v = order[i], k = u+','+v;
+        if (!added.has(k)) { mat[u][v] = rand(1,9); added.add(k); }
+      }
+      var ex = rand(2,3), att = 0;
+      while (ex > 0 && att < 60) {
+        var u = rand(0,N-1), v = rand(0,N-1), k = u+','+v;
+        if (u !== v && !added.has(k)) { mat[u][v] = rand(1,9); added.add(k); ex--; }
+        att++;
+      }
+    }
+    return mat;
+  }
+
+  /* ── Matrix display ────────────────────────────────────────── */
+  function buildMatrixUI(mat, hlMode, hlI, hlJ) {
+    var table = document.getElementById('adj-matrix');
+    table.innerHTML = '';
+    hlMode = hlMode || 'none';
+
+    var thead = document.createElement('thead');
+    var hrow = document.createElement('tr');
+    var corner = document.createElement('th');
+    corner.className = 'corner';
+    corner.textContent = mode === 'undirected' ? '↔' : '→';
+    hrow.appendChild(corner);
+    for (var j = 0; j < N; j++) {
+      var th = document.createElement('th');
+      th.textContent = LABELS[j];
+      th.setAttribute('data-col', j);
+      if ((hlMode === 'col' || hlMode === 'cell') && j === hlJ) th.classList.add('hl');
+      hrow.appendChild(th);
+    }
+    thead.appendChild(hrow); table.appendChild(thead);
+
+    var tbody = document.createElement('tbody');
+    for (var i = 0; i < N; i++) {
+      var row = document.createElement('tr');
+      var rh = document.createElement('th');
+      rh.textContent = LABELS[i];
+      if ((hlMode === 'row' || hlMode === 'cell') && i === hlI) rh.classList.add('hl');
+      row.appendChild(rh);
+      for (var j = 0; j < N; j++) {
+        var td = document.createElement('td');
+        td.className = 'mcell';
+        td.setAttribute('data-i', i); td.setAttribute('data-j', j);
+        if (i === j) {
+          td.classList.add('diagonal'); td.textContent = '—';
+        } else {
+          var val = mat[i][j];
+          td.textContent = String(val);
+          if (val !== 0) td.classList.add('filled');
+          if (hlMode === 'row' && i === hlI) td.classList.add('hl-row');
+          if (hlMode === 'col' && j === hlJ) td.classList.add('hl-col');
+          if (hlMode === 'cell' && i === hlI && j === hlJ) td.classList.add('hl-cell');
+          if (hlMode === 'both' && ((i === hlI && j === hlJ) || (i === hlJ && j === hlI))) td.classList.add('hl-cell');
+        }
+        row.appendChild(td);
+      }
+      tbody.appendChild(row);
+    }
+    table.appendChild(tbody);
+  }
+
+  /* ── Question generation ───────────────────────────────────── */
+  function generateQuestion(mat) {
+    var types = {
+      undirected: ['degree','adjacent','edge-count','symmetric'],
+      directed:   ['out-degree','in-degree','adjacent-dir','edge-count','symmetric'],
+      weighted:   ['out-degree','adjacent-dir','weight','edge-count','weight-sum']
+    };
+    var pool = types[mode];
+    var type = pool[rand(0, pool.length - 1)];
+
+    var u = rand(0, N-1), v;
+    do { v = rand(0, N-1); } while (v === u);
+
+    switch (type) {
+
+      case 'degree': {
+        var deg = 0;
+        for (var j = 0; j < N; j++) if (j !== u && mat[u][j] !== 0) deg++;
+        return {
+          concept: 'Grado',
+          text: '¿Cuál es el <b>grado</b> del nodo ' + LABELS[u] + '?',
+          def: 'El grado de un nodo es el número de aristas que inciden en él. En un grafo no dirigido, cuenta tanto las que llegan como las que salen (son las mismas).',
+          correct: deg, opts: makeOptions(deg, 0, N-1),
+          isYesNo: false, hlMode: 'row', hlI: u, hlJ: null
+        };
+      }
+
+      case 'adjacent': {
+        var isAdj = mat[u][v] !== 0;
+        return {
+          concept: 'Adyacencia',
+          text: '¿Son <b>adyacentes</b> los nodos ' + LABELS[u] + ' y ' + LABELS[v] + '?',
+          def: 'Dos nodos son adyacentes si existe una arista entre ellos. En la matriz: M[u][v] ≠ 0.',
+          correct: isAdj ? 'Sí' : 'No', opts: ['Sí','No'],
+          isYesNo: true, hlMode: 'both', hlI: u, hlJ: v
+        };
+      }
+
+      case 'adjacent-dir': {
+        var isAdj = mat[u][v] !== 0;
+        return {
+          concept: 'Arista',
+          text: '¿Existe la arista <b>' + LABELS[u] + ' → ' + LABELS[v] + '</b>?',
+          def: 'En un grafo dirigido existe la arista u→v si M[u][v] ≠ 0.',
+          correct: isAdj ? 'Sí' : 'No', opts: ['Sí','No'],
+          isYesNo: true, hlMode: 'cell', hlI: u, hlJ: v
+        };
+      }
+
+      case 'out-degree': {
+        var deg = 0;
+        for (var j = 0; j < N; j++) if (j !== u && mat[u][j] !== 0) deg++;
+        return {
+          concept: 'Grado salida',
+          text: '¿Cuál es el <b>grado de salida</b> del nodo ' + LABELS[u] + '?',
+          def: 'El grado de salida (out-degree) es el número de aristas que salen del nodo: cuenta los valores ≠ 0 en su fila.',
+          correct: deg, opts: makeOptions(deg, 0, N-1),
+          isYesNo: false, hlMode: 'row', hlI: u, hlJ: null
+        };
+      }
+
+      case 'in-degree': {
+        var deg = 0;
+        for (var i = 0; i < N; i++) if (i !== u && mat[i][u] !== 0) deg++;
+        return {
+          concept: 'Grado entrada',
+          text: '¿Cuál es el <b>grado de entrada</b> del nodo ' + LABELS[u] + '?',
+          def: 'El grado de entrada (in-degree) es el número de aristas que llegan al nodo: cuenta los valores ≠ 0 en su columna.',
+          correct: deg, opts: makeOptions(deg, 0, N-1),
+          isYesNo: false, hlMode: 'col', hlI: null, hlJ: u
+        };
+      }
+
+      case 'edge-count': {
+        var count = 0;
+        for (var i = 0; i < N; i++)
+          for (var j = 0; j < N; j++)
+            if (i !== j && mat[i][j] !== 0) count++;
+        var edgeCount = mode === 'undirected' ? count / 2 : count;
+        return {
+          concept: 'Aristas',
+          text: '¿Cuántas <b>aristas</b> tiene el grafo?',
+          def: mode === 'undirected'
+            ? 'En un grafo no dirigido la matriz es simétrica: suma todos los 1s y divide entre 2.'
+            : 'En un grafo dirigido cuenta todos los valores ≠ 0 en la matriz (excluyendo la diagonal).',
+          correct: edgeCount, opts: makeOptions(edgeCount, 1, N*(N-1)/2),
+          isYesNo: false, hlMode: 'none', hlI: null, hlJ: null
+        };
+      }
+
+      case 'symmetric': {
+        var isSym = true;
+        for (var i = 0; i < N && isSym; i++)
+          for (var j = 0; j < N && isSym; j++)
+            if (i !== j && mat[i][j] !== mat[j][i]) isSym = false;
+        return {
+          concept: 'Simetría',
+          text: '¿Es la matriz <b>simétrica</b>?',
+          def: 'Una matriz de adyacencia es simétrica si M[i][j] = M[j][i] para todo par (i,j). Esto equivale a un grafo no dirigido.',
+          correct: isSym ? 'Sí' : 'No', opts: ['Sí','No'],
+          isYesNo: true, hlMode: 'none', hlI: null, hlJ: null
+        };
+      }
+
+      case 'weight': {
+        var w = mat[u][v];
+        var opts;
+        if (w === 0) {
+          opts = [0, rand(1,4), rand(5,9), rand(1,9)];
+          opts = Array.from(new Set(opts)).slice(0,4).sort(function(a,b){return a-b;});
+          while (opts.length < 4) opts.push(rand(1,9));
+        } else {
+          opts = makeOptions(w, 0, 9);
+        }
+        return {
+          concept: 'Peso',
+          text: '¿Cuál es el <b>peso</b> de la arista ' + LABELS[u] + ' → ' + LABELS[v] + '? (0 si no existe)',
+          def: 'El peso de la arista u→v es el valor M[u][v]. Si M[u][v] = 0, la arista no existe.',
+          correct: w, opts: opts.sort(function(a,b){return a-b;}),
+          isYesNo: false, hlMode: 'cell', hlI: u, hlJ: v
+        };
+      }
+
+      case 'weight-sum': {
+        var sum = 0;
+        for (var j = 0; j < N; j++) if (j !== u) sum += mat[u][j];
+        return {
+          concept: 'Suma pesos',
+          text: '¿Cuál es la <b>suma de los pesos</b> de las aristas de salida del nodo ' + LABELS[u] + '?',
+          def: 'Suma todos los valores ≠ 0 en la fila del nodo (excluyendo la diagonal).',
+          correct: sum, opts: makeOptions(sum, 0, 9*(N-1)),
+          isYesNo: false, hlMode: 'row', hlI: u, hlJ: null
+        };
+      }
+    }
+  }
+
+  /* ── Render question ───────────────────────────────────────── */
+  function renderQuestion(q) {
+    document.getElementById('q-concept').textContent = q.concept;
+    document.getElementById('q-text').innerHTML = q.text;
+    document.getElementById('q-def').textContent = q.def;
+    document.getElementById('q-def').classList.remove('visible');
+    document.getElementById('btn-hint').setAttribute('aria-expanded','false');
+    document.getElementById('btn-hint').textContent = '💡 Ver pista';
+
+    var choicesEl = document.getElementById('choices');
+    choicesEl.innerHTML = '';
+    choicesEl.className = q.isYesNo ? 'choices' : 'choices';
+
+    q.opts.forEach(function(opt) {
+      var btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.textContent = String(opt);
+      btn.addEventListener('click', function() { handleAnswer(opt, q); });
+      choicesEl.appendChild(btn);
+    });
+
+    document.getElementById('feedback').textContent = '';
+    document.getElementById('feedback').className = 'feedback';
+    document.getElementById('btn-next').hidden = true;
+    answered = false;
+
+    buildMatrixUI(adjMatrix, q.hlMode, q.hlI, q.hlJ);
+  }
+
+  /* ── Answer handler ────────────────────────────────────────── */
+  function handleAnswer(chosen, q) {
+    if (answered) return;
+    answered = true; scoreAll++;
+
+    var isCorrect = String(chosen) === String(q.correct);
+    document.querySelectorAll('.choice-btn').forEach(function(btn) {
+      btn.disabled = true;
+      if (btn.textContent === String(q.correct)) btn.classList.add('ok');
+      else if (btn.textContent === String(chosen) && !isCorrect) btn.classList.add('bad');
+    });
+
+    var fb = document.getElementById('feedback');
+    if (isCorrect) {
+      scoreOk++;
+      fb.textContent = '¡Correcto!';
+      fb.className = 'feedback ok';
+    } else {
+      fb.textContent = 'Incorrecto — la respuesta es ' + q.correct + '.';
+      fb.className = 'feedback bad';
+    }
+
+    document.getElementById('btn-next').hidden = false;
+    document.getElementById('score-ok').textContent = scoreOk;
+    document.getElementById('score-total').textContent = scoreAll;
+
+    var qPanel = document.querySelector('.q-panel');
+    qPanel.classList.add(isCorrect ? 'panel-flash-ok' : 'panel-flash-bad');
+    setTimeout(function() { qPanel.classList.remove('panel-flash-ok','panel-flash-bad'); }, 700);
+  }
+
+  /* ── New matrix ────────────────────────────────────────────── */
+  function newMatrix() {
+    adjMatrix = generateMatrix();
+    buildMatrixUI(adjMatrix, 'none', null, null);
+    nextQuestion();
+  }
+
+  function nextQuestion() {
+    currentQ = generateQuestion(adjMatrix);
+    renderQuestion(currentQ);
+  }
+
+  /* ── Events ────────────────────────────────────────────────── */
+  document.getElementById('mode-sel').addEventListener('change', function() {
+    mode = this.value;
+    newMatrix();
+  });
+
+  document.getElementById('btn-hint').addEventListener('click', function() {
+    var el = document.getElementById('q-def');
+    var vis = el.classList.toggle('visible');
+    this.setAttribute('aria-expanded', String(vis));
+    this.textContent = vis ? '💡 Ocultar pista' : '💡 Ver pista';
+  });
+
+  document.getElementById('btn-next').addEventListener('click', function() {
+    if (Math.random() < 0.4) newMatrix(); else nextQuestion();
+  });
+
+  document.getElementById('btn-new-mat').addEventListener('click', newMatrix);
+
+  /* ── Boot ──────────────────────────────────────────────────── */
+  newMatrix();
+}());
+</script>
+</body>
+</html>

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>06 · ¿Qué representación conviene? — Grafos · PRA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="grafos.css" />
+  <style>
+    .q-panel { padding: 1.5rem; position: sticky; top: 1.25rem; }
+    .choice-btn { font-size: 0.97rem; }
+
+    .mode-row { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
+    .mode-sel {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 0.82rem; font-weight: 700;
+      padding: 0.3rem 0.65rem;
+      border: 1.5px solid rgba(26,35,126,0.3); border-radius: 6px;
+      background: #fff; color: var(--indigo-dark);
+      cursor: pointer; transition: border-color 0.12s;
+    }
+    .mode-sel:focus { outline: none; border-color: var(--indigo); }
+
+    /* Stats strip */
+    .graph-stats {
+      display: flex; gap: 1.5rem; flex-wrap: wrap;
+      background: rgba(26,35,126,0.06); border-radius: 8px;
+      padding: 0.75rem 1rem;
+    }
+    .stat-item { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; }
+    .stat-val {
+      font-family: 'Orbitron', sans-serif; font-size: 1.4rem;
+      font-weight: 700; color: var(--indigo);
+    }
+    .stat-lbl { font-size: 0.72rem; color: #5c6bc0; text-transform: uppercase; letter-spacing: 0.07em; }
+
+    /* Comparison table shown after answer */
+    .compare-table {
+      display: none; border-collapse: collapse; width: 100%;
+      font-size: 0.82rem;
+    }
+    .compare-table.visible { display: table; }
+    .compare-table th {
+      background: var(--indigo); color: #fff;
+      padding: 0.4rem 0.6rem; font-weight: 700; text-align: left;
+    }
+    .compare-table td {
+      padding: 0.4rem 0.6rem; border-bottom: 1px solid rgba(26,35,126,0.1);
+      color: var(--indigo-dark);
+    }
+    .compare-table tr:last-child td { border-bottom: none; }
+    .compare-table .best { font-weight: 700; color: var(--ok); }
+    .compare-table .worse { color: #9e9e9e; }
+
+    /* Density bar */
+    .density-wrap { display: flex; flex-direction: column; gap: 0.4rem; }
+    .density-label { font-size: 0.77rem; color: #5c6bc0; }
+    .density-bar-bg {
+      height: 8px; background: #e8eaf6; border-radius: 4px; overflow: hidden;
+    }
+    .density-bar-fill {
+      height: 100%; background: var(--indigo); border-radius: 4px;
+      transition: width 0.3s;
+    }
+
+    .q-def {
+      font-size: 0.78rem; color: #283593;
+      background: rgba(26,35,126,0.05);
+      border-left: 3px solid var(--indigo);
+      padding: 0.55rem 0.75rem; border-radius: 0 4px 4px 0;
+      line-height: 1.6; display: none;
+    }
+    .q-def.visible { display: block; }
+    .btn-hint {
+      align-self: flex-start; background: none;
+      border: 1.5px dashed rgba(26,35,126,0.35); border-radius: 6px;
+      color: var(--indigo-dark);
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 0.78rem; font-weight: 700; padding: 0.3rem 0.7rem;
+      cursor: pointer; transition: background 0.12s, border-color 0.12s;
+    }
+    .btn-hint:hover { background: rgba(26,35,126,0.06); border-color: var(--indigo); }
+
+    @media (max-width: 700px) {
+      .q-panel { position: static; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="ex-header">
+  <a class="back-link" href="../index.html#grafos">← Grafos</a>
+  <h1 class="ex-title">06 — ¿QUÉ REPRESENTACIÓN CONVIENE?</h1>
+  <p class="ex-desc">Decide cuándo usar la matriz de adyacencia y cuándo la lista. Responde preguntas sobre coste en memoria y tiempo de acceso.</p>
+</header>
+
+<main class="ex-main">
+
+  <section class="graph-panel" aria-label="Grafo">
+    <div class="mode-row">
+      <label class="panel-label" for="mode-sel" style="white-space:nowrap">Modo</label>
+      <select class="mode-sel" id="mode-sel">
+        <option value="undirected">No dirigido</option>
+        <option value="directed">Dirigido</option>
+      </select>
+    </div>
+    <svg id="graph-svg" class="graph-svg" viewBox="0 0 480 300"
+         role="img" aria-label="Grafo"></svg>
+
+    <div class="graph-stats" id="graph-stats" aria-label="Parámetros del grafo"></div>
+
+    <div class="density-wrap">
+      <p class="density-label">Densidad del grafo: <span id="density-pct">—</span></p>
+      <div class="density-bar-bg"><div class="density-bar-fill" id="density-bar" style="width:0"></div></div>
+    </div>
+
+    <button class="btn btn-outline" id="btn-new-graph">✦ Nuevo grafo</button>
+  </section>
+
+  <section class="q-panel" aria-label="Pregunta">
+    <span class="q-concept" id="q-concept">—</span>
+    <p class="q-text" id="q-text"></p>
+    <button class="btn-hint" id="btn-hint" aria-expanded="false">💡 Ver pista</button>
+    <p class="q-def" id="q-def" aria-live="polite"></p>
+    <div class="choices" id="choices" role="group" aria-label="Opciones de respuesta"></div>
+    <p class="feedback" id="feedback" aria-live="polite"></p>
+    <table class="compare-table" id="compare-table">
+      <thead><tr><th>Representación</th><th id="ct-metric">—</th></tr></thead>
+      <tbody>
+        <tr><td>Matriz</td><td id="ct-mat">—</td></tr>
+        <tr><td>Lista</td><td id="ct-lst">—</td></tr>
+      </tbody>
+    </table>
+    <button class="btn btn-primary" id="btn-next" hidden>Siguiente pregunta →</button>
+  </section>
+
+</main>
+
+<footer class="score-bar" aria-label="Puntuación">
+  Correctas: <span class="score-num" id="score-ok">0</span> / <span id="score-total">0</span>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var SVG_W = 480, SVG_H = 300, R = 22;
+  var NS = 'http://www.w3.org/2000/svg';
+  var LABELS = ['A','B','C','D','E','F','G'];
+
+  var mode = 'undirected';
+  var graphInfo = null; /* {n, m, nodes, edges, maxM} */
+  var currentQ = null;
+  var answered = false;
+  var scoreOk = 0, scoreAll = 0;
+
+  /* ── Utils ─────────────────────────────────────────────────── */
+  function rand(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = rand(0,i), t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  function makeOptions(correct, alts) {
+    var pool = new Set([correct]);
+    alts.forEach(function(v){ if (pool.size < 4) pool.add(v); });
+    var arr = Array.from(pool);
+    /* ensure 4 choices */
+    var off = 1;
+    while (arr.length < 4) {
+      arr.push(correct + off); off++;
+    }
+    return arr.sort(function(a,b){return a-b;});
+  }
+
+  /* ── Graph generation ──────────────────────────────────────── */
+  function generateGraph() {
+    var n = rand(5, 7);
+    /* max edges */
+    var maxM = mode === 'undirected' ? n*(n-1)/2 : n*(n-1);
+    var nodes = [], cx = SVG_W/2, cy = SVG_H/2+10;
+    var lr = n <= 5 ? 105 : (n === 6 ? 110 : 115);
+
+    for (var i = 0; i < n; i++) {
+      var a = (2*Math.PI*i)/n - Math.PI/2;
+      nodes.push({id:i, label:LABELS[i], x:cx+lr*Math.cos(a), y:cy+lr*Math.sin(a)});
+    }
+
+    var edges = [], added = new Set(), order = shuffle(Array.from({length:n},function(_,i){return i;}));
+
+    if (mode === 'undirected') {
+      for (var i = 1; i < n; i++) {
+        var u=order[rand(0,i-1)], v=order[i];
+        var k=Math.min(u,v)+','+Math.max(u,v);
+        if (!added.has(k)) { edges.push({from:u,to:v}); added.add(k); }
+      }
+      /* extra edges: aim for 30-70% density */
+      var target = rand(Math.ceil(maxM*0.3), Math.floor(maxM*0.7));
+      var att = 0;
+      while (edges.length < target && att < 200) {
+        var u=rand(0,n-1), v=rand(0,n-1);
+        var k=Math.min(u,v)+','+Math.max(u,v);
+        if (u!==v && !added.has(k)) { edges.push({from:u,to:v}); added.add(k); }
+        att++;
+      }
+    } else {
+      for (var i = 1; i < n; i++) {
+        var u=order[rand(0,i-1)], v=order[i], k=u+','+v;
+        if (!added.has(k)) { edges.push({from:u,to:v}); added.add(k); }
+      }
+      var target = rand(Math.ceil(maxM*0.3), Math.floor(maxM*0.65));
+      var att = 0;
+      while (edges.length < target && att < 200) {
+        var u=rand(0,n-1), v=rand(0,n-1), k=u+','+v;
+        if (u!==v && !added.has(k)) { edges.push({from:u,to:v}); added.add(k); }
+        att++;
+      }
+    }
+
+    return {n:n, m:edges.length, maxM:maxM, nodes:nodes, edges:edges};
+  }
+
+  /* Memory formulas */
+  function matrixMem(n) { return n * n; }
+  function listMem(n, m) {
+    return mode === 'undirected' ? n + 2*m : n + m;
+  }
+
+  /* ── SVG rendering ─────────────────────────────────────────── */
+  function renderGraph(g) {
+    var svg = document.getElementById('graph-svg');
+    svg.innerHTML = '';
+    var nodes = g.nodes, edges = g.edges;
+
+    if (mode !== 'undirected') {
+      var defs = document.createElementNS(NS,'defs');
+      var mk = document.createElementNS(NS,'marker');
+      mk.setAttribute('id','arr'); mk.setAttribute('markerWidth','7');
+      mk.setAttribute('markerHeight','5'); mk.setAttribute('refX','6');
+      mk.setAttribute('refY','2.5'); mk.setAttribute('orient','auto');
+      var poly = document.createElementNS(NS,'polygon');
+      poly.setAttribute('points','0 0, 7 2.5, 0 5'); poly.setAttribute('fill','#3949ab');
+      mk.appendChild(poly); defs.appendChild(mk); svg.appendChild(defs);
+    }
+
+    var edgeSet = new Set();
+    edges.forEach(function(e){ edgeSet.add(e.from+','+e.to); });
+
+    edges.forEach(function(e) {
+      var fn=nodes[e.from], tn=nodes[e.to];
+      var dx=tn.x-fn.x, dy=tn.y-fn.y, dist=Math.sqrt(dx*dx+dy*dy);
+      if (!dist) return;
+      var ux=dx/dist, uy=dy/dist;
+
+      if (mode === 'undirected') {
+        var line = document.createElementNS(NS,'line');
+        line.setAttribute('x1',fn.x+ux*R); line.setAttribute('y1',fn.y+uy*R);
+        line.setAttribute('x2',tn.x-ux*R); line.setAttribute('y2',tn.y-uy*R);
+        line.setAttribute('stroke','#3949ab'); line.setAttribute('stroke-width','2');
+        svg.appendChild(line);
+      } else {
+        var mutual = edgeSet.has(e.to+','+e.from), el;
+        if (mutual) {
+          var mx=(fn.x+tn.x)/2, my=(fn.y+tn.y)/2;
+          var cpx=mx+uy*24, cpy=my-ux*24;
+          var d0x=cpx-fn.x,d0y=cpy-fn.y,d0l=Math.sqrt(d0x*d0x+d0y*d0y);
+          var d1x=tn.x-cpx,d1y=tn.y-cpy,d1l=Math.sqrt(d1x*d1x+d1y*d1y);
+          el = document.createElementNS(NS,'path');
+          el.setAttribute('d',
+            'M '+(fn.x+(d0x/d0l)*(R+2))+','+(fn.y+(d0y/d0l)*(R+2))+
+            ' Q '+cpx+','+cpy+
+            ' '+(tn.x-(d1x/d1l)*(R+7))+','+(tn.y-(d1y/d1l)*(R+7)));
+          el.setAttribute('fill','none');
+        } else {
+          el = document.createElementNS(NS,'line');
+          el.setAttribute('x1',fn.x+ux*(R+2)); el.setAttribute('y1',fn.y+uy*(R+2));
+          el.setAttribute('x2',tn.x-ux*(R+7)); el.setAttribute('y2',tn.y-uy*(R+7));
+        }
+        el.setAttribute('stroke','#3949ab'); el.setAttribute('stroke-width','2');
+        el.setAttribute('marker-end','url(#arr)'); svg.appendChild(el);
+      }
+    });
+
+    nodes.forEach(function(nd) {
+      var g2=document.createElementNS(NS,'g');
+      var c=document.createElementNS(NS,'circle');
+      c.setAttribute('cx',nd.x); c.setAttribute('cy',nd.y); c.setAttribute('r',R);
+      c.setAttribute('fill','#e8eaf6'); c.setAttribute('stroke','#1a237e'); c.setAttribute('stroke-width','2.5');
+      var t=document.createElementNS(NS,'text');
+      t.setAttribute('x',nd.x); t.setAttribute('y',nd.y+5); t.setAttribute('text-anchor','middle');
+      t.setAttribute('font-size','13'); t.setAttribute('font-family','Space Grotesk, sans-serif');
+      t.setAttribute('font-weight','700'); t.setAttribute('fill','#1a237e');
+      t.setAttribute('pointer-events','none'); t.textContent=nd.label;
+      g2.appendChild(c); g2.appendChild(t); svg.appendChild(g2);
+    });
+  }
+
+  function renderStats(g) {
+    var stats = document.getElementById('graph-stats');
+    var density = (g.m / g.maxM * 100).toFixed(1);
+    stats.innerHTML =
+      '<div class="stat-item"><span class="stat-val">'+g.n+'</span><span class="stat-lbl">Nodos (N)</span></div>'+
+      '<div class="stat-item"><span class="stat-val">'+g.m+'</span><span class="stat-lbl">Aristas (M)</span></div>'+
+      '<div class="stat-item"><span class="stat-val">'+g.maxM+'</span><span class="stat-lbl">M máx</span></div>'+
+      '<div class="stat-item"><span class="stat-val">'+matrixMem(g.n)+'</span><span class="stat-lbl">N²</span></div>';
+
+    document.getElementById('density-pct').textContent = density + '%';
+    document.getElementById('density-bar').style.width = density + '%';
+  }
+
+  /* ── Question generation ───────────────────────────────────── */
+  function generateQuestion(g) {
+    var n = g.n, m = g.m, maxM = g.maxM;
+    var matMem = matrixMem(n);
+    var lstMem = listMem(n, m);
+    var listFormula = mode === 'undirected' ? 'N + 2M' : 'N + M';
+    var listVal = mode === 'undirected' ? n+'+2×'+m+'='+(n+2*m) : n+'+'+m+'='+(n+m);
+
+    var types = ['mat-mem','list-mem','which-less','lookup','neighbors','which-overall'];
+    var type = types[rand(0, types.length-1)];
+
+    switch (type) {
+
+      case 'mat-mem': {
+        var correct = matMem;
+        return {
+          concept: 'Memoria matriz',
+          text: 'Este grafo tiene <b>N=' + n + '</b> nodos. ¿Cuántas celdas ocupa su <b>matriz de adyacencia</b>?',
+          def: 'La matriz de adyacencia ocupa siempre N² celdas, independientemente del número de aristas.',
+          correct: correct,
+          opts: makeOptions(correct, [n*(n+1), (n-1)*(n-1), n*2, n+m]),
+          isYesNo: false,
+          ctMetric: 'Celdas (memoria)', ctMat: String(matMem)+' = N²', ctLst: String(lstMem)+' = '+listFormula
+        };
+      }
+
+      case 'list-mem': {
+        var correct = lstMem;
+        return {
+          concept: 'Memoria lista',
+          text: 'Este grafo tiene <b>N=' + n + '</b> nodos y <b>M=' + m + '</b> aristas. ¿Cuántos elementos ocupa su <b>lista de adyacencia</b>?',
+          def: 'La lista ocupa N entradas de cabecera + un elemento por cada vecino almacenado: ' + listFormula + '.',
+          correct: correct,
+          opts: makeOptions(correct, [n+m, n*m, n*2, matMem]),
+          isYesNo: false,
+          ctMetric: 'Elementos (memoria)', ctMat: String(matMem)+' = N²', ctLst: String(lstMem)+' = '+listFormula
+        };
+      }
+
+      case 'which-less': {
+        var matWins = matMem <= lstMem;
+        return {
+          concept: 'Menos memoria',
+          text: 'Con <b>N=' + n + '</b> y <b>M=' + m + '</b>, ¿qué representación <b>ocupa menos memoria</b>?',
+          def: 'Compara N² (matriz) con ' + listFormula + ' (lista). La lista gana cuando el grafo es disperso (M ≪ N²).',
+          correct: matWins ? 'Matriz' : 'Lista',
+          opts: ['Matriz','Lista'],
+          isYesNo: true,
+          ctMetric: 'Memoria', ctMat: String(matMem), ctLst: String(lstMem)
+        };
+      }
+
+      case 'lookup': {
+        return {
+          concept: 'Coste búsqueda',
+          text: '¿Qué coste tiene comprobar si la arista <b>(u, v) existe</b>?',
+          def: 'Con la matriz basta con leer M[u][v]: O(1). Con la lista hay que recorrer los vecinos de u: O(grado(u)).',
+          correct: 'Matriz — O(1)',
+          opts: ['Matriz — O(1)','Lista — O(grado)','Ambas O(1)','Ambas O(N)'],
+          isYesNo: false,
+          ctMetric: 'Coste comprobar (u,v)', ctMat: 'O(1)', ctLst: 'O(grado(u))'
+        };
+      }
+
+      case 'neighbors': {
+        return {
+          concept: 'Listar vecinos',
+          text: '¿Qué coste tiene <b>listar todos los vecinos</b> de un nodo?',
+          def: 'Con la lista basta recorrer su sublista: O(grado). Con la matriz hay que examinar toda la fila: O(N).',
+          correct: 'Lista — O(grado)',
+          opts: ['Matriz — O(N)','Lista — O(grado)','Ambas O(grado)','Ambas O(N)'],
+          isYesNo: false,
+          ctMetric: 'Coste listar vecinos', ctMat: 'O(N)', ctLst: 'O(grado)'
+        };
+      }
+
+      case 'which-overall': {
+        var dense = (m / maxM) >= 0.5;
+        return {
+          concept: 'Elección',
+          text: 'El grafo tiene densidad <b>' + (m/maxM*100).toFixed(0) + '%</b>. ¿Qué representación es más eficiente en memoria?',
+          def: 'Un grafo denso (muchas aristas) favorece la matriz porque N² ≈ N+2M. Un grafo disperso favorece la lista.',
+          correct: dense ? 'Matriz' : 'Lista',
+          opts: ['Matriz','Lista'],
+          isYesNo: true,
+          ctMetric: 'Memoria', ctMat: String(matMem)+' celdas', ctLst: String(lstMem)+' elementos'
+        };
+      }
+    }
+  }
+
+  /* ── Render question ───────────────────────────────────────── */
+  function renderQuestion(q) {
+    document.getElementById('q-concept').textContent = q.concept;
+    document.getElementById('q-text').innerHTML = q.text;
+    document.getElementById('q-def').textContent = q.def;
+    document.getElementById('q-def').classList.remove('visible');
+    document.getElementById('btn-hint').setAttribute('aria-expanded','false');
+    document.getElementById('btn-hint').textContent = '💡 Ver pista';
+    document.getElementById('compare-table').classList.remove('visible');
+
+    var choicesEl = document.getElementById('choices');
+    choicesEl.innerHTML = '';
+    q.opts.forEach(function(opt) {
+      var btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.textContent = String(opt);
+      btn.addEventListener('click', function(){ handleAnswer(opt, q); });
+      choicesEl.appendChild(btn);
+    });
+
+    document.getElementById('feedback').textContent = '';
+    document.getElementById('feedback').className = 'feedback';
+    document.getElementById('btn-next').hidden = true;
+    answered = false;
+  }
+
+  /* ── Answer handler ────────────────────────────────────────── */
+  function handleAnswer(chosen, q) {
+    if (answered) return;
+    answered = true; scoreAll++;
+
+    var isCorrect = String(chosen) === String(q.correct);
+    document.querySelectorAll('.choice-btn').forEach(function(btn) {
+      btn.disabled = true;
+      if (btn.textContent === String(q.correct)) btn.classList.add('ok');
+      else if (btn.textContent === String(chosen) && !isCorrect) btn.classList.add('bad');
+    });
+
+    var fb = document.getElementById('feedback');
+    if (isCorrect) { scoreOk++; fb.textContent = '¡Correcto!'; fb.className = 'feedback ok'; }
+    else { fb.textContent = 'Incorrecto — la respuesta es ' + q.correct + '.'; fb.className = 'feedback bad'; }
+
+    /* Show comparison table */
+    var ct = document.getElementById('compare-table');
+    document.getElementById('ct-metric').textContent = q.ctMetric;
+    var matVal = q.ctMat, lstVal = q.ctLst;
+    var matBetter = false;
+    if (q.concept === 'Menos memoria' || q.concept === 'Elección') {
+      var matNum = parseInt(q.ctMat); var lstNum = parseInt(q.ctLst);
+      matBetter = matNum <= lstNum;
+    }
+    document.getElementById('ct-mat').textContent = matVal;
+    document.getElementById('ct-lst').textContent = lstVal;
+    if (q.concept === 'Menos memoria' || q.concept === 'Elección') {
+      document.getElementById('ct-mat').className = matBetter ? 'best' : 'worse';
+      document.getElementById('ct-lst').className = matBetter ? 'worse' : 'best';
+    } else {
+      document.getElementById('ct-mat').className = '';
+      document.getElementById('ct-lst').className = '';
+    }
+    ct.classList.add('visible');
+
+    document.getElementById('btn-next').hidden = false;
+    document.getElementById('score-ok').textContent = scoreOk;
+    document.getElementById('score-total').textContent = scoreAll;
+
+    var qPanel = document.querySelector('.q-panel');
+    qPanel.classList.add(isCorrect ? 'panel-flash-ok' : 'panel-flash-bad');
+    setTimeout(function(){ qPanel.classList.remove('panel-flash-ok','panel-flash-bad'); }, 700);
+  }
+
+  /* ── New graph ─────────────────────────────────────────────── */
+  function newGraph() {
+    graphInfo = generateGraph();
+    renderGraph(graphInfo);
+    renderStats(graphInfo);
+    nextQuestion();
+  }
+
+  function nextQuestion() {
+    currentQ = generateQuestion(graphInfo);
+    renderQuestion(currentQ);
+  }
+
+  /* ── Events ────────────────────────────────────────────────── */
+  document.getElementById('mode-sel').addEventListener('change', function() {
+    mode = this.value; newGraph();
+  });
+
+  document.getElementById('btn-hint').addEventListener('click', function() {
+    var el = document.getElementById('q-def');
+    var vis = el.classList.toggle('visible');
+    this.setAttribute('aria-expanded', String(vis));
+    this.textContent = vis ? '💡 Ocultar pista' : '💡 Ver pista';
+  });
+
+  document.getElementById('btn-next').addEventListener('click', function() {
+    if (Math.random() < 0.35) newGraph(); else nextQuestion();
+  });
+
+  document.getElementById('btn-new-graph').addEventListener('click', newGraph);
+
+  /* ── Boot ──────────────────────────────────────────────────── */
+  newGraph();
+}());
+</script>
+</body>
+</html>
