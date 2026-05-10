@@ -3,17 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>04 · Interpreta la Matriz — Grafos · PRA</title>
+  <title>04 · Construye la Lista — Grafos · PRA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="grafos.css" />
   <style>
-    .q-panel { padding: 1.5rem; position: sticky; top: 1.25rem; }
-    .btn-outline { width: 100%; }
-    .choice-btn { font-size: 1.05rem; }
+    .list-panel { padding: 1.5rem; position: sticky; top: 1.25rem; }
 
-    .mode-row { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 0.25rem; }
+    .mode-row { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
     .mode-sel {
       font-family: 'Space Grotesk', system-ui, sans-serif;
       font-size: 0.82rem; font-weight: 700;
@@ -24,60 +22,94 @@
     }
     .mode-sel:focus { outline: none; border-color: var(--indigo); }
 
-    /* Matrix display (read-only) */
-    .matrix-wrap { overflow-x: auto; }
-    table.adj-matrix {
-      border-collapse: separate; border-spacing: 3px; margin: 0 auto;
+    .mode-note {
+      font-size: 0.77rem; color: #5c6bc0; line-height: 1.55;
+      background: rgba(26,35,126,0.04);
+      border-left: 3px solid var(--indigo-lt);
+      padding: 0.4rem 0.65rem; border-radius: 0 4px 4px 0;
     }
-    table.adj-matrix th {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 0.88rem; font-weight: 700; color: var(--indigo-dark);
-      text-align: center; width: 44px; height: 44px;
-      transition: color 0.2s;
-    }
-    table.adj-matrix th.hl { color: #0d47a1; }
-    table.adj-matrix th.corner { color: #9fa8da; font-size: 0.8rem; }
-    td.mcell {
-      width: 44px; height: 44px; border-radius: 6px;
-      border: 2px solid rgba(26,35,126,0.14);
-      background: #fff; text-align: center; vertical-align: middle;
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 1rem; font-weight: 700;
-      color: #bdbdbd; cursor: default;
-      transition: background 0.2s, border-color 0.2s, color 0.2s;
-      user-select: none;
-    }
-    td.mcell.filled { color: var(--indigo-dark); background: rgba(26,35,126,0.08); border-color: rgba(26,35,126,0.3); }
-    td.mcell.diagonal { background: #e8eaf6; color: #9fa8da; border-color: transparent; }
-    td.mcell.hl-row { background: rgba(124,185,255,0.18); border-color: rgba(13,71,161,0.35); }
-    td.mcell.hl-col { background: rgba(124,185,255,0.18); border-color: rgba(13,71,161,0.35); }
-    td.mcell.hl-cell { background: #7cb9ff; border-color: #0d47a1; color: #0d1757; }
-    td.mcell.filled.hl-row,
-    td.mcell.filled.hl-col { background: rgba(26,35,126,0.18); }
-    td.mcell.filled.hl-cell { background: #7cb9ff; color: #0d1757; }
 
-    .q-def {
-      font-size: 0.78rem; color: #283593;
-      background: rgba(26,35,126,0.05);
-      border-left: 3px solid var(--indigo);
-      padding: 0.55rem 0.75rem; border-radius: 0 4px 4px 0;
-      line-height: 1.6; display: none;
+    /* Adjacency list rows */
+    .adj-lists { display: flex; flex-direction: column; gap: 0.55rem; }
+
+    .list-row {
+      display: flex; align-items: flex-start; gap: 0.5rem; flex-wrap: wrap;
     }
-    .q-def.visible { display: block; }
-    .btn-hint {
-      align-self: flex-start; background: none;
-      border: 1.5px dashed rgba(26,35,126,0.35); border-radius: 6px;
-      color: var(--indigo-dark);
-      font-family: 'Space Grotesk', system-ui, sans-serif;
-      font-size: 0.78rem; font-weight: 700; padding: 0.3rem 0.7rem;
-      cursor: pointer; transition: background 0.12s, border-color 0.12s;
+    .list-node-label {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.92rem; font-weight: 700; color: var(--indigo-dark);
+      background: #e8eaf6; border: 2px solid rgba(26,35,126,0.25);
+      border-radius: 6px; padding: 0.25rem 0.6rem;
+      min-width: 32px; text-align: center; flex-shrink: 0;
+      line-height: 1.6;
     }
-    .btn-hint:hover { background: rgba(26,35,126,0.06); border-color: var(--indigo); }
+
+    .list-arrow {
+      color: #9fa8da; font-size: 1rem; line-height: 2;
+      flex-shrink: 0;
+    }
+
+    .chip-area {
+      display: flex; flex-wrap: wrap; gap: 4px;
+      min-height: 34px; flex: 1;
+      border-bottom: 2px dashed rgba(26,35,126,0.15);
+      padding-bottom: 4px;
+    }
+
+    /* Chips */
+    .chip {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 0.82rem; font-weight: 700;
+      padding: 0.2rem 0.55rem; border-radius: 20px;
+      cursor: pointer; transition: background 0.1s, transform 0.08s;
+      border: 2px solid transparent; user-select: none;
+    }
+    .chip:active { transform: scale(0.96); }
+
+    /* Bank chip (available to add) */
+    .chip-bank-item {
+      background: #e8eaf6; color: var(--indigo-dark);
+      border-color: rgba(26,35,126,0.2);
+    }
+    .chip-bank-item:hover { background: rgba(26,35,126,0.14); }
+
+    /* Selected chip (added to list) */
+    .chip-selected {
+      background: var(--indigo); color: #fff;
+      border-color: var(--indigo-dark);
+    }
+    .chip-selected:hover { background: var(--indigo-dark); }
+    .chip-selected.ok  { background: var(--ok);  border-color: var(--ok); }
+    .chip-selected.bad { background: var(--bad); border-color: var(--bad); }
+    .chip-bank-item.missing { border-color: var(--bad); color: var(--bad); background: #ffebee; }
+
+    /* Bank section */
+    .bank-label {
+      font-size: 0.72rem; color: #9fa8da; text-transform: uppercase;
+      letter-spacing: 0.07em; font-weight: 700;
+    }
+    .chip-bank { display: flex; flex-wrap: wrap; gap: 4px; }
+
+    /* Weight picker */
+    #weight-picker {
+      position: fixed; z-index: 200;
+      background: #fff; border: 2px solid var(--indigo); border-radius: 8px;
+      padding: 0.4rem; box-shadow: 0 4px 20px rgba(26,35,126,0.18);
+      display: none; gap: 3px; flex-wrap: wrap; width: 126px;
+    }
+    #weight-picker.visible { display: flex; }
+    .wp-btn {
+      width: 32px; height: 32px;
+      border: 1.5px solid rgba(26,35,126,0.2); border-radius: 5px;
+      background: #f4f5fb; color: var(--indigo-dark);
+      font-family: 'Space Grotesk', sans-serif; font-size: 0.88rem; font-weight: 700;
+      cursor: pointer; transition: background 0.09s;
+    }
+    .wp-btn:hover { background: rgba(26,35,126,0.14); }
+    .wp-btn.wp-zero { color: #9fa8da; }
 
     @media (max-width: 700px) {
-      .q-panel { position: static; }
-      td.mcell, table.adj-matrix th { width: 38px; height: 38px; }
-      td.mcell { font-size: 0.9rem; }
+      .list-panel { position: static; }
     }
   </style>
 </head>
@@ -85,13 +117,13 @@
 
 <header class="ex-header">
   <a class="back-link" href="../index.html#grafos">← Grafos</a>
-  <h1 class="ex-title">04 — INTERPRETA LA MATRIZ</h1>
-  <p class="ex-desc">Lee la matriz de adyacencia y responde preguntas sobre el grafo sin verlo dibujado. Practica con grafos no dirigidos, dirigidos y ponderados.</p>
+  <h1 class="ex-title">04 — CONSTRUYE LA LISTA</h1>
+  <p class="ex-desc">Construye la lista de adyacencia del grafo mostrado. Haz clic en los chips para añadir o quitar vecinos de cada nodo.</p>
 </header>
 
 <main class="ex-main">
 
-  <section class="graph-panel" aria-label="Matriz">
+  <section class="graph-panel" aria-label="Grafo">
     <div class="mode-row">
       <label class="panel-label" for="mode-sel" style="white-space:nowrap">Modo</label>
       <select class="mode-sel" id="mode-sel">
@@ -100,41 +132,55 @@
         <option value="weighted">Ponderado (dirigido)</option>
       </select>
     </div>
-    <p class="panel-label" id="mat-label">Matriz de adyacencia</p>
-    <div class="matrix-wrap">
-      <table class="adj-matrix" id="adj-matrix" aria-label="Matriz de adyacencia"></table>
-    </div>
-    <button class="btn btn-outline" id="btn-new-mat">✦ Nueva matriz</button>
+    <svg id="graph-svg" class="graph-svg" viewBox="0 0 480 300"
+         role="img" aria-label="Grafo"></svg>
+    <p class="mode-note" id="mode-note"></p>
+    <button class="btn btn-outline" id="btn-new-graph">✦ Nuevo grafo</button>
   </section>
 
-  <section class="q-panel" aria-label="Pregunta">
-    <span class="q-concept" id="q-concept">—</span>
-    <p class="q-text" id="q-text"></p>
-    <button class="btn-hint" id="btn-hint" aria-expanded="false">💡 Ver pista</button>
-    <p class="q-def" id="q-def" aria-live="polite"></p>
-    <div class="choices" id="choices" role="group" aria-label="Opciones de respuesta"></div>
+  <section class="list-panel q-panel" aria-label="Lista de adyacencia">
+    <span class="q-concept">Lista</span>
+    <p class="panel-label">Construye la lista de adyacencia</p>
+
+    <div class="adj-lists" id="adj-lists"></div>
+
+    <div style="margin-top:0.5rem">
+      <p class="bank-label">Banco de nodos — haz clic para añadir a una lista</p>
+    </div>
+    <div class="chip-bank" id="chip-bank" aria-label="Banco de nodos disponibles"></div>
+
+    <button class="btn btn-primary" id="btn-check">Comprobar →</button>
     <p class="feedback" id="feedback" aria-live="polite"></p>
-    <button class="btn btn-primary" id="btn-next" hidden>Siguiente pregunta →</button>
+    <button class="btn btn-outline" id="btn-next" hidden>✦ Nuevo grafo</button>
   </section>
 
 </main>
 
 <footer class="score-bar" aria-label="Puntuación">
-  Correctas: <span class="score-num" id="score-ok">0</span> / <span id="score-total">0</span>
+  Rondas completadas: <span class="score-num" id="score-ok">0</span>
 </footer>
+
+<div id="weight-picker" role="dialog" aria-label="Selecciona el peso"></div>
 
 <script>
 (function () {
   'use strict';
 
+  var SVG_W = 480, SVG_H = 300, R = 22;
+  var NS = 'http://www.w3.org/2000/svg';
   var LABELS = ['A', 'B', 'C', 'D', 'E'];
   var N = 5;
 
   var mode = 'undirected';
-  var adjMatrix = null;
-  var currentQ = null;
-  var answered = false;
-  var scoreOk = 0, scoreAll = 0;
+  var graph = null;
+  /* userAdj[i] = [{node: j, weight: w}] — what the user has added */
+  var userAdj = null;
+  /* correctAdj[i] = [{node: j, weight: w}] */
+  var correctAdj = null;
+
+  var activeRow = null; /* which row the bank is currently targeting */
+  var pickerTarget = null; /* {row, node} for weight picker */
+  var roundComplete = false, roundsCompleted = 0;
 
   /* ── Utils ─────────────────────────────────────────────────── */
   function rand(a, b) { return Math.floor(Math.random() * (b - a + 1)) + a; }
@@ -145,350 +191,417 @@
     return arr;
   }
 
-  function makeOptions(correct, min, max) {
-    var pool = new Set([correct]);
-    var cands = [];
-    for (var v = Math.max(min, correct-3); v <= Math.min(max, correct+4); v++) {
-      if (v !== correct) cands.push(v);
+  /* ── Graph generation ──────────────────────────────────────── */
+  function generateGraph() {
+    var nodes = [], cx = SVG_W/2, cy = SVG_H/2+10, lr = 105;
+    for (var i = 0; i < N; i++) {
+      var a = (2*Math.PI*i)/N - Math.PI/2;
+      nodes.push({id:i, label:LABELS[i], x:cx+lr*Math.cos(a), y:cy+lr*Math.sin(a)});
     }
-    shuffle(cands);
-    cands.forEach(function(c) { if (pool.size < 4) pool.add(c); });
-    var off = 1;
-    while (pool.size < 4) {
-      var v = correct + off;
-      if (v >= min && !pool.has(v)) pool.add(v);
-      else { v = correct - off; if (v >= min && !pool.has(v)) pool.add(v); }
-      off++;
-    }
-    return Array.from(pool).sort(function(a,b){ return a-b; });
-  }
 
-  /* ── Matrix generation ─────────────────────────────────────── */
-  function generateMatrix() {
-    var mat = [];
-    for (var i = 0; i < N; i++) mat.push([0,0,0,0,0]);
-
-    var added = new Set(), order = shuffle([0,1,2,3,4]);
+    var edges = [], added = new Set(), order = shuffle([0,1,2,3,4]);
 
     if (mode === 'undirected') {
       for (var i = 1; i < N; i++) {
         var u = order[rand(0,i-1)], v = order[i];
         var k = Math.min(u,v)+','+Math.max(u,v);
-        if (!added.has(k)) { mat[u][v] = 1; mat[v][u] = 1; added.add(k); }
+        if (!added.has(k)) { edges.push({from:u,to:v}); added.add(k); }
       }
       var ex = rand(1,3), att = 0;
       while (ex > 0 && att < 50) {
-        var u = rand(0,N-1), v = rand(0,N-1);
+        var u=rand(0,N-1), v=rand(0,N-1);
         var k = Math.min(u,v)+','+Math.max(u,v);
-        if (u !== v && !added.has(k)) { mat[u][v] = 1; mat[v][u] = 1; added.add(k); ex--; }
-        att++;
-      }
-    } else if (mode === 'directed') {
-      for (var i = 1; i < N; i++) {
-        var u = order[rand(0,i-1)], v = order[i], k = u+','+v;
-        if (!added.has(k)) { mat[u][v] = 1; added.add(k); }
-      }
-      var ex = rand(2,3), att = 0;
-      while (ex > 0 && att < 60) {
-        var u = rand(0,N-1), v = rand(0,N-1), k = u+','+v;
-        if (u !== v && !added.has(k)) { mat[u][v] = 1; added.add(k); ex--; }
+        if (u!==v && !added.has(k)) { edges.push({from:u,to:v}); added.add(k); ex--; }
         att++;
       }
     } else {
       for (var i = 1; i < N; i++) {
-        var u = order[rand(0,i-1)], v = order[i], k = u+','+v;
-        if (!added.has(k)) { mat[u][v] = rand(1,9); added.add(k); }
+        var u=order[rand(0,i-1)], v=order[i], k=u+','+v;
+        if (!added.has(k)) {
+          edges.push({from:u,to:v, weight:mode==='weighted'?rand(1,9):1});
+          added.add(k);
+        }
       }
-      var ex = rand(2,3), att = 0;
+      var ex=rand(2,3), att=0;
       while (ex > 0 && att < 60) {
-        var u = rand(0,N-1), v = rand(0,N-1), k = u+','+v;
-        if (u !== v && !added.has(k)) { mat[u][v] = rand(1,9); added.add(k); ex--; }
+        var u=rand(0,N-1), v=rand(0,N-1), k=u+','+v;
+        if (u!==v && !added.has(k)) {
+          edges.push({from:u,to:v,weight:mode==='weighted'?rand(1,9):1});
+          added.add(k); ex--;
+        }
         att++;
       }
     }
-    return mat;
+    return {nodes:nodes, edges:edges};
   }
 
-  /* ── Matrix display ────────────────────────────────────────── */
-  function buildMatrixUI(mat, hlMode, hlI, hlJ) {
-    var table = document.getElementById('adj-matrix');
-    table.innerHTML = '';
-    hlMode = hlMode || 'none';
+  function buildCorrectAdj(g) {
+    var adj = [];
+    for (var i = 0; i < N; i++) adj.push([]);
+    g.edges.forEach(function(e) {
+      if (mode === 'undirected') {
+        adj[e.from].push({node:e.to, weight:1});
+        adj[e.to].push({node:e.from, weight:1});
+      } else if (mode === 'directed') {
+        adj[e.from].push({node:e.to, weight:1});
+      } else {
+        adj[e.from].push({node:e.to, weight:e.weight});
+      }
+    });
+    adj.forEach(function(list) { list.sort(function(a,b){return a.node-b.node;}); });
+    return adj;
+  }
 
-    var thead = document.createElement('thead');
-    var hrow = document.createElement('tr');
-    var corner = document.createElement('th');
-    corner.className = 'corner';
-    corner.textContent = mode === 'undirected' ? '↔' : '→';
-    hrow.appendChild(corner);
-    for (var j = 0; j < N; j++) {
-      var th = document.createElement('th');
-      th.textContent = LABELS[j];
-      th.setAttribute('data-col', j);
-      if ((hlMode === 'col' || hlMode === 'cell') && j === hlJ) th.classList.add('hl');
-      hrow.appendChild(th);
+  /* ── SVG rendering ─────────────────────────────────────────── */
+  function renderGraph(g) {
+    var svg = document.getElementById('graph-svg');
+    svg.innerHTML = '';
+    var nodes = g.nodes, edges = g.edges;
+
+    if (mode !== 'undirected') {
+      var defs = document.createElementNS(NS,'defs');
+      var mk = document.createElementNS(NS,'marker');
+      mk.setAttribute('id','arr'); mk.setAttribute('markerWidth','7');
+      mk.setAttribute('markerHeight','5'); mk.setAttribute('refX','6');
+      mk.setAttribute('refY','2.5'); mk.setAttribute('orient','auto');
+      var poly = document.createElementNS(NS,'polygon');
+      poly.setAttribute('points','0 0, 7 2.5, 0 5'); poly.setAttribute('fill','#3949ab');
+      mk.appendChild(poly); defs.appendChild(mk); svg.appendChild(defs);
     }
-    thead.appendChild(hrow); table.appendChild(thead);
 
-    var tbody = document.createElement('tbody');
-    for (var i = 0; i < N; i++) {
-      var row = document.createElement('tr');
-      var rh = document.createElement('th');
-      rh.textContent = LABELS[i];
-      if ((hlMode === 'row' || hlMode === 'cell') && i === hlI) rh.classList.add('hl');
-      row.appendChild(rh);
-      for (var j = 0; j < N; j++) {
-        var td = document.createElement('td');
-        td.className = 'mcell';
-        td.setAttribute('data-i', i); td.setAttribute('data-j', j);
-        if (i === j) {
-          td.classList.add('diagonal'); td.textContent = '—';
+    var edgeSet = new Set();
+    edges.forEach(function(e) { edgeSet.add(e.from+','+e.to); });
+
+    var wLabels = [];
+
+    edges.forEach(function(e) {
+      var fn=nodes[e.from], tn=nodes[e.to];
+      var dx=tn.x-fn.x, dy=tn.y-fn.y, dist=Math.sqrt(dx*dx+dy*dy);
+      if (!dist) return;
+      var ux=dx/dist, uy=dy/dist;
+
+      if (mode === 'undirected') {
+        var line = document.createElementNS(NS,'line');
+        line.setAttribute('x1',fn.x+ux*R); line.setAttribute('y1',fn.y+uy*R);
+        line.setAttribute('x2',tn.x-ux*R); line.setAttribute('y2',tn.y-uy*R);
+        line.setAttribute('stroke','#3949ab'); line.setAttribute('stroke-width','2.5');
+        svg.appendChild(line);
+      } else {
+        var mutual = edgeSet.has(e.to+','+e.from), el;
+        if (mutual) {
+          var mx=(fn.x+tn.x)/2, my=(fn.y+tn.y)/2;
+          var cpx=mx+uy*26, cpy=my-ux*26;
+          var d0x=cpx-fn.x,d0y=cpy-fn.y,d0l=Math.sqrt(d0x*d0x+d0y*d0y);
+          var d1x=tn.x-cpx,d1y=tn.y-cpy,d1l=Math.sqrt(d1x*d1x+d1y*d1y);
+          el = document.createElementNS(NS,'path');
+          el.setAttribute('d',
+            'M '+(fn.x+(d0x/d0l)*(R+2))+','+(fn.y+(d0y/d0l)*(R+2))+
+            ' Q '+cpx+','+cpy+
+            ' '+(tn.x-(d1x/d1l)*(R+7))+','+(tn.y-(d1y/d1l)*(R+7)));
+          el.setAttribute('fill','none');
+          if (mode==='weighted') {
+            var t=0.5;
+            wLabels.push({
+              x: (1-t)*(1-t)*(fn.x+(d0x/d0l)*(R+2))+2*(1-t)*t*cpx+t*t*(tn.x-(d1x/d1l)*(R+7)),
+              y: (1-t)*(1-t)*(fn.y+(d0y/d0l)*(R+2))+2*(1-t)*t*cpy+t*t*(tn.y-(d1y/d1l)*(R+7)),
+              w: e.weight
+            });
+          }
         } else {
-          var val = mat[i][j];
-          td.textContent = String(val);
-          if (val !== 0) td.classList.add('filled');
-          if (hlMode === 'row' && i === hlI) td.classList.add('hl-row');
-          if (hlMode === 'col' && j === hlJ) td.classList.add('hl-col');
-          if (hlMode === 'cell' && i === hlI && j === hlJ) td.classList.add('hl-cell');
-          if (hlMode === 'both' && ((i === hlI && j === hlJ) || (i === hlJ && j === hlI))) td.classList.add('hl-cell');
+          el = document.createElementNS(NS,'line');
+          el.setAttribute('x1',fn.x+ux*(R+2)); el.setAttribute('y1',fn.y+uy*(R+2));
+          el.setAttribute('x2',tn.x-ux*(R+7)); el.setAttribute('y2',tn.y-uy*(R+7));
+          if (mode==='weighted') {
+            wLabels.push({
+              x: (fn.x+ux*(R+2)+tn.x-ux*(R+7))/2,
+              y: (fn.y+uy*(R+2)+tn.y-uy*(R+7))/2,
+              w: e.weight
+            });
+          }
         }
-        row.appendChild(td);
+        el.setAttribute('stroke','#3949ab'); el.setAttribute('stroke-width','2');
+        el.setAttribute('marker-end','url(#arr)'); svg.appendChild(el);
       }
-      tbody.appendChild(row);
-    }
-    table.appendChild(tbody);
-  }
-
-  /* ── Question generation ───────────────────────────────────── */
-  function generateQuestion(mat) {
-    var types = {
-      undirected: ['degree','adjacent','edge-count','symmetric'],
-      directed:   ['out-degree','in-degree','adjacent-dir','edge-count','symmetric'],
-      weighted:   ['out-degree','adjacent-dir','weight','edge-count','weight-sum']
-    };
-    var pool = types[mode];
-    var type = pool[rand(0, pool.length - 1)];
-
-    var u = rand(0, N-1), v;
-    do { v = rand(0, N-1); } while (v === u);
-
-    switch (type) {
-
-      case 'degree': {
-        var deg = 0;
-        for (var j = 0; j < N; j++) if (j !== u && mat[u][j] !== 0) deg++;
-        return {
-          concept: 'Grado',
-          text: '¿Cuál es el <b>grado</b> del nodo ' + LABELS[u] + '?',
-          def: 'El grado de un nodo es el número de aristas que inciden en él. En un grafo no dirigido, cuenta tanto las que llegan como las que salen (son las mismas).',
-          correct: deg, opts: makeOptions(deg, 0, N-1),
-          isYesNo: false, hlMode: 'row', hlI: u, hlJ: null
-        };
-      }
-
-      case 'adjacent': {
-        var isAdj = mat[u][v] !== 0;
-        return {
-          concept: 'Adyacencia',
-          text: '¿Son <b>adyacentes</b> los nodos ' + LABELS[u] + ' y ' + LABELS[v] + '?',
-          def: 'Dos nodos son adyacentes si existe una arista entre ellos. En la matriz: M[u][v] ≠ 0.',
-          correct: isAdj ? 'Sí' : 'No', opts: ['Sí','No'],
-          isYesNo: true, hlMode: 'both', hlI: u, hlJ: v
-        };
-      }
-
-      case 'adjacent-dir': {
-        var isAdj = mat[u][v] !== 0;
-        return {
-          concept: 'Arista',
-          text: '¿Existe la arista <b>' + LABELS[u] + ' → ' + LABELS[v] + '</b>?',
-          def: 'En un grafo dirigido existe la arista u→v si M[u][v] ≠ 0.',
-          correct: isAdj ? 'Sí' : 'No', opts: ['Sí','No'],
-          isYesNo: true, hlMode: 'cell', hlI: u, hlJ: v
-        };
-      }
-
-      case 'out-degree': {
-        var deg = 0;
-        for (var j = 0; j < N; j++) if (j !== u && mat[u][j] !== 0) deg++;
-        return {
-          concept: 'Grado salida',
-          text: '¿Cuál es el <b>grado de salida</b> del nodo ' + LABELS[u] + '?',
-          def: 'El grado de salida (out-degree) es el número de aristas que salen del nodo: cuenta los valores ≠ 0 en su fila.',
-          correct: deg, opts: makeOptions(deg, 0, N-1),
-          isYesNo: false, hlMode: 'row', hlI: u, hlJ: null
-        };
-      }
-
-      case 'in-degree': {
-        var deg = 0;
-        for (var i = 0; i < N; i++) if (i !== u && mat[i][u] !== 0) deg++;
-        return {
-          concept: 'Grado entrada',
-          text: '¿Cuál es el <b>grado de entrada</b> del nodo ' + LABELS[u] + '?',
-          def: 'El grado de entrada (in-degree) es el número de aristas que llegan al nodo: cuenta los valores ≠ 0 en su columna.',
-          correct: deg, opts: makeOptions(deg, 0, N-1),
-          isYesNo: false, hlMode: 'col', hlI: null, hlJ: u
-        };
-      }
-
-      case 'edge-count': {
-        var count = 0;
-        for (var i = 0; i < N; i++)
-          for (var j = 0; j < N; j++)
-            if (i !== j && mat[i][j] !== 0) count++;
-        var edgeCount = mode === 'undirected' ? count / 2 : count;
-        return {
-          concept: 'Aristas',
-          text: '¿Cuántas <b>aristas</b> tiene el grafo?',
-          def: mode === 'undirected'
-            ? 'En un grafo no dirigido la matriz es simétrica: suma todos los 1s y divide entre 2.'
-            : 'En un grafo dirigido cuenta todos los valores ≠ 0 en la matriz (excluyendo la diagonal).',
-          correct: edgeCount, opts: makeOptions(edgeCount, 1, N*(N-1)/2),
-          isYesNo: false, hlMode: 'none', hlI: null, hlJ: null
-        };
-      }
-
-      case 'symmetric': {
-        var isSym = true;
-        for (var i = 0; i < N && isSym; i++)
-          for (var j = 0; j < N && isSym; j++)
-            if (i !== j && mat[i][j] !== mat[j][i]) isSym = false;
-        return {
-          concept: 'Simetría',
-          text: '¿Es la matriz <b>simétrica</b>?',
-          def: 'Una matriz de adyacencia es simétrica si M[i][j] = M[j][i] para todo par (i,j). Esto equivale a un grafo no dirigido.',
-          correct: isSym ? 'Sí' : 'No', opts: ['Sí','No'],
-          isYesNo: true, hlMode: 'none', hlI: null, hlJ: null
-        };
-      }
-
-      case 'weight': {
-        var w = mat[u][v];
-        var opts;
-        if (w === 0) {
-          opts = [0, rand(1,4), rand(5,9), rand(1,9)];
-          opts = Array.from(new Set(opts)).slice(0,4).sort(function(a,b){return a-b;});
-          while (opts.length < 4) opts.push(rand(1,9));
-        } else {
-          opts = makeOptions(w, 0, 9);
-        }
-        return {
-          concept: 'Peso',
-          text: '¿Cuál es el <b>peso</b> de la arista ' + LABELS[u] + ' → ' + LABELS[v] + '? (0 si no existe)',
-          def: 'El peso de la arista u→v es el valor M[u][v]. Si M[u][v] = 0, la arista no existe.',
-          correct: w, opts: opts.sort(function(a,b){return a-b;}),
-          isYesNo: false, hlMode: 'cell', hlI: u, hlJ: v
-        };
-      }
-
-      case 'weight-sum': {
-        var sum = 0;
-        for (var j = 0; j < N; j++) if (j !== u) sum += mat[u][j];
-        return {
-          concept: 'Suma pesos',
-          text: '¿Cuál es la <b>suma de los pesos</b> de las aristas de salida del nodo ' + LABELS[u] + '?',
-          def: 'Suma todos los valores ≠ 0 en la fila del nodo (excluyendo la diagonal).',
-          correct: sum, opts: makeOptions(sum, 0, 9*(N-1)),
-          isYesNo: false, hlMode: 'row', hlI: u, hlJ: null
-        };
-      }
-    }
-  }
-
-  /* ── Render question ───────────────────────────────────────── */
-  function renderQuestion(q) {
-    document.getElementById('q-concept').textContent = q.concept;
-    document.getElementById('q-text').innerHTML = q.text;
-    document.getElementById('q-def').textContent = q.def;
-    document.getElementById('q-def').classList.remove('visible');
-    document.getElementById('btn-hint').setAttribute('aria-expanded','false');
-    document.getElementById('btn-hint').textContent = '💡 Ver pista';
-
-    var choicesEl = document.getElementById('choices');
-    choicesEl.innerHTML = '';
-    choicesEl.className = q.isYesNo ? 'choices' : 'choices';
-
-    q.opts.forEach(function(opt) {
-      var btn = document.createElement('button');
-      btn.className = 'choice-btn';
-      btn.textContent = String(opt);
-      btn.addEventListener('click', function() { handleAnswer(opt, q); });
-      choicesEl.appendChild(btn);
     });
 
+    wLabels.forEach(function(lb) { renderWLabel(svg, lb.x, lb.y, lb.w); });
+
+    nodes.forEach(function(nd) {
+      var g2=document.createElementNS(NS,'g');
+      var c=document.createElementNS(NS,'circle');
+      c.setAttribute('cx',nd.x); c.setAttribute('cy',nd.y); c.setAttribute('r',R);
+      c.setAttribute('fill','#e8eaf6'); c.setAttribute('stroke','#1a237e'); c.setAttribute('stroke-width','2.5');
+      var t=document.createElementNS(NS,'text');
+      t.setAttribute('x',nd.x); t.setAttribute('y',nd.y+5); t.setAttribute('text-anchor','middle');
+      t.setAttribute('font-size','14'); t.setAttribute('font-family','Space Grotesk, sans-serif');
+      t.setAttribute('font-weight','700'); t.setAttribute('fill','#1a237e');
+      t.setAttribute('pointer-events','none'); t.textContent = nd.label;
+      g2.appendChild(c); g2.appendChild(t); svg.appendChild(g2);
+    });
+  }
+
+  function renderWLabel(svg,x,y,w) {
+    var bg=document.createElementNS(NS,'rect');
+    bg.setAttribute('x',x-9); bg.setAttribute('y',y-9);
+    bg.setAttribute('width','18'); bg.setAttribute('height','18');
+    bg.setAttribute('rx','4'); bg.setAttribute('fill','#283593');
+    svg.appendChild(bg);
+    var t=document.createElementNS(NS,'text');
+    t.setAttribute('x',x); t.setAttribute('y',y+5); t.setAttribute('text-anchor','middle');
+    t.setAttribute('font-size','11'); t.setAttribute('font-family','Space Grotesk, sans-serif');
+    t.setAttribute('font-weight','700'); t.setAttribute('fill','#fff');
+    t.setAttribute('pointer-events','none'); t.textContent=String(w);
+    svg.appendChild(t);
+  }
+
+  /* ── List UI ───────────────────────────────────────────────── */
+  function buildListUI() {
+    activeRow = null;
+    userAdj = [];
+    for (var i = 0; i < N; i++) userAdj.push([]);
+
+    var listsEl = document.getElementById('adj-lists');
+    listsEl.innerHTML = '';
+
+    for (var i = 0; i < N; i++) {
+      (function(row) {
+        var div = document.createElement('div');
+        div.className = 'list-row';
+        div.setAttribute('data-row', row);
+
+        var lbl = document.createElement('span');
+        lbl.className = 'list-node-label';
+        lbl.textContent = LABELS[row];
+        div.appendChild(lbl);
+
+        var arrow = document.createElement('span');
+        arrow.className = 'list-arrow';
+        arrow.textContent = '→';
+        div.appendChild(arrow);
+
+        var area = document.createElement('div');
+        area.className = 'chip-area';
+        area.setAttribute('data-area', row);
+        area.setAttribute('role', 'list');
+        area.setAttribute('aria-label', 'Vecinos del nodo '+LABELS[row]);
+        div.appendChild(area);
+
+        listsEl.appendChild(div);
+
+        /* Click on row activates bank for this row */
+        div.addEventListener('click', function(ev) {
+          if (ev.target.closest('.chip-selected')) return;
+          setActiveRow(row);
+        });
+      })(i);
+    }
+
+    buildBank();
+    setActiveRow(0);
+  }
+
+  function setActiveRow(row) {
+    activeRow = row;
+    document.querySelectorAll('.list-row').forEach(function(r) {
+      var isActive = parseInt(r.getAttribute('data-row')) === row;
+      r.style.background = isActive ? 'rgba(26,35,126,0.04)' : '';
+      r.style.borderRadius = isActive ? '6px' : '';
+    });
+  }
+
+  function buildBank() {
+    var bankEl = document.getElementById('chip-bank');
+    bankEl.innerHTML = '';
+    for (var j = 0; j < N; j++) {
+      (function(node) {
+        var chip = document.createElement('button');
+        chip.className = 'chip chip-bank-item';
+        chip.textContent = LABELS[node];
+        chip.setAttribute('data-node', node);
+        chip.setAttribute('aria-label', 'Añadir nodo '+LABELS[node]+' a la lista activa');
+        chip.addEventListener('click', function(ev) {
+          ev.stopPropagation();
+          if (activeRow === null || activeRow === node) return;
+          if (roundComplete) return;
+          /* Check not already added */
+          var already = userAdj[activeRow].some(function(e){ return e.node === node; });
+          if (already) return;
+          if (mode === 'weighted') {
+            openPicker(activeRow, node, ev);
+          } else {
+            addToList(activeRow, node, 1);
+          }
+        });
+        bankEl.appendChild(chip);
+      })(j);
+    }
+  }
+
+  function addToList(row, node, weight) {
+    userAdj[row].push({node:node, weight:weight});
+    userAdj[row].sort(function(a,b){return a.node-b.node;});
+    refreshArea(row);
+  }
+
+  function removeFromList(row, node) {
+    userAdj[row] = userAdj[row].filter(function(e){ return e.node !== node; });
+    refreshArea(row);
+  }
+
+  function refreshArea(row) {
+    var area = document.querySelector('[data-area="'+row+'"]');
+    if (!area) return;
+    area.innerHTML = '';
+    userAdj[row].forEach(function(entry) {
+      (function(e) {
+        var chip = document.createElement('button');
+        chip.className = 'chip chip-selected';
+        var label = mode === 'weighted'
+          ? LABELS[e.node] + '(' + e.weight + ')'
+          : LABELS[e.node];
+        chip.textContent = label;
+        chip.setAttribute('title', 'Clic para eliminar');
+        chip.addEventListener('click', function(ev) {
+          ev.stopPropagation();
+          if (roundComplete) return;
+          chip.classList.remove('ok','bad');
+          removeFromList(row, e.node);
+        });
+        area.appendChild(chip);
+      })(entry);
+    });
+  }
+
+  /* ── Weight picker ─────────────────────────────────────────── */
+  function openPicker(row, node, ev) {
+    pickerTarget = {row:row, node:node};
+    var picker = document.getElementById('weight-picker');
+    picker.innerHTML = '';
+    for (var w = 1; w <= 9; w++) {
+      var btn = document.createElement('button');
+      btn.className = 'wp-btn'; btn.textContent = String(w);
+      btn.setAttribute('data-w', w);
+      btn.addEventListener('click', onPickWeight);
+      picker.appendChild(btn);
+    }
+    var rect = ev.target.getBoundingClientRect();
+    picker.style.top = (rect.bottom+4)+'px';
+    picker.style.left = rect.left+'px';
+    picker.classList.add('visible');
+    ev.stopPropagation();
+  }
+
+  function onPickWeight(ev) {
+    var w = parseInt(this.getAttribute('data-w'));
+    if (pickerTarget) addToList(pickerTarget.row, pickerTarget.node, w);
+    closePicker(); ev.stopPropagation();
+  }
+
+  function closePicker() {
+    document.getElementById('weight-picker').classList.remove('visible');
+    pickerTarget = null;
+  }
+  document.addEventListener('click', closePicker);
+
+  /* ── Check ─────────────────────────────────────────────────── */
+  function checkList() {
+    if (roundComplete) return;
+    closePicker();
+
+    var totalWrong = 0;
+
+    for (var i = 0; i < N; i++) {
+      var area = document.querySelector('[data-area="'+i+'"]');
+      var correct = correctAdj[i];
+      var user = userAdj[i];
+
+      /* Mark existing chips ok/bad */
+      var chips = area.querySelectorAll('.chip-selected');
+      chips.forEach(function(chip) {
+        var label = chip.textContent;
+        var nodeLabel = mode === 'weighted' ? label.split('(')[0] : label;
+        var nodeIdx = LABELS.indexOf(nodeLabel);
+        var weight = mode === 'weighted' ? parseInt(label.split('(')[1]) : 1;
+
+        var isCorrect = correct.some(function(e){
+          return e.node === nodeIdx && (mode !== 'weighted' || e.weight === weight);
+        });
+
+        chip.classList.remove('ok','bad');
+        chip.classList.add(isCorrect ? 'ok' : 'bad');
+        if (!isCorrect) totalWrong++;
+      });
+
+      /* Mark missing nodes in bank */
+      var bankChips = document.querySelectorAll('#chip-bank .chip-bank-item');
+      bankChips.forEach(function(bc){ bc.classList.remove('missing'); });
+
+      correct.forEach(function(e) {
+        var inUser = user.some(function(u){ return u.node === e.node; });
+        if (!inUser) {
+          totalWrong++;
+          var bc = document.querySelector('#chip-bank [data-node="'+e.node+'"]');
+          if (bc) bc.classList.add('missing');
+        }
+      });
+    }
+
+    var fb = document.getElementById('feedback');
+    var panel = document.querySelector('.list-panel');
+
+    if (totalWrong === 0) {
+      roundComplete = true; roundsCompleted++;
+      fb.textContent = '¡Perfecto! Ronda completada.';
+      fb.className = 'feedback ok';
+      document.getElementById('btn-next').hidden = false;
+      document.getElementById('btn-check').disabled = true;
+      document.getElementById('score-ok').textContent = roundsCompleted;
+      panel.classList.add('panel-flash-ok');
+      setTimeout(function(){ panel.classList.remove('panel-flash-ok'); }, 700);
+    } else {
+      fb.textContent = totalWrong + ' error'+(totalWrong>1?'es':'')+'. Los chips en rojo están mal; los del banco en rojo faltan.';
+      fb.className = 'feedback bad';
+      panel.classList.add('panel-flash-bad');
+      setTimeout(function(){
+        panel.classList.remove('panel-flash-bad');
+        document.querySelectorAll('.chip-selected.bad').forEach(function(c){ c.classList.remove('bad'); });
+        document.querySelectorAll('.chip-bank-item.missing').forEach(function(c){ c.classList.remove('missing'); });
+      }, 2000);
+    }
+  }
+
+  /* ── New graph ─────────────────────────────────────────────── */
+  var MODE_NOTES = {
+    undirected: 'Grafo no dirigido — cada arista aparece en las listas de ambos extremos.',
+    directed:   'Grafo dirigido — cada nodo lista solo sus vecinos de salida.',
+    weighted:   'Grafo ponderado — selecciona el peso al añadir cada vecino.'
+  };
+
+  function newGraph() {
+    roundComplete = false;
+    graph = generateGraph();
+    correctAdj = buildCorrectAdj(graph);
+    renderGraph(graph);
+    buildListUI();
     document.getElementById('feedback').textContent = '';
     document.getElementById('feedback').className = 'feedback';
     document.getElementById('btn-next').hidden = true;
-    answered = false;
-
-    buildMatrixUI(adjMatrix, q.hlMode, q.hlI, q.hlJ);
-  }
-
-  /* ── Answer handler ────────────────────────────────────────── */
-  function handleAnswer(chosen, q) {
-    if (answered) return;
-    answered = true; scoreAll++;
-
-    var isCorrect = String(chosen) === String(q.correct);
-    document.querySelectorAll('.choice-btn').forEach(function(btn) {
-      btn.disabled = true;
-      if (btn.textContent === String(q.correct)) btn.classList.add('ok');
-      else if (btn.textContent === String(chosen) && !isCorrect) btn.classList.add('bad');
-    });
-
-    var fb = document.getElementById('feedback');
-    if (isCorrect) {
-      scoreOk++;
-      fb.textContent = '¡Correcto!';
-      fb.className = 'feedback ok';
-    } else {
-      fb.textContent = 'Incorrecto — la respuesta es ' + q.correct + '.';
-      fb.className = 'feedback bad';
-    }
-
-    document.getElementById('btn-next').hidden = false;
-    document.getElementById('score-ok').textContent = scoreOk;
-    document.getElementById('score-total').textContent = scoreAll;
-
-    var qPanel = document.querySelector('.q-panel');
-    qPanel.classList.add(isCorrect ? 'panel-flash-ok' : 'panel-flash-bad');
-    setTimeout(function() { qPanel.classList.remove('panel-flash-ok','panel-flash-bad'); }, 700);
-  }
-
-  /* ── New matrix ────────────────────────────────────────────── */
-  function newMatrix() {
-    adjMatrix = generateMatrix();
-    buildMatrixUI(adjMatrix, 'none', null, null);
-    nextQuestion();
-  }
-
-  function nextQuestion() {
-    currentQ = generateQuestion(adjMatrix);
-    renderQuestion(currentQ);
+    document.getElementById('btn-check').disabled = false;
   }
 
   /* ── Events ────────────────────────────────────────────────── */
   document.getElementById('mode-sel').addEventListener('change', function() {
     mode = this.value;
-    newMatrix();
+    document.getElementById('mode-note').textContent = MODE_NOTES[mode];
+    newGraph();
   });
-
-  document.getElementById('btn-hint').addEventListener('click', function() {
-    var el = document.getElementById('q-def');
-    var vis = el.classList.toggle('visible');
-    this.setAttribute('aria-expanded', String(vis));
-    this.textContent = vis ? '💡 Ocultar pista' : '💡 Ver pista';
-  });
-
-  document.getElementById('btn-next').addEventListener('click', function() {
-    if (Math.random() < 0.4) newMatrix(); else nextQuestion();
-  });
-
-  document.getElementById('btn-new-mat').addEventListener('click', newMatrix);
+  document.getElementById('btn-new-graph').addEventListener('click', newGraph);
+  document.getElementById('btn-check').addEventListener('click', checkList);
+  document.getElementById('btn-next').addEventListener('click', newGraph);
 
   /* ── Boot ──────────────────────────────────────────────────── */
-  newMatrix();
+  document.getElementById('mode-note').textContent = MODE_NOTES[mode];
+  newGraph();
 }());
 </script>
 </body>
