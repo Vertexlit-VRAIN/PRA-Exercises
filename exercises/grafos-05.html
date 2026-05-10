@@ -320,7 +320,8 @@
     var listFormula = mode === 'undirected' ? 'N + 2M' : 'N + M';
     var listVal = mode === 'undirected' ? n+'+2×'+m+'='+(n+2*m) : n+'+'+m+'='+(n+m);
 
-    var types = ['mat-mem','list-mem','which-less','lookup','neighbors','which-overall'];
+    var types = ['mat-mem','list-mem','which-less','faster-lookup','faster-neighbors',
+                 'cost-lookup-mat','cost-lookup-lst','cost-neighbors-mat','cost-neighbors-lst'];
     var type = types[rand(0, types.length-1)];
 
     switch (type) {
@@ -334,7 +335,7 @@
           correct: correct,
           opts: makeOptions(correct, [n*(n+1), (n-1)*(n-1), n*2, n+m]),
           isYesNo: false,
-          ctMetric: 'Celdas (memoria)', ctMat: String(matMem)+' = N²', ctLst: String(lstMem)+' = '+listFormula
+          ctMetric: 'Memoria', ctMat: String(matMem)+' celdas = N²', ctLst: String(lstMem)+' elem. = '+listFormula
         };
       }
 
@@ -343,11 +344,11 @@
         return {
           concept: 'Memoria lista',
           text: 'Este grafo tiene <b>N=' + n + '</b> nodos y <b>M=' + m + '</b> aristas. ¿Cuántos elementos ocupa su <b>lista de adyacencia</b>?',
-          def: 'La lista ocupa N entradas de cabecera + un elemento por cada vecino almacenado: ' + listFormula + '.',
+          def: 'La lista ocupa N entradas de cabecera + un elemento por cada vecino: ' + listFormula + '.',
           correct: correct,
           opts: makeOptions(correct, [n+m, n*m, n*2, matMem]),
           isYesNo: false,
-          ctMetric: 'Elementos (memoria)', ctMat: String(matMem)+' = N²', ctLst: String(lstMem)+' = '+listFormula
+          ctMetric: 'Memoria', ctMat: String(matMem)+' celdas = N²', ctLst: String(lstMem)+' elem. = '+listFormula
         };
       }
 
@@ -356,50 +357,86 @@
         return {
           concept: 'Menos memoria',
           text: 'Con <b>N=' + n + '</b> y <b>M=' + m + '</b>, ¿qué representación <b>ocupa menos memoria</b>?',
-          def: 'Compara N² (matriz) con ' + listFormula + ' (lista). La lista gana cuando el grafo es disperso (M ≪ N²).',
+          def: 'Compara N² (matriz) con ' + listFormula + ' (lista). La lista gana en grafos dispersos; la matriz puede ganar en grafos densos.',
           correct: matWins ? 'Matriz' : 'Lista',
-          opts: ['Matriz','Lista'],
-          isYesNo: true,
-          ctMetric: 'Memoria', ctMat: String(matMem), ctLst: String(lstMem)
-        };
-      }
-
-      case 'lookup': {
-        return {
-          concept: 'Coste búsqueda',
-          text: '¿Qué coste tiene comprobar si la arista <b>(u, v) existe</b>?',
-          def: 'Con la matriz basta con leer M[u][v]: O(1). Con la lista hay que recorrer los vecinos de u: O(grado(u)).',
-          correct: 'Matriz — O(1)',
-          opts: ['Matriz — O(1)','Lista — O(grado)','Ambas O(1)','Ambas O(N)'],
-          isYesNo: false,
-          ctMetric: 'Coste comprobar (u,v)', ctMat: 'O(1)', ctLst: 'O(grado(u))'
-        };
-      }
-
-      case 'neighbors': {
-        return {
-          concept: 'Listar vecinos',
-          text: '¿Qué coste tiene <b>listar todos los vecinos</b> de un nodo?',
-          def: 'Con la lista basta recorrer su sublista: O(grado). Con la matriz hay que examinar toda la fila: O(N).',
-          correct: 'Lista — O(grado)',
-          opts: ['Matriz — O(N)','Lista — O(grado)','Ambas O(grado)','Ambas O(N)'],
-          isYesNo: false,
-          ctMetric: 'Coste listar vecinos', ctMat: 'O(N)', ctLst: 'O(grado)'
-        };
-      }
-
-      case 'which-overall': {
-        var dense = (m / maxM) >= 0.5;
-        return {
-          concept: 'Elección',
-          text: 'El grafo tiene densidad <b>' + (m/maxM*100).toFixed(0) + '%</b>. ¿Qué representación es más eficiente en memoria?',
-          def: 'Un grafo denso (muchas aristas) favorece la matriz porque N² ≈ N+2M. Un grafo disperso favorece la lista.',
-          correct: dense ? 'Matriz' : 'Lista',
           opts: ['Matriz','Lista'],
           isYesNo: true,
           ctMetric: 'Memoria', ctMat: String(matMem)+' celdas', ctLst: String(lstMem)+' elementos'
         };
       }
+
+      case 'faster-lookup': {
+        return {
+          concept: 'Búsqueda de arista',
+          text: '¿Qué representación es más eficiente para <b>comprobar si existe la arista (u,v)</b>?',
+          def: 'La matriz accede directamente a M[u][v]: O(1). La lista debe recorrer los vecinos de u: O(grado(u)).',
+          correct: 'Matriz',
+          opts: ['Matriz','Lista'],
+          isYesNo: true,
+          ctMetric: 'Coste comprobar (u,v)', ctMat: 'O(1)', ctLst: 'O(grado(u))'
+        };
+      }
+
+      case 'faster-neighbors': {
+        return {
+          concept: 'Listar vecinos',
+          text: '¿Qué representación es más eficiente para <b>listar todos los vecinos</b> de un nodo?',
+          def: 'La lista recorre solo su sublista: O(grado(u)). La matriz debe examinar toda la fila: O(N).',
+          correct: 'Lista',
+          opts: ['Matriz','Lista'],
+          isYesNo: true,
+          ctMetric: 'Coste listar vecinos', ctMat: 'O(N)', ctLst: 'O(grado(u))'
+        };
+      }
+
+      case 'cost-lookup-mat': {
+        return {
+          concept: 'Coste en matriz',
+          text: '¿Qué coste tiene comprobar si existe (u,v) usando la <b>matriz de adyacencia</b>?',
+          def: 'Basta con acceder a la celda M[u][v]: una sola operación, independientemente del tamaño del grafo.',
+          correct: 'O(1)',
+          opts: ['O(1)','O(grado(u))','O(N)','O(N²)'],
+          isYesNo: false,
+          ctMetric: 'Coste comprobar (u,v)', ctMat: 'O(1)', ctLst: 'O(grado(u))'
+        };
+      }
+
+      case 'cost-lookup-lst': {
+        return {
+          concept: 'Coste en lista',
+          text: '¿Qué coste tiene comprobar si existe (u,v) usando la <b>lista de adyacencia</b>?',
+          def: 'Hay que recorrer la sublista de u buscando v. En el peor caso se visitan todos los vecinos de u.',
+          correct: 'O(grado(u))',
+          opts: ['O(1)','O(grado(u))','O(N)','O(N²)'],
+          isYesNo: false,
+          ctMetric: 'Coste comprobar (u,v)', ctMat: 'O(1)', ctLst: 'O(grado(u))'
+        };
+      }
+
+      case 'cost-neighbors-mat': {
+        return {
+          concept: 'Coste en matriz',
+          text: '¿Qué coste tiene listar todos los vecinos de un nodo usando la <b>matriz de adyacencia</b>?',
+          def: 'Hay que recorrer toda la fila del nodo (N celdas) para encontrar las que son ≠ 0.',
+          correct: 'O(N)',
+          opts: ['O(1)','O(grado(u))','O(N)','O(N²)'],
+          isYesNo: false,
+          ctMetric: 'Coste listar vecinos', ctMat: 'O(N)', ctLst: 'O(grado(u))'
+        };
+      }
+
+      case 'cost-neighbors-lst': {
+        return {
+          concept: 'Coste en lista',
+          text: '¿Qué coste tiene listar todos los vecinos de un nodo usando la <b>lista de adyacencia</b>?',
+          def: 'La sublista del nodo contiene exactamente sus vecinos: se recorre una sola vez sin celdas vacías.',
+          correct: 'O(grado(u))',
+          opts: ['O(1)','O(grado(u))','O(N)','O(N²)'],
+          isYesNo: false,
+          ctMetric: 'Coste listar vecinos', ctMat: 'O(N)', ctLst: 'O(grado(u))'
+        };
+      }
+
     }
   }
 
