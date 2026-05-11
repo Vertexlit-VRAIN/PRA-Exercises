@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>07 · Traza el BFS — Grafos · PRA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="grafos.css" />
+  <style>
+    .q-panel { padding: 1.5rem; position: sticky; top: 1.25rem; }
+
+    /* ── BFS state display ── */
+    .bfs-state {
+      display: flex; flex-direction: column; gap: 0.55rem;
+      background: rgba(26,35,126,0.05); border-radius: 8px;
+      padding: 0.8rem 1rem;
+    }
+    .state-row { display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap; }
+    .state-label {
+      font-family: 'Orbitron', sans-serif; font-size: 0.62rem; font-weight: 700;
+      color: var(--indigo); text-transform: uppercase; letter-spacing: 0.1em;
+      white-space: nowrap; min-width: 4rem;
+    }
+    .state-chips { display: flex; gap: 0.22rem; flex-wrap: wrap; align-items: center; }
+    .chip-closed {
+      font-family: 'Space Grotesk', sans-serif; font-size: 0.78rem; font-weight: 700;
+      padding: 0.12rem 0.45rem; border-radius: 4px;
+      background: #e8f5e9; color: #1b5e20; border: 1.5px solid #43a047;
+    }
+    .chip-open {
+      font-family: 'Space Grotesk', sans-serif; font-size: 0.78rem; font-weight: 700;
+      padding: 0.12rem 0.45rem; border-radius: 4px;
+      background: #e0f7fa; color: #006064; border: 1.5px solid #00bcd4;
+    }
+    .chip-empty { font-family: 'Space Grotesk', sans-serif; font-size: 0.78rem; color: #9e9e9e; }
+
+    .open-queue { display: flex; align-items: center; gap: 0.35rem; flex-wrap: wrap; }
+    .queue-front-tag {
+      font-family: 'Space Grotesk', sans-serif; font-size: 0.62rem; font-weight: 700;
+      color: #006064; background: #b2ebf2; padding: 0.06rem 0.3rem;
+      border-radius: 3px; white-space: nowrap; border: 1px solid #00bcd4;
+    }
+
+    /* ── Step counter ── */
+    .step-counter {
+      font-family: 'Orbitron', sans-serif; font-size: 0.68rem; font-weight: 700;
+      color: #5c6bc0; text-align: right; letter-spacing: 0.04em;
+    }
+
+    /* ── Graph legend ── */
+    .graph-legend {
+      display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;
+      padding: 0.55rem 0.8rem;
+      background: rgba(26,35,126,0.04); border-radius: 6px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 0.38rem; }
+    .legend-dot {
+      width: 14px; height: 14px; border-radius: 50%; border: 2px solid; flex-shrink: 0;
+    }
+    .legend-dot.ld-current { background: #f9a825; border-color: #e65100; }
+    .legend-dot.ld-queued  { background: #00bcd4; border-color: #006064; }
+    .legend-dot.ld-visited { background: #43a047; border-color: #1b5e20; }
+    .legend-dot.ld-unseen  { background: #e8eaf6; border-color: #1a237e; }
+    .legend-line { width: 22px; height: 3px; border-radius: 2px; }
+    .legend-line.ll-tree   { background: #1a237e; }
+    .legend-text { font-size: 0.7rem; color: #283593; }
+
+    /* ── Adjacency list ── */
+    .adj-list {
+      display: flex; flex-direction: column; gap: 0.18rem;
+      background: rgba(26,35,126,0.04); border-radius: 6px;
+      padding: 0.55rem 0.75rem;
+    }
+    .adj-row {
+      display: flex; align-items: center; gap: 0.22rem; flex-wrap: wrap;
+      padding: 0.18rem 0.3rem; border-radius: 4px;
+      font-size: 0.8rem; font-family: 'Space Grotesk', sans-serif;
+    }
+    .adj-key   { font-weight: 700; color: var(--indigo); min-width: 1.1rem; text-align: right; }
+    .adj-colon { color: #5c6bc0; margin-right: 0.05rem; }
+    .adj-sep   { color: #aab; font-size: 0.68rem; }
+    .adj-chip  {
+      padding: 0.07rem 0.36rem; border-radius: 3px; font-weight: 700; font-size: 0.77rem;
+      background: #e8eaf6; color: var(--indigo); border: 1.5px solid #c5cae9;
+    }
+    .adj-empty { color: #9e9e9e; font-style: italic; font-size: 0.75rem; }
+
+    /* ── Done banner ── */
+    .done-banner {
+      text-align: center; padding: 1.2rem;
+      background: rgba(67,160,71,0.09); border-radius: 8px;
+      border: 2px solid #43a047;
+    }
+    .done-title {
+      font-family: 'Orbitron', sans-serif; font-size: 0.95rem;
+      font-weight: 700; color: var(--ok); margin-bottom: 0.4rem;
+    }
+    .done-order { font-size: 0.82rem; color: #283593; margin: 0; }
+
+    /* ── Choices ── */
+    .choices { display: flex; flex-wrap: wrap; gap: 0.55rem; }
+    .choice-btn { flex: 1 1 calc(33% - 0.55rem); min-width: 90px; font-size: 0.9rem; }
+
+    @media (max-width: 700px) {
+      .q-panel { position: static; }
+      .choice-btn { flex: 1 1 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="ex-header">
+  <a class="back-link" href="../index.html#grafos">← Grafos</a>
+  <h1 class="ex-title">07 — TRAZA EL BFS</h1>
+  <p class="ex-desc">Sigue el recorrido en anchura paso a paso. Decide qué vértice extrae BFS de la cola y qué vecinos se añaden a OPEN.</p>
+</header>
+
+<main class="ex-main">
+
+  <section class="graph-panel" aria-label="Grafo">
+    <svg id="graph-svg" class="graph-svg" viewBox="0 0 600 360"
+         role="img" aria-label="Grafo dirigido para trazar BFS"></svg>
+
+    <div aria-label="Lista de adyacencia">
+      <span class="panel-label">Lista de adyacencia</span>
+      <div class="adj-list" id="adj-list"></div>
+    </div>
+
+    <div class="graph-legend" aria-label="Leyenda">
+      <div class="legend-item">
+        <div class="legend-dot ld-current"></div>
+        <span class="legend-text">nodo actual (u)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot ld-queued"></div>
+        <span class="legend-text">en cola (OPEN)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot ld-visited"></div>
+        <span class="legend-text">visitado (CLOSED)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot ld-unseen"></div>
+        <span class="legend-text">no visitado</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-line ll-tree"></div>
+        <span class="legend-text">arco árbol BFS</span>
+      </div>
+    </div>
+
+    <button class="btn btn-outline" id="btn-new-graph">✦ Nuevo grafo</button>
+  </section>
+
+  <section class="q-panel" aria-label="Pregunta">
+    <div class="bfs-state" id="bfs-state">
+      <div class="state-row">
+        <span class="state-label">CLOSED</span>
+        <div class="state-chips" id="closed-chips"><span class="chip-empty">{ }</span></div>
+      </div>
+      <div class="state-row">
+        <span class="state-label">OPEN</span>
+        <div class="open-queue">
+          <span class="queue-front-tag">frente →</span>
+          <div class="state-chips" id="open-chips"><span class="chip-empty">[ ]</span></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="step-counter" id="step-counter">Paso 1 / 14</p>
+    <span class="q-concept" id="q-concept">—</span>
+    <p class="q-text" id="q-text"></p>
+    <div class="choices" id="choices" role="group" aria-label="Opciones de respuesta"></div>
+    <p class="feedback" id="feedback" aria-live="polite"></p>
+    <div class="done-banner" id="done-banner" hidden>
+      <p class="done-title">¡Recorrido completado!</p>
+      <p class="done-order" id="done-order"></p>
+    </div>
+    <button class="btn btn-primary" id="btn-next" hidden>Siguiente paso →</button>
+  </section>
+
+</main>
+
+<footer class="score-bar" aria-label="Puntuación">
+  Correctas: <span class="score-num" id="score-ok">0</span> / <span id="score-total">0</span>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var NS = 'http://www.w3.org/2000/svg';
+  var R  = 22;
+
+  /* ── Default graph (same as DFS slide) ─────────────────────── */
+  var DEF_NODES = [
+    {id:1, label:'1', x: 72,  y:185},
+    {id:2, label:'2', x:220,  y: 72},
+    {id:3, label:'3', x:348,  y:272},
+    {id:4, label:'4', x:278,  y:185},
+    {id:5, label:'5', x:450,  y:148},
+    {id:6, label:'6', x:278,  y:318},
+    {id:7, label:'7', x:555,  y:185}
+  ];
+  var DEF_EDGES = [
+    {from:1,to:4},{from:1,to:2},
+    {from:2,to:5},
+    {from:4,to:6},{from:4,to:3},{from:4,to:5},
+    {from:3,to:5},{from:5,to:7},{from:6,to:7}
+  ];
+  var DEF_ADJ = {1:[4,2], 2:[5], 3:[5], 4:[6,3,5], 5:[7], 6:[7], 7:[]};
+
+  /* BFS tree edges: 1→4, 1→2, 4→6, 4→3, 4→5, 6→7 */
+  var TE0  = [];
+  var TE12 = ['1,4','1,2'];
+  var TE45 = ['1,4','1,2','4,6','4,3','4,5'];
+  var TE67 = ['1,4','1,2','4,6','4,3','4,5','6,7'];
+
+  /* ── 14-step hardcoded BFS trace ────────────────────────────── */
+  var DEF_STEPS = [
+    /* 1 */
+    { sb:{open:[1],        closed:[],              cur:null, te:TE0},
+      concept:'BFS — Extracción',
+      text:'OPEN contiene el nodo inicial. ¿Qué vértice <b>extrae BFS</b> de la cola?',
+      opts:['1','4','2'],  correct:'1' },
+    /* 2 */
+    { sb:{open:[],         closed:[1],             cur:1,    te:TE0},
+      concept:'BFS — Inserción',
+      text:'BFS procesa el nodo <b>1</b>. ¿Qué vecinos se <b>añaden a OPEN</b> (en el orden de la lista)?',
+      opts:['4, 2','2, 4','4, 2, 5'],  correct:'4, 2' },
+    /* 3 */
+    { sb:{open:[4,2],      closed:[1],             cur:null, te:TE12},
+      concept:'BFS — Extracción',
+      text:'OPEN = [4, 2]. BFS usa una <b>cola FIFO</b>: extrae siempre el primero. ¿Qué vértice extrae ahora?',
+      opts:['4','2','1'],  correct:'4' },
+    /* 4 */
+    { sb:{open:[2],        closed:[1,4],           cur:4,    te:TE12},
+      concept:'BFS — Inserción',
+      text:'BFS procesa el nodo <b>4</b>. Sus vecinos son [6, 3, 5]. ¿Cuáles <b>no están ya en OPEN ni CLOSED</b> y se añaden?',
+      opts:['6, 3, 5','6, 3, 5, 2','3, 5'],  correct:'6, 3, 5' },
+    /* 5 */
+    { sb:{open:[2,6,3,5],  closed:[1,4],           cur:null, te:TE45},
+      concept:'BFS — Extracción',
+      text:'OPEN = [2, 6, 3, 5]. ¿Qué vértice extrae BFS de la cola?',
+      opts:['2','6','3'],  correct:'2' },
+    /* 6 */
+    { sb:{open:[6,3,5],    closed:[1,4,2],         cur:2,    te:TE45},
+      concept:'BFS — Sin vecinos nuevos',
+      text:'BFS procesa el nodo <b>2</b>. Su vecino 5 <b>ya está en OPEN</b>. ¿Cuántos vecinos nuevos se añaden a OPEN?',
+      opts:['Ninguno','1','2'],  correct:'Ninguno' },
+    /* 7 */
+    { sb:{open:[6,3,5],    closed:[1,4,2],         cur:null, te:TE45},
+      concept:'BFS — Extracción',
+      text:'OPEN = [6, 3, 5]. ¿Qué vértice extrae BFS de la cola?',
+      opts:['6','3','5'],  correct:'6' },
+    /* 8 */
+    { sb:{open:[3,5],      closed:[1,4,2,6],       cur:6,    te:TE45},
+      concept:'BFS — Inserción',
+      text:'BFS procesa el nodo <b>6</b>. ¿Qué vecino se <b>añade a OPEN</b>?',
+      opts:['7','3','5'],  correct:'7' },
+    /* 9 */
+    { sb:{open:[3,5,7],    closed:[1,4,2,6],       cur:null, te:TE67},
+      concept:'BFS — Extracción',
+      text:'OPEN = [3, 5, 7]. ¿Qué vértice extrae BFS de la cola?',
+      opts:['3','5','7'],  correct:'3' },
+    /* 10 */
+    { sb:{open:[5,7],      closed:[1,4,2,6,3],     cur:3,    te:TE67},
+      concept:'BFS — Sin vecinos nuevos',
+      text:'BFS procesa el nodo <b>3</b>. Su vecino 5 <b>ya está en OPEN</b>. ¿Cuántos vecinos nuevos se añaden?',
+      opts:['Ninguno','1','2'],  correct:'Ninguno' },
+    /* 11 */
+    { sb:{open:[5,7],      closed:[1,4,2,6,3],     cur:null, te:TE67},
+      concept:'BFS — Extracción',
+      text:'OPEN = [5, 7]. ¿Qué vértice extrae BFS de la cola?',
+      opts:['5','7','3'],  correct:'5' },
+    /* 12 */
+    { sb:{open:[7],        closed:[1,4,2,6,3,5],   cur:5,    te:TE67},
+      concept:'BFS — Sin vecinos nuevos',
+      text:'BFS procesa el nodo <b>5</b>. Su vecino 7 <b>ya está en OPEN</b>. ¿Cuántos vecinos nuevos se añaden?',
+      opts:['Ninguno','1','2'],  correct:'Ninguno' },
+    /* 13 */
+    { sb:{open:[7],        closed:[1,4,2,6,3,5],   cur:null, te:TE67},
+      concept:'BFS — Extracción',
+      text:'Solo queda un nodo en OPEN. ¿Qué vértice extrae BFS?',
+      opts:['7','5','3'],  correct:'7' },
+    /* 14 */
+    { sb:{open:[],         closed:[1,4,2,6,3,5,7], cur:null, te:TE67},
+      concept:'BFS — Orden de visita',
+      text:'¡BFS completado! ¿Cuál fue el <b>orden de visita</b> de los nodos?',
+      opts:['1→4→2→6→3→5→7','1→2→4→3→5→6→7','1→4→6→7→3→5→2'],
+      correct:'1→4→2→6→3→5→7' }
+  ];
+
+  /* ── Runtime state ─────────────────────────────────────────── */
+  var nodes, edges, adjMap;
+  var steps, stepIdx;
+  var scoreOk = 0, scoreAll = 0;
+  var answered = false;
+  var visitOrder = [];
+
+  /* ── Utils ─────────────────────────────────────────────────── */
+  function rand(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+  function shuffle(arr){
+    var a=arr.slice();
+    for(var i=a.length-1;i>0;i--){ var j=rand(0,i),t=a[i];a[i]=a[j];a[j]=t; }
+    return a;
+  }
+  function wrongOrder(arr){
+    var a=arr.slice();
+    if(a.length<3){ var t=a[0]; a[0]=a[a.length-1]; a[a.length-1]=t; return a; }
+    var i=rand(0,a.length-1), j=rand(0,a.length-1);
+    for(var _=0;_<10&&i===j;_++) j=rand(0,a.length-1);
+    var t=a[i]; a[i]=a[j]; a[j]=t; return a;
+  }
+
+  /* ── Random graph generation ──────────────────────────────── */
+  function generateRandom() {
+    var n = rand(5,6);
+    var ids = []; for(var i=1;i<=n;i++) ids.push(i);
+    var W=600,H=360,cx=W/2,cy=H/2+10,lr=n<=5?115:125;
+    var nodeList = ids.map(function(id,idx){
+      var a=(2*Math.PI*idx)/n - Math.PI/2;
+      return {id:id,label:String(id),x:cx+lr*Math.cos(a),y:cy+lr*Math.sin(a)};
+    });
+
+    var adjM={}, edgeList=[], edgeSet=new Set();
+    ids.forEach(function(id){ adjM[id]=[]; });
+
+    var order=shuffle(ids.slice());
+    for(var si=1;si<order.length;si++){
+      var pu=order[rand(0,si-1)],pv=order[si],pk=pu+','+pv;
+      if(!edgeSet.has(pk)){ edgeList.push({from:pu,to:pv}); adjM[pu].push(pv); edgeSet.add(pk); }
+    }
+    var target=(n-1)+rand(0,Math.floor(n/2));
+    for(var att=0;edgeList.length<target&&att<200;att++){
+      var eu=ids[rand(0,n-1)],ev=ids[rand(0,n-1)],ek=eu+','+ev;
+      if(eu!==ev&&!edgeSet.has(ek)){ edgeList.push({from:eu,to:ev}); adjM[eu].push(ev); edgeSet.add(ek); }
+    }
+
+    var startId=order[0];
+    var qs=buildSteps(adjM,startId,nodeList);
+    return {nodeList:nodeList, edgeList:edgeList, adjM:adjM, steps:qs};
+  }
+
+  /* ── BFS step builder ─────────────────────────────────────── */
+  function buildSteps(adjM, startId, nodeList) {
+    var closed=[], open=[startId], visited=[], treeEdges=[], qs=[];
+
+    while(open.length > 0) {
+      var u = open[0];
+
+      /* Extracción question */
+      var wrongDeq=[];
+      for(var wi=1;wi<open.length&&wrongDeq.length<2;wi++) wrongDeq.push(String(open[wi]));
+      nodeList.forEach(function(nd){
+        if(nd.id!==u&&wrongDeq.indexOf(String(nd.id))===-1&&wrongDeq.length<2)
+          wrongDeq.push(String(nd.id));
+      });
+      qs.push({
+        sb:{open:open.slice(),closed:closed.slice(),cur:null,te:treeEdges.slice()},
+        concept:'BFS — Extracción',
+        text:'¿Qué vértice <b>extrae BFS</b> de la cola OPEN?',
+        opts:shuffle([String(u)].concat(wrongDeq.slice(0,2))),
+        correct:String(u)
+      });
+
+      open.shift();
+      closed.push(u);
+      visited.push(u);
+
+      var nbrs=adjM[u]||[];
+      var toAdd=nbrs.filter(function(v){ return closed.indexOf(v)===-1&&open.indexOf(v)===-1; });
+      var blocked=nbrs.filter(function(v){ return open.indexOf(v)!==-1||closed.indexOf(v)!==-1; });
+
+      if(toAdd.length > 0) {
+        var correctStr=toAdd.join(', ');
+        var wrongs=[];
+
+        /* Wrong: include an already-queued/closed neighbor */
+        if(blocked.length > 0) wrongs.push(toAdd.concat([blocked[0]]).join(', '));
+
+        /* Wrong: shuffled order (only useful if length > 1) */
+        if(toAdd.length > 1) {
+          var shuf=wrongOrder(toAdd).join(', ');
+          for(var sw=0;sw<10&&shuf===correctStr;sw++) shuf=wrongOrder(toAdd).join(', ');
+          if(shuf!==correctStr&&wrongs.indexOf(shuf)===-1) wrongs.push(shuf);
+        }
+
+        /* Wrong: omit last neighbor */
+        if(toAdd.length > 1) {
+          var omit=toAdd.slice(0,toAdd.length-1).join(', ');
+          if(wrongs.indexOf(omit)===-1) wrongs.push(omit);
+        }
+
+        /* Fallback: any other node */
+        nodeList.forEach(function(nd){
+          if(wrongs.length>=3) return;
+          if(nd.id!==u&&toAdd.indexOf(nd.id)===-1){
+            var c=String(nd.id);
+            if(wrongs.indexOf(c)===-1) wrongs.push(c);
+          }
+        });
+
+        qs.push({
+          sb:{open:open.slice(),closed:closed.slice(),cur:u,te:treeEdges.slice()},
+          concept:'BFS — Inserción',
+          text:'¿Qué vecinos de <b>'+u+'</b> se <b>añaden a OPEN</b>?',
+          opts:shuffle([correctStr,wrongs[0]||'ninguno',wrongs[1]||String(u+1)]),
+          correct:correctStr
+        });
+
+        toAdd.forEach(function(v){ treeEdges.push(u+','+v); open.push(v); });
+
+      } else if(nbrs.length > 0) {
+        qs.push({
+          sb:{open:open.slice(),closed:closed.slice(),cur:u,te:treeEdges.slice()},
+          concept:'BFS — Sin vecinos nuevos',
+          text:'Todos los vecinos de <b>'+u+'</b> ya están en OPEN o CLOSED. ¿Cuántos vecinos nuevos se añaden?',
+          opts:shuffle(['Ninguno','1','2']),
+          correct:'Ninguno'
+        });
+      }
+    }
+
+    visitOrder = visited;
+
+    if(visited.length > 1){
+      var vs=visited.join('→');
+      var w1=wrongOrder(visited).join('→');
+      for(var _a=0;_a<20&&w1===vs;_a++) w1=wrongOrder(visited).join('→');
+      var w2=wrongOrder(visited).join('→');
+      for(var _b=0;_b<20&&(w2===vs||w2===w1);_b++) w2=wrongOrder(visited).join('→');
+      qs.push({
+        sb:{open:[],closed:closed.slice(),cur:null,te:treeEdges.slice()},
+        concept:'BFS — Orden de visita',
+        text:'BFS completado. ¿Cuál fue el <b>orden de visita</b>?',
+        opts:shuffle([vs,w1,w2]),
+        correct:vs
+      });
+    }
+
+    return qs;
+  }
+
+  /* ── SVG rendering ─────────────────────────────────────────── */
+  function renderGraph(sb) {
+    var svg=document.getElementById('graph-svg');
+    svg.innerHTML='';
+
+    var defs=document.createElementNS(NS,'defs');
+    function mkMarker(id,col){
+      var mk=document.createElementNS(NS,'marker');
+      mk.setAttribute('id',id); mk.setAttribute('markerWidth','7');
+      mk.setAttribute('markerHeight','5'); mk.setAttribute('refX','6');
+      mk.setAttribute('refY','2.5'); mk.setAttribute('orient','auto');
+      var poly=document.createElementNS(NS,'polygon');
+      poly.setAttribute('points','0 0, 7 2.5, 0 5'); poly.setAttribute('fill',col);
+      mk.appendChild(poly); return mk;
+    }
+    defs.appendChild(mkMarker('arr-n','#3949ab'));
+    defs.appendChild(mkMarker('arr-t','#1a237e'));
+    svg.appendChild(defs);
+
+    var closed=sb?sb.closed:[];
+    var openQ=sb?sb.open:[];
+    var cur=sb?sb.cur:null;
+    var teSet=sb?new Set(sb.te):new Set();
+
+    var lookup={};
+    nodes.forEach(function(nd){ lookup[nd.id]=nd; });
+    var edgeSet=new Set();
+    edges.forEach(function(e){ edgeSet.add(e.from+','+e.to); });
+
+    edges.forEach(function(e){
+      var fn=lookup[e.from],tn=lookup[e.to];
+      if(!fn||!tn) return;
+      var isTree=teSet.has(e.from+','+e.to);
+      var color=isTree?'#1a237e':'#3949ab';
+      var width=isTree?'3':'1.5';
+      var marker=isTree?'arr-t':'arr-n';
+
+      var dx=tn.x-fn.x,dy=tn.y-fn.y,dist=Math.sqrt(dx*dx+dy*dy);
+      if(!dist) return;
+      var ux=dx/dist,uy=dy/dist;
+
+      var mutual=edgeSet.has(e.to+','+e.from);
+      var el;
+      if(mutual){
+        var mx=(fn.x+tn.x)/2,my=(fn.y+tn.y)/2;
+        var cpx=mx+uy*28,cpy=my-ux*28;
+        var d0x=cpx-fn.x,d0y=cpy-fn.y,d0l=Math.sqrt(d0x*d0x+d0y*d0y);
+        var d1x=tn.x-cpx,d1y=tn.y-cpy,d1l=Math.sqrt(d1x*d1x+d1y*d1y);
+        el=document.createElementNS(NS,'path');
+        el.setAttribute('d',
+          'M '+(fn.x+(d0x/d0l)*(R+2))+','+(fn.y+(d0y/d0l)*(R+2))+
+          ' Q '+cpx+','+cpy+
+          ' '+(tn.x-(d1x/d1l)*(R+7))+','+(tn.y-(d1y/d1l)*(R+7)));
+        el.setAttribute('fill','none');
+      } else {
+        el=document.createElementNS(NS,'line');
+        el.setAttribute('x1',fn.x+ux*(R+2)); el.setAttribute('y1',fn.y+uy*(R+2));
+        el.setAttribute('x2',tn.x-ux*(R+7)); el.setAttribute('y2',tn.y-uy*(R+7));
+      }
+      el.setAttribute('stroke',color); el.setAttribute('stroke-width',width);
+      el.setAttribute('marker-end','url(#'+marker+')');
+      svg.appendChild(el);
+    });
+
+    nodes.forEach(function(nd){
+      var inClosed=closed.indexOf(nd.id)!==-1;
+      var isCur=nd.id===cur;
+      var inOpen=openQ.indexOf(nd.id)!==-1;
+
+      var fill,stroke,textFill,sw;
+      if(isCur)         { fill='#f9a825'; stroke='#e65100'; textFill='#4a2c00'; sw='3.5'; }
+      else if(inClosed) { fill='#43a047'; stroke='#1b5e20'; textFill='#fff';    sw='2.5'; }
+      else if(inOpen)   { fill='#00bcd4'; stroke='#006064'; textFill='#fff';    sw='2.5'; }
+      else              { fill='#e8eaf6'; stroke='#1a237e'; textFill='#1a237e'; sw='2.5'; }
+
+      var g=document.createElementNS(NS,'g');
+      var c=document.createElementNS(NS,'circle');
+      c.setAttribute('cx',nd.x); c.setAttribute('cy',nd.y); c.setAttribute('r',R);
+      c.setAttribute('fill',fill); c.setAttribute('stroke',stroke);
+      c.setAttribute('stroke-width',sw);
+      var t=document.createElementNS(NS,'text');
+      t.setAttribute('x',nd.x); t.setAttribute('y',nd.y+5);
+      t.setAttribute('text-anchor','middle'); t.setAttribute('font-size','13');
+      t.setAttribute('font-family','Space Grotesk, sans-serif');
+      t.setAttribute('font-weight','700'); t.setAttribute('fill',textFill);
+      t.setAttribute('pointer-events','none'); t.textContent=nd.label;
+      g.appendChild(c); g.appendChild(t); svg.appendChild(g);
+    });
+  }
+
+  /* ── Adjacency list display ────────────────────────────────── */
+  function renderAdjList() {
+    var el=document.getElementById('adj-list');
+    var html='';
+    nodes.forEach(function(nd){
+      var nbrs=adjMap[nd.id]||[];
+      html+='<div class="adj-row">';
+      html+='<span class="adj-key">'+nd.id+'</span>';
+      html+='<span class="adj-colon">:</span>';
+      if(nbrs.length===0){
+        html+='<span class="adj-empty">(vacío)</span>';
+      } else {
+        nbrs.forEach(function(v,i){
+          if(i>0) html+='<span class="adj-sep">→</span>';
+          html+='<span class="adj-chip">'+v+'</span>';
+        });
+      }
+      html+='</div>';
+    });
+    el.innerHTML=html;
+  }
+
+  /* ── State chips (CLOSED + OPEN queue) ────────────────────── */
+  function renderState(sb) {
+    var cc=document.getElementById('closed-chips');
+    var oc=document.getElementById('open-chips');
+    var closed=sb?sb.closed:[];
+    var openQ=sb?sb.open:[];
+
+    cc.innerHTML=closed.length===0
+      ? '<span class="chip-empty">{ }</span>'
+      : closed.map(function(id){ return '<span class="chip-closed">'+id+'</span>'; }).join(' ');
+
+    oc.innerHTML=openQ.length===0
+      ? '<span class="chip-empty">[ ]</span>'
+      : openQ.map(function(id){ return '<span class="chip-open">'+id+'</span>'; }).join(' ');
+  }
+
+  function renderVisual(sb){ renderGraph(sb); renderState(sb); }
+
+  /* ── Question rendering ────────────────────────────────────── */
+  function renderQuestion(step, idx, total) {
+    document.getElementById('step-counter').textContent='Paso '+(idx+1)+' / '+total;
+    document.getElementById('q-concept').textContent=step.concept;
+    document.getElementById('q-text').innerHTML=step.text;
+    document.getElementById('done-banner').hidden=true;
+
+    var ch=document.getElementById('choices');
+    ch.innerHTML='';
+    step.opts.forEach(function(opt){
+      var btn=document.createElement('button');
+      btn.className='choice-btn';
+      btn.textContent=String(opt);
+      btn.addEventListener('click',function(){ handleAnswer(opt,step); });
+      ch.appendChild(btn);
+    });
+
+    document.getElementById('feedback').textContent='';
+    document.getElementById('feedback').className='feedback';
+    document.getElementById('btn-next').hidden=true;
+    answered=false;
+  }
+
+  /* ── Answer handler ────────────────────────────────────────── */
+  function handleAnswer(chosen, step) {
+    if(answered) return;
+    answered=true; scoreAll++;
+
+    var ok=String(chosen)===String(step.correct);
+    document.querySelectorAll('.choice-btn').forEach(function(btn){
+      btn.disabled=true;
+      if(btn.textContent===String(step.correct)) btn.classList.add('ok');
+      else if(btn.textContent===String(chosen)&&!ok) btn.classList.add('bad');
+    });
+
+    var fb=document.getElementById('feedback');
+    if(ok){ scoreOk++; fb.textContent='¡Correcto!'; fb.className='feedback ok'; }
+    else { fb.textContent='Incorrecto — la respuesta es: '+step.correct+'.'; fb.className='feedback bad'; }
+
+    document.getElementById('score-ok').textContent=scoreOk;
+    document.getElementById('score-total').textContent=scoreAll;
+
+    var qp=document.querySelector('.q-panel');
+    qp.classList.add(ok?'panel-flash-ok':'panel-flash-bad');
+    setTimeout(function(){ qp.classList.remove('panel-flash-ok','panel-flash-bad'); },700);
+
+    if(stepIdx>=steps.length-1){
+      setTimeout(showDone, 550);
+    } else {
+      document.getElementById('btn-next').hidden=false;
+    }
+  }
+
+  function showDone(){
+    document.getElementById('done-banner').hidden=false;
+    document.getElementById('done-order').textContent=
+      'Orden de visita BFS: '+visitOrder.join(' → ');
+    document.getElementById('btn-next').hidden=true;
+  }
+
+  /* ── Advance ───────────────────────────────────────────────── */
+  function nextStep(){
+    stepIdx++;
+    if(stepIdx>=steps.length) return;
+    var step=steps[stepIdx];
+    renderVisual(step.sb);
+    renderQuestion(step, stepIdx, steps.length);
+  }
+
+  /* ── Init ──────────────────────────────────────────────────── */
+  function init(nodeList, edgeList, adjM, stepList, vo){
+    nodes=nodeList; edges=edgeList; adjMap=adjM;
+    steps=stepList; visitOrder=vo||[];
+    stepIdx=0; scoreOk=0; scoreAll=0;
+    document.getElementById('score-ok').textContent='0';
+    document.getElementById('score-total').textContent='0';
+    document.getElementById('done-banner').hidden=true;
+
+    renderAdjList();
+    if(!steps.length){ renderVisual(null); return; }
+    var s=steps[0];
+    renderVisual(s.sb);
+    renderQuestion(s,0,steps.length);
+  }
+
+  function newGraph(){
+    var g=generateRandom();
+    init(g.nodeList, g.edgeList, g.adjM, g.steps, visitOrder);
+  }
+
+  /* ── Events & Boot ─────────────────────────────────────────── */
+  document.getElementById('btn-new-graph').addEventListener('click', newGraph);
+  document.getElementById('btn-next').addEventListener('click', nextStep);
+
+  init(DEF_NODES, DEF_EDGES, DEF_ADJ, DEF_STEPS, [1,4,2,6,3,5,7]);
+}());
+</script>
+</body>
+</html>
