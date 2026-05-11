@@ -9,100 +9,19 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="grafos.css" />
   <style>
-    .q-panel { padding: 1.5rem; position: sticky; top: 1.25rem; }
-
-    /* ── DFS state display ── */
-    .dfs-state {
-      display: flex; flex-direction: column; gap: 0.55rem;
-      background: rgba(26,35,126,0.05); border-radius: 8px;
-      padding: 0.8rem 1rem;
-    }
-    .state-row { display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap; }
-    .state-label {
-      font-family: 'Orbitron', sans-serif; font-size: 0.62rem; font-weight: 700;
-      color: var(--indigo); text-transform: uppercase; letter-spacing: 0.1em;
-      white-space: nowrap; min-width: 4rem;
-    }
-    .state-chips { display: flex; gap: 0.22rem; flex-wrap: wrap; align-items: center; }
-    .chip-closed {
-      font-family: 'Space Grotesk', sans-serif; font-size: 0.78rem; font-weight: 700;
-      padding: 0.12rem 0.45rem; border-radius: 4px;
-      background: #e8f5e9; color: #1b5e20; border: 1.5px solid #43a047;
-    }
+    /* ── DFS-specific chip styles ── */
     .chip-path {
       font-family: 'Space Grotesk', sans-serif; font-size: 0.78rem; font-weight: 700;
       padding: 0.12rem 0.45rem; border-radius: 4px;
       background: #fff8e1; color: #e65100; border: 1.5px solid #f9a825;
     }
     .chip-arrow { color: #f9a825; font-size: 0.7rem; }
-    .chip-empty { font-family: 'Space Grotesk', sans-serif; font-size: 0.78rem; color: #9e9e9e; }
 
-    /* ── Step counter ── */
-    .step-counter {
-      font-family: 'Orbitron', sans-serif; font-size: 0.68rem; font-weight: 700;
-      color: #5c6bc0; text-align: right; letter-spacing: 0.04em;
-    }
-
-    /* ── Graph legend ── */
-    .graph-legend {
-      display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;
-      padding: 0.55rem 0.8rem;
-      background: rgba(26,35,126,0.04); border-radius: 6px;
-    }
-    .legend-item { display: flex; align-items: center; gap: 0.38rem; }
-    .legend-dot {
-      width: 14px; height: 14px; border-radius: 50%; border: 2px solid; flex-shrink: 0;
-    }
-    .legend-dot.ld-current  { background: #f9a825; border-color: #e65100; }
-    .legend-dot.ld-visited  { background: #43a047; border-color: #1b5e20; }
-    .legend-dot.ld-unseen   { background: #e8eaf6; border-color: #1a237e; }
-    .legend-line { width: 22px; height: 3px; border-radius: 2px; }
-    .legend-line.ll-tree    { background: #1a237e; }
-    .legend-text { font-size: 0.7rem; color: #283593; }
-
-    /* ── Adjacency list ── */
-    .adj-list {
-      display: flex; flex-direction: column; gap: 0.18rem;
-      background: rgba(26,35,126,0.04); border-radius: 6px;
-      padding: 0.55rem 0.75rem;
-    }
-    .adj-row {
-      display: flex; align-items: center; gap: 0.22rem; flex-wrap: wrap;
-      padding: 0.18rem 0.3rem; border-radius: 4px;
-      font-size: 0.8rem; font-family: 'Space Grotesk', sans-serif;
-    }
-    .adj-key {
-      font-weight: 700; color: var(--indigo);
-      min-width: 1.1rem; text-align: right;
-    }
-    .adj-colon { color: #5c6bc0; margin-right: 0.05rem; }
-    .adj-sep   { color: #aab; font-size: 0.68rem; }
-    .adj-chip {
-      padding: 0.07rem 0.36rem; border-radius: 3px; font-weight: 700; font-size: 0.77rem;
-      background: #e8eaf6; color: var(--indigo); border: 1.5px solid #c5cae9;
-    }
-    .adj-empty { color: #9e9e9e; font-style: italic; font-size: 0.75rem; }
-
-    /* ── Done banner ── */
-    .done-banner {
-      text-align: center; padding: 1.2rem;
-      background: rgba(67,160,71,0.09); border-radius: 8px;
-      border: 2px solid #43a047;
-    }
-    .done-title {
-      font-family: 'Orbitron', sans-serif; font-size: 0.95rem;
-      font-weight: 700; color: var(--ok); margin-bottom: 0.4rem;
-    }
-    .done-order { font-size: 0.82rem; color: #283593; margin: 0; }
-
-    /* ── choices ── */
+    /* 3-column choice layout for trace exercises */
     .choices { display: flex; flex-wrap: wrap; gap: 0.55rem; }
     .choice-btn { flex: 1 1 calc(33% - 0.55rem); min-width: 80px; font-size: 0.9rem; }
 
-    @media (max-width: 700px) {
-      .q-panel { position: static; }
-      .choice-btn { flex: 1 1 100%; }
-    }
+    @media (max-width: 700px) { .choice-btn { flex: 1 1 100%; } }
   </style>
 </head>
 <body>
