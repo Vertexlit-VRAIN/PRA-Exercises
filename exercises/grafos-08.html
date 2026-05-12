@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>08 · Construye el Algoritmo — Grafos · PRA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="grafos.css" />
+  <style>
+    /* ── Pseudocode display ── */
+    .pseudo-display {
+      font-family: 'Courier New', Consolas, monospace;
+      font-size: 1rem;
+      line-height: 1.9;
+      white-space: pre;
+      color: var(--indigo-dark);
+      background: rgba(26,35,126,0.04);
+      border: 1px solid rgba(26,35,126,0.12);
+      border-radius: 8px;
+      padding: 0.9rem 1.1rem;
+      min-height: 5rem;
+      overflow-x: auto;
+      transition: background 0.5s;
+    }
+    .pseudo-display.pseudo-glow {
+      background: rgba(57,73,171,0.14);
+    }
+
+    /* ── Problem description ── */
+    .prob-description {
+      font-size: 1rem;
+      line-height: 1.65;
+      background: rgba(26,35,126,0.05);
+      border-left: 4px solid var(--indigo);
+      padding: 0.7rem 0.9rem;
+      border-radius: 0 6px 6px 0;
+    }
+
+    /* ── Choices: vertical list, 3 options ── */
+    .choices { display: flex; flex-direction: column; gap: 0.55rem; }
+    .choice-btn {
+      padding: 0.75rem 1rem;
+      border: 2px solid rgba(26,35,126,0.2);
+      border-radius: 8px;
+      background: #fff;
+      color: var(--text);
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: left;
+      line-height: 1.4;
+      transition: background 0.12s, border-color 0.12s, transform 0.1s;
+    }
+    .choice-btn:hover:not(:disabled) {
+      background: rgba(26,35,126,0.07);
+      border-color: var(--indigo);
+      transform: translateY(-1px);
+    }
+    .choice-btn:disabled { cursor: default; }
+    .choice-btn.ok  { background: #e8f5e9; border-color: var(--ok);  color: var(--ok);  }
+    .choice-btn.bad { background: #ffebee; border-color: var(--bad); color: var(--bad); }
+
+    /* ── Problem selector ── */
+    .prob-selector {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+    }
+    .prob-sel-btn {
+      padding: 0.45rem 0.9rem;
+      border: 2px solid rgba(26,35,126,0.22);
+      border-radius: 20px;
+      background: #fff;
+      color: var(--indigo-dark);
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s, color 0.12s;
+      white-space: nowrap;
+    }
+    .prob-sel-btn:hover  { background: rgba(26,35,126,0.07); border-color: var(--indigo); }
+    .prob-sel-btn.active { background: var(--indigo); color: #fff; border-color: var(--indigo); }
+
+    /* ── Strategy label: prominent in left panel ── */
+    .strategy-label {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--indigo);
+      letter-spacing: 0.06em;
+      padding: 0.55rem 0.9rem;
+      background: rgba(26,35,126,0.08);
+      border-radius: 6px;
+      border: 1.5px solid rgba(26,35,126,0.2);
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+<header class="ex-header">
+  <a class="back-link" href="../index.html#grafos">= Grafos</a>
+  <h1 class="ex-title">08 — CONSTRUYE EL ALGORITMO</h1>
+  <p class="ex-desc">Para cada problema toma las decisiones algorítmicas clave. Con cada acierto el pseudocódigo se va ensamblando en pantalla. Sin C++, solo razonamiento.</p>
+</header>
+
+<main class="ex-main">
+
+  <!-- Problem selector: spans both columns -->
+  <nav class="prob-selector" id="prob-selector" aria-label="Seleccionar problema"></nav>
+
+  <!-- LEFT: problem description + growing pseudocode -->
+  <section class="graph-panel" aria-label="Referencia">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem;">
+      <span class="panel-label" id="prob-counter">Problema 1 / 6</span>
+    </div>
+    <span class="strategy-label" id="prob-concept"></span>
+
+    <div>
+      <span class="panel-label">Enunciado</span>
+      <p class="prob-description" id="prob-desc"></p>
+    </div>
+
+    <div>
+      <span class="panel-label">Pseudocódigo en construcción</span>
+      <div class="pseudo-display" id="pseudo-display"></div>
+    </div>
+  </section>
+
+  <!-- RIGHT: MCQ questions -->
+  <section class="q-panel" aria-label="Pregunta">
+    <p class="step-counter" id="step-counter">Decisión 1 / 4</p>
+    <span class="q-concept" id="q-concept"></span>
+    <p class="q-text" id="q-text"></p>
+    <div class="choices" id="choices" role="group"></div>
+    <p class="feedback" id="feedback" aria-live="polite"></p>
+    <button class="btn btn-primary" id="btn-next" hidden>Siguiente →</button>
+  </section>
+
+</main>
+
+<footer class="score-bar" aria-label="Puntuación">
+  Correctas: <span class="score-num" id="score-correct">0</span>
+  &nbsp;/&nbsp; <span id="score-total">0</span>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Problem data ───────────────────────────────────────────────────────── */
+
+  var PROBLEMS = [
+    {
+      concept: 'BFS — Conteo',
+      header:  'contarAccesibles(G, s):',
+      desc:    'Dado un grafo G y un vértice de inicio s, ¿cuántos vértices son accesibles desde s? Un vértice es accesible si existe un camino que llegue hasta él. El propio s cuenta.',
+      steps: [
+        {
+          concept: 'Mecanismo anti-repetición',
+          q: 'Para contar nodos accesibles sin contar el mismo nodo dos veces, ¿qué necesitas llevar la cuenta?',
+          opts: [
+            'Un conjunto CLOSED que registre qué nodos ya has procesado',
+            'Nada: el propio contador evita las repeticiones',
+            'El id del nodo de inicio s, para volver a él cuando cicles'
+          ],
+          correct: 0,
+          code: '  OPEN = estructura de pendientes (cola o pila)\n  CLOSED = conjunto vacío',
+          why:  'Sin CLOSED, en un grafo con ciclos el recorrido no termina. La elección de cola (BFS) o pila (DFS) cambia el orden de visita, pero ambas funcionan: lo que importa es CLOSED.'
+        },
+        {
+          concept: 'Inicialización',
+          q: 'Antes de arrancar el bucle, ¿cuándo debes añadir s a CLOSED?',
+          opts: [
+            'Al añadirlo a OPEN, antes de entrar al bucle',
+            'Al sacarlo de OPEN dentro del bucle, como cualquier otro nodo',
+            'No hace falta marcarlo; s es el punto de partida y siempre se sabe'
+          ],
+          correct: 0,
+          code: '  añadir s a CLOSED\n  añadir s a OPEN\n  count = 1',
+          why:  'Marcar al añadir a OPEN (no al extraer) es la clave. Si lo marcas tarde, otro camino podría añadir s de nuevo a OPEN antes de que salga, causando duplicados.'
+        },
+        {
+          concept: 'Condición sobre el vecino',
+          q: '¿Qué condición debe cumplir un vecino v de u para añadirlo a OPEN?',
+          opts: [
+            'Que v ∉ CLOSED',
+            'Que v sea adyacente al nodo de inicio s (no solo a u)',
+            'Ninguna: se añaden siempre todos los vecinos'
+          ],
+          correct: 0,
+          code: '  mientras OPEN ≠ ∅:\n      u = extraer de OPEN\n      para cada vecino v de u:\n          si v ∉ CLOSED:',
+          why:  'Solo procesamos nodos nuevos. Añadir repetidos crearía bucles infinitos y conteos incorrectos.'
+        },
+        {
+          concept: 'Acción sobre el vecino válido',
+          q: 'Al encontrar un vecino v que ∉ CLOSED, ¿qué tres cosas haces a la vez?',
+          opts: [
+            'Añadirlo a CLOSED, añadirlo a OPEN e incrementar count',
+            'Solo añadirlo a OPEN; lo contarás cuando salga',
+            'Solo incrementar count; el marcado lo hará el bucle siguiente'
+          ],
+          correct: 0,
+          code: '              añadir v a CLOSED\n              añadir v a OPEN\n              count = count + 1\n  devolver count',
+          why:  'Las tres acciones son inseparables: marcar para no repetir, encolar para explorar sus vecinos, y contar porque ya sabemos que es accesible.'
+        }
+      ]
+    },
+
+    {
+      concept: 'BFS — Alcanzabilidad',
+      header:  'existeCamino(G, u, v):',
+      desc:    'Dados dos vértices u y v del grafo G, la función debe devolver verdadero si existe algún camino de u a v, y falso en caso contrario.',
+      steps: [
+        {
+          concept: 'Caso base',
+          q: '¿Hay algún caso que puedas resolver sin recorrer el grafo?',
+          opts: [
+            'Sí: si u = v, devolver verdadero directamente',
+            'No, siempre hay que recorrer aunque sea un paso',
+            'Sí: si u tiene al menos un vecino, devolver verdadero'
+          ],
+          correct: 0,
+          code: '  si u = v: devolver verdadero',
+          why:  'Un nodo siempre es alcanzable desde sí mismo. Tratarlo como caso base evita inicializar la cola innecesariamente.'
+        },
+        {
+          concept: 'Inicialización del BFS',
+          q: '¿Cómo arrancas el BFS?',
+          opts: [
+            'Añades u a CLOSED y lo añades a OPEN',
+            'Añades todos los nodos del grafo a OPEN',
+            'Empiezas por v (el destino) y buscas u hacia atrás'
+          ],
+          correct: 0,
+          code: '  OPEN = cola vacía\n  añadir u a CLOSED\n  añadir u a OPEN',
+          why:  'Arrancamos desde u explorando hacia v. Marcar u evita que lo revisitemos si hay ciclos.'
+        },
+        {
+          concept: 'Detección del destino',
+          q: 'Al explorar los vecinos de w (extraído de OPEN), ¿cuándo devuelves verdadero?',
+          opts: [
+            'Cuando un vecino x es igual a v',
+            'Cuando OPEN se vacía y v está en CLOSED',
+            'Cuando w tiene más de un vecino (señal de conectividad)'
+          ],
+          correct: 0,
+          code: '  mientras OPEN ≠ ∅:\n      w = extraer de OPEN\n      para cada vecino x de w:\n          si x = v: devolver verdadero',
+          why:  'En cuanto v aparece como vecino de algún nodo en CLOSED, confirmamos el camino y podemos parar.'
+        },
+        {
+          concept: 'Continuar o concluir',
+          q: 'Si x ≠ v y x ∉ CLOSED, ¿qué haces? ¿Y qué devuelves si OPEN se vacía?',
+          opts: [
+            'Añades x a CLOSED y a OPEN; si OPEN se vacía sin encontrar v, devuelves falso',
+            'Ignoras x; solo te interesa llegar a v por el camino más corto',
+            'Devuelves falso inmediatamente si cualquier vecino no es v'
+          ],
+          correct: 0,
+          code: '          si x ∉ CLOSED:\n              añadir x a CLOSED,  añadir x a OPEN\n  devolver falso',
+          why:  'Seguimos explorando para llegar a v por cualquier camino. Si la cola se vacía sin encontrarlo, no existe camino → falso.'
+        }
+      ]
+    },
+
+    {
+      concept: 'DFS recursivo — Filtrado',
+      header:  'contarConPropiedad(G, s, P):',
+      desc:    'Dado G y un vértice s, cuenta cuántos vértices accesibles desde s cumplen una propiedad P (por ejemplo, valor > umbral). Usaremos DFS recursivo. El conjunto CLOSED se inicializa fuera, antes de la primera llamada.',
+      steps: [
+        {
+          concept: 'Primera acción al entrar',
+          q: 'La función acaba de ser llamada con el nodo s. ¿Qué es lo primero que hace?',
+          opts: [
+            'Añadir s a CLOSED',
+            'Comprobar si s cumple la propiedad P',
+            'Llamar recursivamente a los vecinos de s'
+          ],
+          correct: 0,
+          code: '  añadir s a CLOSED',
+          why:  'Marcamos s nada más entrar para que ninguna llamada recursiva futura lo visite de nuevo y cree un ciclo infinito.'
+        },
+        {
+          concept: 'Contribución de s al contador',
+          q: '¿Cuánto aporta s al contador en función de si cumple P?',
+          opts: [
+            '1 si P(s) se cumple, 0 si no',
+            'Siempre 0; el contador se actualiza al volver de la recursión',
+            'Siempre 1; ya lo filtrará la función llamante'
+          ],
+          correct: 0,
+          code: '  count = ( P(s) se cumple ) ? 1 : 0',
+          why:  'Evaluamos s ahora mismo. El operador ternario da 1 si cumple P, 0 si no. Así cada llamada aporta exactamente lo que le corresponde.'
+        },
+        {
+          concept: 'Acumulación recursiva',
+          q: '¿Cómo obtienes el total de todos los nodos alcanzables desde s que cumplen P?',
+          opts: [
+            'Sumando el resultado de llamar recursivamente a cada vecino ∉ CLOSED',
+            'Multiplicando los resultados de los vecinos entre sí',
+            'Devolviendo count solo si s cumple P; si no, devolviendo 0'
+          ],
+          correct: 0,
+          code: '  para cada vecino v de s:\n      si v ∉ CLOSED:\n          count = count + contarConPropiedad(G, v, P)\n  devolver count',
+          why:  'Cada llamada recursiva devuelve su propio subtotal. Sumamos porque cada nodo contribuye de forma independiente.'
+        }
+      ]
+    },
+
+    {
+      concept: 'BFS — Máximo',
+      header:  'verticeMaximo(G, s):',
+      desc:    'Dado G y un vértice de inicio s, devuelve el identificador del vértice con mayor valor entre todos los accesibles desde s (s incluido).',
+      steps: [
+        {
+          concept: 'Inicialización del máximo',
+          q: '¿Cómo inicializas la variable que guarda el mejor candidato antes del BFS?',
+          opts: [
+            'maxId = s,  maxVal = valor(s)',
+            'maxId = -1,  maxVal = 0',
+            'maxId = -1,  maxVal = +∞'
+          ],
+          correct: 0,
+          code: '  maxId = s,  maxVal = valor(s)',
+          why:  'Inicializar con s es seguro porque s siempre es accesible. Usar 0 fallaría si todos los valores son negativos.'
+        },
+        {
+          concept: 'Actualización del máximo',
+          q: 'Al extraer u de OPEN y comparar su valor, ¿cuándo actualizas maxId y maxVal?',
+          opts: [
+            'Cuando valor(u) > maxVal',
+            'Siempre; cada nodo extraído podría ser el máximo',
+            'Solo si u es el último nodo en salir de OPEN'
+          ],
+          correct: 0,
+          code: '  OPEN = cola vacía;  añadir s a CLOSED;  añadir s a OPEN\n  mientras OPEN ≠ ∅:\n      u = extraer de OPEN\n      si valor(u) > maxVal:\n          maxVal = valor(u),  maxId = u',
+          why:  'Actualizamos solo cuando mejoramos el máximo conocido. El BFS garantiza que visitamos todos los nodos accesibles.'
+        },
+        {
+          concept: 'Retorno',
+          q: '¿Qué devuelve la función, el identificador o el valor del nodo máximo?',
+          opts: [
+            'maxId (el identificador del nodo con mayor valor)',
+            'maxVal (el propio valor máximo encontrado)',
+            'Un par (maxId, maxVal) con los dos datos'
+          ],
+          correct: 0,
+          code: '      para cada vecino v de u:\n          si v ∉ CLOSED:\n              añadir v a CLOSED,  añadir v a OPEN\n  devolver maxId',
+          why:  'El enunciado pide el identificador del vértice. maxVal es una variable auxiliar del recorrido, no el resultado final.'
+        }
+      ]
+    },
+
+    {
+      concept: 'BFS — Distancia exacta',
+      header:  'contarDistanciaK(G, s, k):',
+      desc:    'Dado G, un vértice s y un número k, ¿cuántos vértices están a distancia exactamente k de s? El grafo no tiene pesos; cada arco tiene distancia 1.',
+      steps: [
+        {
+          concept: 'Elección del recorrido',
+          q: '¿Por qué BFS es la elección correcta para calcular distancias en grafos no ponderados?',
+          opts: [
+            'BFS visita los nodos por niveles: primero a distancia 1, luego 2, etc., garantizando distancias mínimas',
+            'DFS calcula distancias igual de bien que BFS en grafos no ponderados',
+            'Cualquier recorrido vale; la distancia se calcula en un paso separado al final'
+          ],
+          correct: 0,
+          code: '  // BFS: explora por niveles (dist 0, 1, 2…)\n  dist(s) = 0',
+          why:  'BFS garantiza que al visitar un nodo por primera vez su distancia es mínima. DFS puede llegar a un nodo por un camino largo y asignarle una distancia errónea.'
+        },
+        {
+          concept: 'Distancia del vecino',
+          q: 'Al sacar u de OPEN y encontrar un vecino v aún no en CLOSED, ¿qué distancia le asignas?',
+          opts: [
+            'dist(v) = dist(u) + 1',
+            'dist(v) = dist(u)   (misma distancia que su padre)',
+            'dist(v) = k   (ya sé cuánto quiero buscar)'
+          ],
+          correct: 0,
+          code: '  para cada v ≠ s: dist(v) = -1    // -1 = no visitado\n  OPEN = cola vacía;  añadir s a OPEN\n  mientras OPEN ≠ ∅:\n      u = extraer de OPEN\n      para cada vecino v de u:\n          si dist(v) = -1:\n              dist(v) = dist(u) + 1\n              añadir v a OPEN',
+          why:  'Cada paso del BFS avanza un nivel; la distancia del vecino es la del nodo actual más uno. Asignar dist(u) no avanzaría el nivel.'
+        },
+        {
+          concept: 'Conteo final',
+          q: 'Terminado el BFS, ¿cómo cuentas los nodos a distancia exactamente k?',
+          opts: [
+            'Recorres todos los nodos y cuentas los que tienen dist(v) = k',
+            'Son los últimos nodos que quedan en OPEN cuando la cola se vacía',
+            'Ya los contaste durante el BFS: son los que entran en OPEN en el nivel k'
+          ],
+          correct: 0,
+          code: '  count = 0\n  para cada nodo v del grafo:\n      si dist(v) = k: count = count + 1\n  devolver count',
+          why:  'Necesitamos un recorrido final para filtrar. Intentar contarlos durante el BFS complica la lógica sin ventaja real.'
+        }
+      ]
+    },
+
+    {
+      concept: 'BFS — Componentes conexas',
+      header:  'componentesConexas(G):',
+      desc:    'Dado un grafo G no dirigido, ¿cuántas componentes conexas tiene? Dos vértices están en la misma componente si y solo si existe un camino entre ellos.',
+      steps: [
+        {
+          concept: 'Necesidad del bucle exterior',
+          q: '¿Por qué un solo BFS/DFS desde un nodo arbitrario no es suficiente?',
+          opts: [
+            'Solo alcanzaría los nodos de una componente; el resto quedaría sin visitar',
+            'BFS siempre recorre el grafo completo, sea conexo o no',
+            'Con un nodo de inicio bien elegido siempre basta'
+          ],
+          correct: 0,
+          code: '  numComp = 0\n  para cada nodo v del grafo:  // bucle exterior',
+          why:  'En un grafo no conexo los nodos de otras componentes son inalcanzables desde el primer vértice. El bucle exterior garantiza que los visitemos todos.'
+        },
+        {
+          concept: 'Condición para lanzar un nuevo recorrido',
+          q: '¿Cuándo lanzas un nuevo BFS/DFS desde el vértice v del bucle exterior?',
+          opts: [
+            'Cuando v aún no tiene componente asignada',
+            'Siempre, para cada v del grafo',
+            'Cuando v no tiene vecinos (nodo aislado)'
+          ],
+          correct: 0,
+          code: '      si comp(v) = sin asignar:',
+          why:  'Si v ya tiene componente es porque un BFS anterior lo alcanzó. Relanzar desde él sería redundante y contaría componentes de más.'
+        },
+        {
+          concept: 'Momento de incrementar el contador',
+          q: 'El BFS/DFS interior asigna comp(w) = numComp a todos los nodos de la componente. ¿Cuándo incrementas numComp?',
+          opts: [
+            'Justo al terminar el BFS/DFS de esa componente, una vez por componente',
+            'Dentro del BFS, cada vez que añades un nodo a OPEN',
+            'Al inicio del bucle exterior, antes de comprobar si v está asignado'
+          ],
+          correct: 0,
+          code: '          BFS/DFS desde v → comp(w) = numComp\n          (para todo w alcanzable desde v)\n          numComp = numComp + 1\n  devolver numComp',
+          why:  'Incrementamos una vez por componente, no por nodo. Hacerlo dentro del BFS contaría nodos individuales, no grupos.'
+        }
+      ]
+    }
+  ];
+
+  /* ── State ──────────────────────────────────────────────────────────────── */
+
+  var state = {
+    probIdx:  0,
+    stepIdx:  0,
+    answered: false,
+    correct:  0,
+    total:    0
+  };
+
+  /* ── DOM refs ───────────────────────────────────────────────────────────── */
+
+  var elProbCounter  = document.getElementById('prob-counter');
+  var elProbConcept  = document.getElementById('prob-concept');
+  var elProbDesc     = document.getElementById('prob-desc');
+  var elPseudo       = document.getElementById('pseudo-display');
+  var elStepCounter  = document.getElementById('step-counter');
+  var elQConcept     = document.getElementById('q-concept');
+  var elQText        = document.getElementById('q-text');
+  var elChoices      = document.getElementById('choices');
+  var elFeedback     = document.getElementById('feedback');
+  var elBtnNext      = document.getElementById('btn-next');
+  var elScoreCorrect = document.getElementById('score-correct');
+  var elScoreTotal   = document.getElementById('score-total');
+  var qPanel         = document.querySelector('.q-panel');
+
+  /* ── Helpers ────────────────────────────────────────────────────────────── */
+
+  function updateScoreBar() {
+    elScoreCorrect.textContent = state.correct;
+    elScoreTotal.textContent   = state.total;
+  }
+
+  function flashPanel(ok) {
+    qPanel.classList.remove('panel-flash-ok', 'panel-flash-bad');
+    void qPanel.offsetWidth;
+    qPanel.classList.add(ok ? 'panel-flash-ok' : 'panel-flash-bad');
+    setTimeout(function () {
+      qPanel.classList.remove('panel-flash-ok', 'panel-flash-bad');
+    }, 700);
+  }
+
+  function appendCode(text) {
+    elPseudo.textContent += (elPseudo.textContent ? '\n' : '') + text;
+    elPseudo.classList.remove('pseudo-glow');
+    void elPseudo.offsetWidth;
+    elPseudo.classList.add('pseudo-glow');
+    setTimeout(function () { elPseudo.classList.remove('pseudo-glow'); }, 600);
+  }
+
+  /* ── Load problem ───────────────────────────────────────────────────────── */
+
+  function loadProblem(idx) {
+    var p = PROBLEMS[idx];
+    state.probIdx  = idx;
+    state.stepIdx  = 0;
+    state.answered = false;
+
+    // Update selector active state
+    document.querySelectorAll('.prob-sel-btn').forEach(function (b, i) {
+      b.classList.toggle('active', i === idx);
+    });
+
+    elProbCounter.textContent = 'Problema ' + (idx + 1) + ' / ' + PROBLEMS.length;
+    elProbConcept.textContent = p.concept;
+    elProbDesc.textContent    = p.desc;
+    elPseudo.textContent      = p.header;
+    elBtnNext.hidden          = true;
+    elFeedback.textContent    = '';
+    elFeedback.className      = 'feedback';
+
+    renderStep();
+  }
+
+  function buildSelector() {
+    var nav = document.getElementById('prob-selector');
+    PROBLEMS.forEach(function (p, i) {
+      var btn = document.createElement('button');
+      btn.className   = 'prob-sel-btn' + (i === 0 ? ' active' : '');
+      btn.textContent = (i + 1) + '. ' + p.concept;
+      btn.addEventListener('click', function () { loadProblem(i); });
+      nav.appendChild(btn);
+    });
+  }
+
+  /* ── Render current step ────────────────────────────────────────────────── */
+
+  function renderStep() {
+    var p = PROBLEMS[state.probIdx];
+    var s = p.steps[state.stepIdx];
+
+    elStepCounter.textContent = 'Decisión ' + (state.stepIdx + 1) + ' / ' + p.steps.length;
+    elQConcept.textContent    = s.concept;
+    elQText.textContent       = s.q;
+    elFeedback.textContent    = '';
+    elFeedback.className      = 'feedback';
+    elBtnNext.hidden          = true;
+    state.answered            = false;
+
+    // Shuffle option display order
+    var order = [0, 1, 2];
+    for (var ii = order.length - 1; ii > 0; ii--) {
+      var jj = Math.floor(Math.random() * (ii + 1));
+      var tt = order[ii]; order[ii] = order[jj]; order[jj] = tt;
+    }
+    var correctDisplay = order.indexOf(s.correct);
+
+    elChoices.innerHTML = '';
+    order.forEach(function (origIdx, displayIdx) {
+      (function (dIdx, isCorr) {
+        var btn = document.createElement('button');
+        btn.className   = 'choice-btn';
+        btn.textContent = s.opts[origIdx];
+        btn.addEventListener('click', function () {
+          handleAnswer(dIdx, correctDisplay, isCorr);
+        });
+        elChoices.appendChild(btn);
+      })(displayIdx, origIdx === s.correct);
+    });
+  }
+
+  /* ── Handle answer ──────────────────────────────────────────────────────── */
+
+  // clickedIdx and correctIdx are display positions (after shuffle)
+  // isCorrect is pre-computed at render time
+  function handleAnswer(clickedIdx, correctIdx, isCorrect) {
+    if (state.answered) return;
+    state.answered = true;
+    state.total++;
+
+    if (isCorrect) state.correct++;
+    updateScoreBar();
+    flashPanel(isCorrect);
+
+    var btns = elChoices.querySelectorAll('.choice-btn');
+    btns.forEach(function (b, i) {
+      b.disabled = true;
+      if (i === correctIdx)             b.classList.add('ok');
+      else if (i === clickedIdx && !isCorrect) b.classList.add('bad');
+    });
+
+    var s = PROBLEMS[state.probIdx].steps[state.stepIdx];
+    elFeedback.textContent = (isCorrect ? '✓ Correcto. ' : '✗ Incorrecto. ') + s.why;
+    elFeedback.className   = 'feedback ' + (isCorrect ? 'ok' : 'bad');
+
+    appendCode(s.code);
+    elBtnNext.hidden = false;
+  }
+
+  /* ── Next step / next problem ───────────────────────────────────────────── */
+
+  function handleNext() {
+    var p = PROBLEMS[state.probIdx];
+    state.stepIdx++;
+
+    if (state.stepIdx >= p.steps.length) {
+      // Problem finished
+      if (state.probIdx < PROBLEMS.length - 1) {
+        elBtnNext.hidden = true;
+        // Brief pause so student sees the completed pseudocode
+        setTimeout(function () { loadProblem(state.probIdx + 1); }, 800);
+      } else {
+        showDone();
+      }
+    } else {
+      renderStep();
+    }
+  }
+
+  function showDone() {
+    elBtnNext.hidden   = true;
+    elBtnNext.disabled = true;
+  }
+
+  /* ── Event wiring & boot ────────────────────────────────────────────────── */
+
+  elBtnNext.addEventListener('click', handleNext);
+  buildSelector();
+  loadProblem(0);
+
+}());
+</script>
+
+</body>
+</html>
