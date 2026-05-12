@@ -9,8 +9,8 @@
   --amber:      #b35c00;
   --amber-dark: #7c3f00;
   --amber-lt:   #ffe0b2;
-  --bg:         #fffde7;
-  --panel:      #fff8e1;
+  --bg:         #f5f0eb;
+  --panel:      #fff;
   --text:       #3e2000;
   --ok:         #2e7d32;
   --bad:        #c62828;
@@ -24,7 +24,6 @@ html { font-size: 18px; }
 body {
   font-family: 'Space Grotesk', system-ui, sans-serif;
   background-color: var(--bg);
-  background-image: linear-gradient(180deg, #0a1e10 0px, transparent 320px);
   color: var(--text);
   min-height: 100vh;
   display: flex;
@@ -34,20 +33,17 @@ body {
 /* ─── Exercise Header ───────────────────────────────────────────────────────── */
 
 .ex-header {
-  background-color: #0a1e10;
-  background-image:
-    radial-gradient(ellipse at 20% 80%, rgba(20, 70, 30, 0.7) 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 20%, rgba(10, 50, 20, 0.5) 0%, transparent 55%);
-  color: #fff;
+  background: linear-gradient(135deg, #fff3e0, #fdf8f0);
+  border-top: 3px solid var(--amber);
+  border-bottom: 1px solid rgba(179, 92, 0, 0.15);
   padding: 1rem 1.5rem 1.1rem;
-  border-bottom: 1px solid rgba(255, 214, 0, 0.12);
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
 }
 
 .back-link {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--amber);
   text-decoration: none;
   font-size: 0.78rem;
   font-weight: 700;
@@ -56,16 +52,15 @@ body {
 .back-link:hover { opacity: 0.7; }
 
 .ex-title {
-  font-family: 'Press Start 2P', monospace;
-  font-size: clamp(0.52rem, 2vw, 0.78rem);
-  color: #ffd600;
-  text-shadow: 2px 2px 0 #3d1f00, 3px 3px 0 rgba(0, 0, 0, 0.5);
-  line-height: 1.8;
+  font-size: clamp(0.88rem, 2vw, 1.1rem);
+  font-weight: 700;
+  color: var(--amber);
+  line-height: 1.5;
 }
 
 .ex-desc {
   font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: #555;
   line-height: 1.5;
   max-width: 64ch;
 }
@@ -110,7 +105,7 @@ body {
 #tree-svg {
   width: 100%;
   border-radius: 8px;
-  background: #fffef5;
+  background: #f5f0eb;
   border: 1px solid rgba(179, 92, 0, 0.1);
 }
 
@@ -157,7 +152,7 @@ body {
 
 .score-bar {
   border-top: 2px solid rgba(179, 92, 0, 0.15);
-  background: rgba(255, 253, 231, 0.95);
+  background: rgba(245, 240, 235, 0.97);
   padding: 0.7rem 1.5rem;
   display: flex;
   align-items: center;
@@ -267,7 +262,7 @@ body {
   display: inline-block;
   background: var(--amber);
   color: #fff;
-  font-family: 'Press Start 2P', monospace;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
   font-size: 0.75rem;
   padding: 0.3rem 0.65rem;
   border-radius: 4px;

@@ -9,8 +9,8 @@
   --indigo:      #1a237e;
   --indigo-dark: #0d1757;
   --indigo-lt:   #c5cae9;
-  --bg:          #f4f5fb;
-  --panel:       #f8f9ff;
+  --bg:          #f5f0eb;
+  --panel:       #fff;
   --text:        #1a237e;
   --ok:          #2e7d32;
   --bad:         #c62828;
@@ -24,7 +24,6 @@ html { font-size: 18px; }
 body {
   font-family: 'Space Grotesk', system-ui, sans-serif;
   background-color: var(--bg);
-  background-image: linear-gradient(180deg, #050a1e 0px, transparent 320px);
   color: var(--text);
   min-height: 100vh;
   display: flex;
@@ -34,20 +33,17 @@ body {
 /* ─── Exercise Header ───────────────────────────────────────────────────────── */
 
 .ex-header {
-  background-color: #050a1e;
-  background-image:
-    radial-gradient(ellipse at 20% 80%, rgba(26, 69, 171, 0.55) 0%, transparent 55%),
-    radial-gradient(ellipse at 80% 20%, rgba(21, 101, 192, 0.45) 0%, transparent 55%);
-  color: #fff;
+  background: linear-gradient(135deg, #e8eaf6, #f0f2ff);
+  border-top: 3px solid var(--indigo);
+  border-bottom: 1px solid rgba(26, 35, 126, 0.15);
   padding: 1rem 1.5rem 1.1rem;
-  border-bottom: 1px solid rgba(124, 185, 255, 0.12);
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
 }
 
 .back-link {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--indigo);
   text-decoration: none;
   font-size: 0.78rem;
   font-weight: 700;
@@ -56,20 +52,15 @@ body {
 .back-link:hover { opacity: 0.7; }
 
 .ex-title {
-  font-family: 'Orbitron', sans-serif;
-  font-size: clamp(0.52rem, 2vw, 0.85rem);
-  color: #7cb9ff;
-  text-shadow:
-    0 0 14px rgba(124, 185, 255, 0.8),
-    0 0 35px rgba(124, 185, 255, 0.35),
-    0 0 70px rgba(124, 185, 255, 0.12);
-  line-height: 1.8;
-  letter-spacing: 0.1em;
+  font-size: clamp(0.88rem, 2vw, 1.1rem);
+  font-weight: 700;
+  color: var(--indigo);
+  line-height: 1.5;
 }
 
 .ex-desc {
   font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: #555;
   line-height: 1.5;
   max-width: 64ch;
 }
@@ -112,7 +103,7 @@ body {
 .graph-svg {
   width: 100%;
   border-radius: 8px;
-  background: #f0f2ff;
+  background: #f5f0eb;
   border: 1px solid rgba(26, 35, 126, 0.1);
 }
 
@@ -148,7 +139,7 @@ body {
 
 .score-bar {
   border-top: 2px solid rgba(26, 35, 126, 0.15);
-  background: rgba(244, 245, 251, 0.97);
+  background: rgba(245, 240, 235, 0.97);
   padding: 0.7rem 1.5rem;
   display: flex;
   align-items: center;
@@ -166,7 +157,7 @@ body {
   display: inline-block;
   background: var(--indigo);
   color: #fff;
-  font-family: 'Orbitron', sans-serif;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
   font-size: 0.65rem;
   padding: 0.3rem 0.65rem;
   border-radius: 4px;
@@ -237,7 +228,7 @@ body {
 
 .state-row   { display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap; }
 .state-label {
-  font-family: 'Orbitron', sans-serif; font-size: 0.62rem; font-weight: 700;
+  font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 0.62rem; font-weight: 700;
   color: var(--indigo); text-transform: uppercase; letter-spacing: 0.1em;
   white-space: nowrap; min-width: 4rem;
 }
@@ -252,7 +243,7 @@ body {
 
 /* Step counter */
 .step-counter {
-  font-family: 'Orbitron', sans-serif; font-size: 0.68rem; font-weight: 700;
+  font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 0.68rem; font-weight: 700;
   color: #5c6bc0; text-align: right; letter-spacing: 0.04em;
 }
 
@@ -299,7 +290,7 @@ body {
   border: 2px solid #43a047;
 }
 .done-title {
-  font-family: 'Orbitron', sans-serif; font-size: 0.95rem;
+  font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 0.95rem;
   font-weight: 700; color: var(--ok); margin-bottom: 0.4rem;
 }
 .done-order { font-size: 0.82rem; color: #283593; margin: 0; }

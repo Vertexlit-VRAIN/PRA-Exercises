@@ -8,8 +8,8 @@
   --green:      #1b5e20;
   --green-lt:   #4caf50;
   --green-glow: #00cc44;
-  --bg:         #f0fff4;
-  --panel:      #e8f5e9;
+  --bg:         #f5f0eb;
+  --panel:      #fff;
   --text:       #0d1f0d;
   --ok:         #2e7d32;
   --bad:        #c62828;
@@ -24,7 +24,6 @@ html { font-size: 18px; }
 body {
   font-family: 'Space Grotesk', system-ui, sans-serif;
   background-color: var(--bg);
-  background-image: linear-gradient(180deg, var(--terminal) 0px, transparent 320px);
   color: var(--text);
   min-height: 100vh;
   display: flex;
@@ -33,38 +32,33 @@ body {
 
 /* ── Exercise header ─────────────────────────────────────────── */
 .ex-header {
-  background-color: var(--terminal);
-  background-image: repeating-linear-gradient(
-    0deg, transparent, transparent 2px,
-    rgba(0,200,50,0.07) 2px, rgba(0,200,50,0.07) 3px
-  );
-  color: #fff;
+  background: linear-gradient(135deg, #e8f5e9, #f0f9f1);
+  border-top: 3px solid var(--green);
+  border-bottom: 1px solid rgba(27,94,32,0.15);
   padding: 1rem 1.5rem 1.1rem;
-  border-bottom: 1px solid rgba(0,200,50,0.15);
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
 }
 .back-link {
-  color: rgba(255,255,255,0.55);
+  color: var(--green);
   text-decoration: none;
-  font-family: 'Share Tech Mono', monospace;
   font-size: 0.78rem;
   font-weight: 700;
   transition: opacity 0.15s;
 }
 .back-link:hover { opacity: 0.7; }
 .ex-title {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: clamp(0.78rem, 2.5vw, 1.05rem);
-  color: #00cc44;
-  text-shadow: 0 0 14px rgba(0,204,68,0.45);
-  line-height: 1.6;
+  font-size: clamp(0.88rem, 2.5vw, 1.1rem);
+  font-weight: 700;
+  color: var(--green);
+  line-height: 1.5;
 }
 .ex-desc {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.78rem;
-  color: rgba(255,255,255,0.4);
+  font-size: 0.82rem;
+  color: #555;
+  line-height: 1.5;
+  max-width: 64ch;
 }
 
 /* ── Main layout ─────────────────────────────────────────────── */
@@ -84,7 +78,7 @@ body {
 
 /* ── Round badge ─────────────────────────────────────────────── */
 .round-badge {
-  font-family: 'Share Tech Mono', monospace;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
   font-size: 0.72rem;
   color: var(--green-glow);
   letter-spacing: 0.08em;
@@ -107,22 +101,21 @@ body {
   gap: 0.4rem;
 }
 .key-label {
-  font-family: 'Share Tech Mono', monospace;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
   font-size: 0.68rem;
   color: #4a7a42;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 .key-value {
-  font-family: 'Share Tech Mono', monospace;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
   font-size: 3.5rem;
   line-height: 1;
-  color: var(--green-glow);
-  text-shadow: 0 0 16px rgba(0,204,68,0.35);
+  color: var(--green);
   letter-spacing: 0.05em;
 }
 .key-formula {
-  font-family: 'Share Tech Mono', monospace;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
   font-size: 0.88rem;
   color: #3a7a34;
   margin-top: 0.1rem;
@@ -167,7 +160,7 @@ body {
   gap: 0.3rem;
 }
 .round-result.visible { display: flex; }
-.result-line { font-family: 'Share Tech Mono', monospace; font-size: 0.85rem; color: var(--green); }
+.result-line { font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 0.85rem; color: var(--green); }
 .result-line strong { color: var(--green-glow); font-size: 1.05rem; }
 
 /* ── Button ──────────────────────────────────────────────────── */
@@ -197,7 +190,7 @@ body {
   gap: 0.65rem;
 }
 .panel-label {
-  font-family: 'Share Tech Mono', monospace;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
   font-size: 0.72rem;
   color: #4a7a42;
   letter-spacing: 0.08em;
@@ -226,7 +219,7 @@ body {
   padding: 0 0.5rem;
   background: rgba(0,130,40,0.07);
   border-right: 1px solid rgba(0,130,40,0.12);
-  font-family: 'Share Tech Mono', monospace;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
   font-size: 0.82rem;
   font-weight: 700;
   color: var(--green);
@@ -236,7 +229,7 @@ body {
 /* ── Score footer ────────────────────────────────────────────── */
 .score-bar {
   border-top: 2px solid rgba(0,130,40,0.12);
-  background: rgba(232,245,233,0.95);
+  background: rgba(245,240,235,0.97);
   padding: 0.65rem 1.5rem;
   display: flex;
   align-items: center;
