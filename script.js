@@ -94,6 +94,13 @@
     }
   });
 
+  // If the URL hash points to a sub-panel (e.g. #arboles from an exercise back-link),
+  // click the matching sub-tab now that all sub-navs are initialised.
+  if (hash && validIds.indexOf(hash) === -1) {
+    var subTabTarget = document.querySelector('.sub-tab[aria-controls="' + hash + '"]');
+    if (subTabTarget) subTabTarget.click();
+  }
+
   // ─── Card scroll-in animation ────────────────────────────────────────────────
   var STAGGER_MS       = 80;
   var TRANSITION_MS    = 450;
