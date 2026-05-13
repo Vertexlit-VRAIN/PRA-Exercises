@@ -37,25 +37,66 @@ body {
   min-height: 100vh;
 }
 
-/* ─── Exercise shell ─────────────────────────────────────────────────────────── */
+/* ─── Exercise header (matches TADs ex-header pattern) ──────────────────────── */
 
-.exercise-shell {
-  max-width: 860px;
-  margin: 0 auto;
-  padding: 2.5rem 1.5rem 5rem;
+body {
+  display: flex;
+  flex-direction: column;
 }
 
-.exercise-title {
-  font-size: clamp(1.2rem, 3vw, 1.7rem);
+.ex-header {
+  padding: 1rem 1.5rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.voraces .ex-header {
+  background: linear-gradient(135deg, #ffebee, #fdf0f0);
+  border-top: 3px solid var(--crimson);
+  border-bottom: 1px solid rgba(198, 40, 40, 0.15);
+}
+
+.dinamica .ex-header {
+  background: linear-gradient(135deg, #e0f2f1, #f0fbfa);
+  border-top: 3px solid var(--teal);
+  border-bottom: 1px solid rgba(0, 77, 64, 0.15);
+}
+
+.back-link {
+  text-decoration: none;
+  font-size: 0.78rem;
   font-weight: 700;
-  margin-bottom: 0.4rem;
+  transition: opacity 0.15s;
 }
 
-.exercise-desc {
-  font-size: 0.95rem;
+.back-link:hover { opacity: 0.7; }
+
+.voraces  .back-link { color: var(--crimson); }
+.dinamica .back-link { color: var(--teal); }
+
+.ex-title {
+  font-size: clamp(0.88rem, 2.5vw, 1.1rem);
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.voraces  .ex-title { color: var(--crimson); }
+.dinamica .ex-title { color: var(--teal); }
+
+.ex-desc {
+  font-size: 0.82rem;
   color: #555;
-  line-height: 1.7;
-  margin-bottom: 2rem;
+  line-height: 1.5;
+  max-width: 64ch;
+}
+
+.ex-main {
+  flex: 1;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 5rem;
 }
 
 /* ─── Shared panels ──────────────────────────────────────────────────────────── */
@@ -224,30 +265,10 @@ body {
   margin-top: 1.5rem;
 }
 
-/* ─── Back link ──────────────────────────────────────────────────────────────── */
-
-.back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  text-decoration: none;
-  margin-bottom: 2rem;
-  transition: gap 0.2s;
-}
-
-.voraces  .back-link { color: var(--crimson); }
-.dinamica .back-link { color: var(--teal); }
-
-.back-link:hover { gap: 0.7rem; }
-
 /* ─── Responsive ─────────────────────────────────────────────────────────────── */
 
 @media (max-width: 600px) {
-  .exercise-shell { padding: 1.5rem 1rem 4rem; }
+  .ex-main { padding: 1rem 1rem 4rem; }
   .table-dp th,
-  .table-dp td    { padding: 0.35rem 0.5rem; font-size: 0.8rem; }
+  .table-dp td { padding: 0.35rem 0.5rem; font-size: 0.8rem; }
 }

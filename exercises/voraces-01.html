@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cambio de Monedas — PRA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="algoritmos.css" />
+  <style>
+    /* ── Controls bar ────────────────────────────────────────────── */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .diff-group {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .diff-btn {
+      padding: 0.45rem 1.1rem;
+      border: 1.5px solid rgba(198, 40, 40, 0.3);
+      border-radius: 100px;
+      background: transparent;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      color: #888;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+
+    .diff-btn:hover { border-color: var(--crimson); color: var(--crimson); }
+
+    .diff-btn.active {
+      background: var(--crimson);
+      border-color: var(--crimson);
+      color: #fff;
+    }
+
+    .new-round-btn {
+      padding: 0.45rem 1.1rem;
+      border: 1.5px solid var(--crimson);
+      border-radius: 100px;
+      background: transparent;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      color: var(--crimson);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .new-round-btn:hover { background: var(--crimson); color: #fff; }
+
+    /* ── Layout ─────────────────────────────────────────────────── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    /* ── State panel (left) ──────────────────────────────────────── */
+    .state-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .target-display {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--crimson);
+      letter-spacing: -0.02em;
+    }
+
+    .state-row {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .state-item {
+      flex: 1;
+      background: #fff;
+      border: 1.5px solid rgba(198, 40, 40, 0.2);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      text-align: center;
+    }
+
+    .state-label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 0.25rem;
+    }
+
+    .state-val {
+      display: block;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #111;
+      line-height: 1;
+    }
+
+    .state-val.highlight { color: var(--crimson); }
+
+    /* ── x-vector display ────────────────────────────────────────── */
+    .x-vector {
+      background: #fff;
+      border: 1.5px solid rgba(198, 40, 40, 0.2);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+    }
+
+    .x-vector-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 0.5rem;
+    }
+
+    .x-vector-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.4rem;
+      font-size: 1.05rem;
+      font-weight: 700;
+      flex-wrap: wrap;
+    }
+
+    .x-vec-math { color: #555; }
+
+    .x-cells {
+      display: flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+    }
+
+    .x-cell {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.1rem;
+    }
+
+    .x-cell-val {
+      min-width: 2rem;
+      text-align: center;
+      font-weight: 700;
+      color: #111;
+      transition: color 0.25s;
+    }
+
+    .x-cell-val.nonzero { color: var(--crimson); }
+
+    .x-cell-sub {
+      font-size: 0.65rem;
+      color: #aaa;
+      font-weight: 400;
+    }
+
+    .x-comma { color: #bbb; align-self: flex-end; margin-bottom: 0.15rem; }
+
+    /* ── Question area ───────────────────────────────────────────── */
+    .step-counter {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #bbb;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .question-text {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: #333;
+      min-height: 1.6rem;
+    }
+
+    .question-text code {
+      font-family: 'Courier New', monospace;
+      background: #f4f4f4;
+      padding: 0.1em 0.4em;
+      border-radius: 4px;
+      font-size: 0.9em;
+      color: var(--crimson);
+    }
+
+    .feedback {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      border-radius: 8px;
+      padding: 0.6rem 0.85rem;
+      min-height: 2.8rem;
+      display: none;
+    }
+
+    .feedback.ok  { display: block; background: #f1fbf1; color: #2e7d32; border: 1px solid #c8e6c9; }
+    .feedback.bad { display: block; background: #fff5f5; color: #c62828; border: 1px solid #ffcdd2; }
+
+    /* ── Score strip ─────────────────────────────────────────────── */
+    .score-strip {
+      font-size: 0.75rem;
+      color: #999;
+      letter-spacing: 0.05em;
+    }
+
+    .score-strip strong { color: #333; }
+
+    /* ── Coin panel (right) ──────────────────────────────────────── */
+    .coin-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .coin-panel-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+    }
+
+    .coin-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    .coin-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: var(--font-ui);
+    }
+
+    .coin-face {
+      width: 5rem;
+      height: 5rem;
+      border-radius: 50%;
+      border: 3px solid var(--crimson);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--crimson);
+      transition: background 0.2s, color 0.2s, border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 2px 8px rgba(198, 40, 40, 0.12);
+    }
+
+    .coin-btn:hover:not([disabled]) .coin-face {
+      background: var(--crimson);
+      color: #fff;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(198, 40, 40, 0.28);
+    }
+
+    .coin-btn[disabled] .coin-face {
+      border-color: #ddd;
+      color: #bbb;
+      background: #fafafa;
+      box-shadow: none;
+      transform: none;
+      cursor: not-allowed;
+    }
+
+    .coin-btn.is-correct .coin-face {
+      background: #4caf50;
+      border-color: #4caf50;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(76, 175, 80, 0.35);
+    }
+
+    .coin-btn.is-wrong .coin-face {
+      background: #ffcdd2;
+      border-color: #e53935;
+      color: #c62828;
+    }
+
+    .coin-sub {
+      font-size: 0.7rem;
+      color: #999;
+      font-weight: 400;
+    }
+
+    /* ── Pseudocode reference ────────────────────────────────────── */
+    .pseudo-box {
+      background: #1a1a2e;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      line-height: 1.8;
+      color: #cdd6f4;
+    }
+
+    .pseudo-box .kw  { color: #cba6f7; font-weight: bold; }
+    .pseudo-box .fn  { color: #89dceb; }
+    .pseudo-box .cmt { color: #6c7086; }
+    .pseudo-box .hl  { background: rgba(198, 40, 40, 0.28); border-radius: 3px; padding: 0 0.2em; }
+
+    /* ── Done banner — FULL WIDTH, below the two columns ────────── */
+    .done-banner {
+      margin-top: 1.5rem;
+      text-align: center;
+      padding: 2rem 1.5rem;
+      background: #f1fbf1;
+      border-radius: 14px;
+      border: 2px solid #c8e6c9;
+      color: #2e7d32;
+    }
+
+    .done-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .done-x {
+      font-family: 'Courier New', monospace;
+      font-size: 0.95rem;
+      margin: 0.4rem 0;
+      color: #1b5e20;
+    }
+
+    .done-total-coins {
+      font-size: 0.85rem;
+      color: #555;
+      margin-bottom: 0;
+    }
+
+    /* ── Responsive ──────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .two-col     { grid-template-columns: 1fr; }
+      .coin-face   { width: 4rem; height: 4rem; font-size: 1rem; }
+      .controls-bar { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body class="voraces">
+
+<header class="ex-header">
+  <a class="back-link" href="../index.html#algoritmos">← Algoritmos Voraces</a>
+  <h1 class="ex-title">01 — Cambio de Monedas</h1>
+  <p class="ex-desc">
+    Traza el algoritmo voraz <code>coin_change</code> paso a paso.
+    En cada iteración selecciona la moneda que elegiría <code>best_coin(w,&nbsp;W−total)</code>
+    — la de mayor valor que no supere el importe restante — y observa cómo se construye el vector solución <strong>x</strong>.
+  </p>
+</header>
+
+<main class="ex-main">
+
+    <!-- ── Barra de controles (siempre visible) ── -->
+    <div class="controls-bar">
+      <div class="diff-group" role="group" aria-label="Rango de W">
+        <button class="diff-btn active" data-diff="easy">W: 15–35</button>
+        <button class="diff-btn" data-diff="medium">W: 35–65</button>
+        <button class="diff-btn" data-diff="hard">W: 60–99</button>
+      </div>
+      <button class="new-round-btn" id="new-round-btn">Nueva ronda →</button>
+    </div>
+
+    <div class="two-col">
+
+      <!-- ── Estado / Pregunta ── -->
+      <div class="state-panel q-panel">
+
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem">
+          <span class="round-badge" id="round-badge">Ronda 1</span>
+          <span class="score-strip">A la primera: <strong id="score-ok">0</strong> / <strong id="score-total">0</strong></span>
+        </div>
+
+        <div class="target-display">W&nbsp;=&nbsp;<span id="W-val">—</span></div>
+
+        <div class="state-row">
+          <div class="state-item">
+            <span class="state-label">total</span>
+            <span class="state-val" id="total-val">0</span>
+          </div>
+          <div class="state-item">
+            <span class="state-label">W&nbsp;−&nbsp;total</span>
+            <span class="state-val highlight" id="rest-val">—</span>
+          </div>
+        </div>
+
+        <div class="x-vector">
+          <div class="x-vector-label">vector solución</div>
+          <div class="x-vector-row">
+            <span class="x-vec-math">x&nbsp;=&nbsp;[</span>
+            <div class="x-cells" id="x-cells"></div>
+            <span class="x-vec-math">]</span>
+          </div>
+        </div>
+
+        <div class="step-counter">Paso <span id="step-cur">1</span></div>
+        <p class="question-text" id="question-text"></p>
+        <p class="feedback" id="feedback"></p>
+
+      </div>
+
+      <!-- ── Monedas + pseudocódigo ── -->
+      <div class="coin-panel">
+        <div class="coin-panel-label">w&nbsp;(mayor → menor)</div>
+        <div class="coin-grid" id="coin-grid"></div>
+
+        <div class="pseudo-box">
+          <span class="cmt">// w ordenado mayor→menor | W: objetivo</span><br>
+          <span class="kw">function</span> <span class="fn">coin_change</span>(w[1..N], W)<br>
+          &nbsp;&nbsp;x[1..N] = [0..0]<br>
+          &nbsp;&nbsp;total = 0<br>
+          &nbsp;&nbsp;<span class="kw">while</span> total &lt; W <span class="kw">do</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="hl">i = <span class="fn">best_coin</span>(w, W − total)</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> i == −1 <span class="kw">then return</span> NULL<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;x[i] += 1<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;total = total + w[i]<br>
+          &nbsp;&nbsp;<span class="kw">end_while</span><br>
+          &nbsp;&nbsp;<span class="kw">return</span> x
+        </div>
+      </div>
+
+    </div><!-- two-col -->
+
+    <!-- ── Banner de completado — ancho completo, fuera de las columnas ── -->
+    <div class="done-banner" id="done-banner" hidden>
+      <div class="done-title">✓ ¡Completado!</div>
+      <p class="done-x" id="done-x"></p>
+      <p class="done-total-coins" id="done-total-coins"></p>
+    </div>
+
+</main>
+
+  <script>
+  (function () {
+    'use strict';
+
+    var DIFF_CONFIG = {
+      easy:   { minW: 15, maxW: 35, minSteps: 2,
+                sets: [[25,10,5,1],[10,5,2,1],[20,10,5,1]] },
+      medium: { minW: 35, maxW: 65, minSteps: 3,
+                sets: [[25,10,5,1],[15,7,3,1],[25,9,4,1]] },
+      hard:   { minW: 60, maxW: 99, minSteps: 5,
+                sets: [[50,10,5,2,1],[25,9,4,1],[15,7,3,1]] },
+    };
+
+    var currentDiff = 'easy';
+    var coins, W, x, total, answered;
+    var roundNum = 0, gOk = 0, gTotal = 0;
+
+    // ── Greedy helper ────────────────────────────────────────────
+    function bestCoin(remaining) {
+      for (var i = 0; i < coins.length; i++) {
+        if (coins[i] <= remaining) return i;
+      }
+      return -1;
+    }
+
+    function countSteps(target) {
+      var t = 0, n = 0;
+      while (t < target) {
+        var found = -1;
+        for (var j = 0; j < coins.length; j++) {
+          if (coins[j] <= target - t) { found = j; break; }
+        }
+        if (found === -1) break;
+        t += coins[found];
+        n++;
+      }
+      return n;
+    }
+
+    function subscript(n) {
+      var s = ['₀','₁','₂','₃','₄','₅','₆','₇','₈','₉'];
+      return String(n).split('').map(function(d){ return s[+d]; }).join('');
+    }
+
+    // ── Round lifecycle ──────────────────────────────────────────
+    function generate() {
+      var cfg = DIFF_CONFIG[currentDiff];
+      var sets = cfg.sets;
+      coins = sets[Math.floor(Math.random() * sets.length)].slice();
+
+      var tries = 0;
+      do {
+        W = cfg.minW + Math.floor(Math.random() * (cfg.maxW - cfg.minW + 1));
+        tries++;
+      } while (countSteps(W) < cfg.minSteps && tries < 60);
+
+      x        = coins.map(function () { return 0; });
+      total    = 0;
+      answered = false;
+      roundNum++;
+
+      document.getElementById('round-badge').textContent = 'Ronda ' + roundNum;
+      document.getElementById('done-banner').hidden = true;
+
+      renderState();
+      renderCoins();
+      renderQuestion();
+      updateScore();
+    }
+
+    // ── Rendering ────────────────────────────────────────────────
+    function renderState() {
+      var rest = W - total;
+      document.getElementById('W-val').textContent     = W;
+      document.getElementById('total-val').textContent = total;
+      document.getElementById('rest-val').textContent  = rest;
+
+      var steps = 0;
+      for (var i = 0; i < x.length; i++) steps += x[i];
+      document.getElementById('step-cur').textContent = steps + 1;
+
+      var cellsEl = document.getElementById('x-cells');
+      cellsEl.innerHTML = '';
+      coins.forEach(function (w, i) {
+        var cell = document.createElement('span');
+        cell.className = 'x-cell';
+
+        var val = document.createElement('span');
+        val.className = 'x-cell-val' + (x[i] > 0 ? ' nonzero' : '');
+        val.textContent = x[i];
+
+        var sub = document.createElement('span');
+        sub.className = 'x-cell-sub';
+        sub.textContent = 'x' + subscript(i + 1);
+
+        cell.appendChild(val);
+        cell.appendChild(sub);
+        cellsEl.appendChild(cell);
+
+        if (i < coins.length - 1) {
+          var comma = document.createElement('span');
+          comma.className = 'x-comma';
+          comma.textContent = ',';
+          cellsEl.appendChild(comma);
+        }
+      });
+    }
+
+    function renderCoins() {
+      var grid = document.getElementById('coin-grid');
+      grid.innerHTML = '';
+      coins.forEach(function (w, i) {
+        var btn  = document.createElement('button');
+        btn.className  = 'coin-btn';
+        btn.dataset.idx = i;
+
+        var face = document.createElement('span');
+        face.className   = 'coin-face';
+        face.textContent = w;
+
+        var sub = document.createElement('span');
+        sub.className = 'coin-sub';
+        sub.innerHTML = 'w' + subscript(i + 1);
+
+        btn.appendChild(face);
+        btn.appendChild(sub);
+        btn.addEventListener('click', function () {
+          handleCoinClick(parseInt(btn.dataset.idx, 10));
+        });
+        grid.appendChild(btn);
+      });
+    }
+
+    function renderQuestion() {
+      var rest = W - total;
+      document.getElementById('question-text').innerHTML =
+        '¿Qué moneda selecciona <code>best_coin(w,&nbsp;' + rest + ')</code>?';
+
+      var fb = document.getElementById('feedback');
+      fb.className   = 'feedback';
+      fb.textContent = '';
+    }
+
+    function setCoinStates(correctIdx, clickedIdx) {
+      document.getElementById('coin-grid').querySelectorAll('.coin-btn')
+        .forEach(function (btn, i) {
+          btn.disabled = true;
+          if (i === correctIdx) btn.classList.add('is-correct');
+          if (clickedIdx !== null && i === clickedIdx && i !== correctIdx)
+            btn.classList.add('is-wrong');
+        });
+    }
+
+    function enableCoins() {
+      document.getElementById('coin-grid').querySelectorAll('.coin-btn')
+        .forEach(function (btn) {
+          btn.disabled = false;
+          btn.classList.remove('is-correct', 'is-wrong');
+        });
+    }
+
+    function updateScore() {
+      document.getElementById('score-ok').textContent    = gOk;
+      document.getElementById('score-total').textContent = gTotal;
+    }
+
+    // ── Interaction ──────────────────────────────────────────────
+    function handleCoinClick(idx) {
+      if (answered) return;
+      answered = true;
+
+      var rest    = W - total;
+      var correct = bestCoin(rest);
+      var fb      = document.getElementById('feedback');
+      gTotal++;
+
+      if (idx === correct) {
+        gOk++;
+        x[idx]++;
+        total += coins[idx];
+
+        fb.className = 'feedback ok';
+        fb.innerHTML = '✓ best_coin(w,&nbsp;' + rest + ')&nbsp;=&nbsp;w' + subscript(idx + 1) +
+          '&nbsp;=&nbsp;<strong>' + coins[idx] + '</strong> — mayor valor ≤ ' + rest;
+
+        setCoinStates(correct, null);
+        updateScore();
+
+        setTimeout(function () {
+          answered = false;
+          if (total >= W) {
+            showDone();
+          } else {
+            renderState();
+            enableCoins();
+            renderQuestion();
+          }
+        }, 900);
+
+      } else {
+        fb.className = 'feedback bad';
+        if (coins[idx] > rest) {
+          fb.innerHTML = '✗ w' + subscript(idx + 1) + '&nbsp;=&nbsp;<strong>' + coins[idx] +
+            '</strong> supera el restante ' + rest + '. Busca la mayor ≤ ' + rest;
+        } else {
+          fb.innerHTML = '✗ Hay una moneda mayor disponible: w' + subscript(correct + 1) +
+            '&nbsp;=&nbsp;<strong>' + coins[correct] + '</strong>&nbsp;≤&nbsp;' + rest;
+        }
+
+        setCoinStates(correct, idx);
+        updateScore();
+
+        setTimeout(function () {
+          answered = false;
+          enableCoins();
+          var fb2 = document.getElementById('feedback');
+          fb2.className   = 'feedback';
+          fb2.textContent = '';
+        }, 1400);
+      }
+    }
+
+    function showDone() {
+      var xStr = 'x = [ ' + x.map(function (v, i) {
+        return v + ' (×w' + subscript(i + 1) + '=' + coins[i] + ')';
+      }).join(', ') + ' ]';
+
+      var totalCoins = x.reduce(function (a, b) { return a + b; }, 0);
+
+      document.getElementById('done-x').textContent = xStr;
+      document.getElementById('done-total-coins').textContent =
+        'Monedas usadas: ' + totalCoins + ' — solución óptima greedy';
+      document.getElementById('done-banner').hidden = false;
+
+      document.getElementById('coin-grid').querySelectorAll('.coin-btn')
+        .forEach(function (b) { b.disabled = true; });
+
+      document.getElementById('feedback').className   = 'feedback';
+      document.getElementById('question-text').textContent = '— completado —';
+      document.getElementById('step-cur').textContent = totalCoins;
+    }
+
+    // ── Init ─────────────────────────────────────────────────────
+    document.getElementById('new-round-btn').addEventListener('click', generate);
+
+    document.querySelectorAll('.diff-btn').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        document.querySelectorAll('.diff-btn').forEach(function (b) {
+          b.classList.remove('active');
+        });
+        btn.classList.add('active');
+        currentDiff = btn.dataset.diff;
+        generate();
+      });
+    });
+
+    generate();
+
+  })();
+  </script>
+</body>
+</html>
