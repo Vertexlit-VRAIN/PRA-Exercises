@@ -1,0 +1,253 @@
+/* ─── algoritmos.css — Voraces & Programación Dinámica ──────────────────────── */
+/* Linked from exercises/voraces-NN.html and exercises/dinamica-NN.html          */
+
+/* ─── Design tokens ─────────────────────────────────────────────────────────── */
+
+:root {
+  /* Voraces: crimson chess */
+  --crimson:      #c62828;
+  --crimson-dark: #8e0000;
+  --crimson-lt:   #ffcdd2;
+  --crimson-bg:   #fdf0f0;
+
+  /* P. Dinámica: deep teal */
+  --teal:         #004d40;
+  --teal-dark:    #00251a;
+  --teal-lt:      #b2dfdb;
+  --teal-bg:      #e0f2f1;
+
+  /* Shared */
+  --font-ui:      'Space Grotesk', system-ui, sans-serif;
+  --radius:       12px;
+  --transition:   0.25s ease;
+}
+
+/* ─── Base reset ─────────────────────────────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+[hidden] { display: none !important; }
+
+html { font-size: 18px; scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-ui);
+  background: #f5f0eb;
+  color: #111;
+  min-height: 100vh;
+}
+
+/* ─── Exercise shell ─────────────────────────────────────────────────────────── */
+
+.exercise-shell {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 5rem;
+}
+
+.exercise-title {
+  font-size: clamp(1.2rem, 3vw, 1.7rem);
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+}
+
+.exercise-desc {
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.7;
+  margin-bottom: 2rem;
+}
+
+/* ─── Shared panels ──────────────────────────────────────────────────────────── */
+
+.q-panel,
+.table-panel,
+.step-panel {
+  background: #fff;
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+}
+
+/* ─── Round / step badge ─────────────────────────────────────────────────────── */
+
+.round-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.85rem;
+  border-radius: 100px;
+  margin-bottom: 1rem;
+}
+
+.voraces .round-badge  { background: var(--crimson-lt); color: var(--crimson-dark); }
+.dinamica .round-badge { background: var(--teal-lt);    color: var(--teal-dark); }
+
+/* ─── DP table (.table-dp) ───────────────────────────────────────────────────── */
+
+.table-dp {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.table-dp th,
+.table-dp td {
+  border: 1px solid rgba(0, 77, 64, 0.2);
+  padding: 0.5rem 0.75rem;
+  text-align: center;
+  min-width: 2.5rem;
+}
+
+.table-dp th {
+  background: var(--teal-bg);
+  color: var(--teal-dark);
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+}
+
+.table-dp td.active {
+  background: var(--teal-lt);
+  color: var(--teal-dark);
+  font-weight: 700;
+}
+
+.table-dp td.done {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+/* ─── Greedy steps (.greedy-step) ───────────────────────────────────────────── */
+
+.greedy-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: var(--radius);
+  border: 1.5px solid rgba(198, 40, 40, 0.2);
+  background: #fff;
+  margin-bottom: 0.75rem;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.greedy-step.is-active {
+  border-color: var(--crimson);
+  background: var(--crimson-bg);
+}
+
+.greedy-step.is-done {
+  border-color: #c8e6c9;
+  background: #f8fef8;
+}
+
+.step-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--crimson-lt);
+  color: var(--crimson-dark);
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.greedy-step.is-done .step-num {
+  background: #c8e6c9;
+  color: #1b5e20;
+}
+
+/* ─── Choice buttons ─────────────────────────────────────────────────────────── */
+
+.choice-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--radius);
+  border: 1.5px solid #e0e0e0;
+  background: #fff;
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+  cursor: pointer;
+  margin-bottom: 0.6rem;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.choice-btn:hover {
+  border-color: #bbb;
+  background: #fafafa;
+}
+
+.voraces  .choice-btn:focus-visible,
+.voraces  .choice-btn:hover  { border-color: var(--crimson); }
+.dinamica .choice-btn:focus-visible,
+.dinamica .choice-btn:hover  { border-color: var(--teal); }
+
+.choice-btn.is-correct { border-color: #4caf50; background: #f1fbf1; color: #2e7d32; pointer-events: none; }
+.choice-btn.is-wrong   { border-color: #e53935; background: #fff5f5; color: #c62828; pointer-events: none; }
+
+/* ─── Feedback flashes ───────────────────────────────────────────────────────── */
+
+.flash-ok  { animation: flash-ok  0.55s ease forwards; }
+.flash-bad { animation: flash-bad 0.55s ease forwards; }
+
+@keyframes flash-ok {
+  0%   { background: #c8e6c9; }
+  100% { background: inherit; }
+}
+
+@keyframes flash-bad {
+  0%   { background: #ffcdd2; }
+  100% { background: inherit; }
+}
+
+/* ─── Done banner ────────────────────────────────────────────────────────────── */
+
+.done-banner {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  background: #f1fbf1;
+  border-radius: var(--radius);
+  border: 2px solid #c8e6c9;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #2e7d32;
+  margin-top: 1.5rem;
+}
+
+/* ─── Back link ──────────────────────────────────────────────────────────────── */
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  margin-bottom: 2rem;
+  transition: gap 0.2s;
+}
+
+.voraces  .back-link { color: var(--crimson); }
+.dinamica .back-link { color: var(--teal); }
+
+.back-link:hover { gap: 0.7rem; }
+
+/* ─── Responsive ─────────────────────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .exercise-shell { padding: 1.5rem 1rem 4rem; }
+  .table-dp th,
+  .table-dp td    { padding: 0.35rem 0.5rem; font-size: 0.8rem; }
+}

@@ -8,19 +8,32 @@
 Web estática para GitHub Pages con ejercicios interactivos para estudiantes.  
 Tres archivos: `index.html`, `style.css`, `script.js`. Sin build tools, sin npm.
 
-### Secciones y temáticas visuales
+### Estructura de navegación
 
-| Sección | Tema visual | Colores clave | Fuente |
+Dos tabs principales → sub-tabs por tema:
+
+```
+[ ◈ TADs no lineales ]  →  [ ⬡ Tablas Hash ] [ 🍌 Árboles ] [ ✦ Grafos ]
+[ ⚡ Algoritmos       ]  →  [ ♟ Voraces     ] [ ⊞ P. Dinámica ]
+```
+
+### Temáticas visuales
+
+| Sub-sección | Tema visual | Color acento | Fondo |
 |---|---|---|---|
-| Tablas Hash | Matrix / terminal | Verde bosque `#005c13`, fondo `#f0fff4` | Share Tech Mono |
-| Árboles | Donkey Kong jungle | Ámbar `#b35c00`, fondo `#fffde7` | Press Start 2P |
-| Grafos | Blueprint / constelaciones | Índigo `#1a237e`, fondo `#e8eaf6` | Orbitron |
+| Tablas Hash | Matrix / terminal | `#1b5e20` | `#f7fcf8` |
+| Árboles | Donkey Kong jungle | `#b35c00` | `#fdfdf5` |
+| Grafos | Blueprint / constelaciones | `#1a237e` | `#f4f5fb` |
+| Voraces | Ajedrez / decisión óptima | `#c62828` | `#fdf0f0` |
+| P. Dinámica | Tabla de subproblemas | `#004d40` | `#e0f2f1` |
 
-Navegación por pestañas (tab nav), hamburguesa en móvil. Header oscuro (branding), contenido claro.  
+Navegación por pestañas con sub-tabs, hamburguesa en móvil. Header oscuro (branding), contenido claro.  
 **Tema claro y fuente base 18px** — pensado para proyección en clase.
 
 ## Reglas
 
 - Rutas siempre relativas, nunca absolutas (GitHub Pages corre en subdirectorio)
-- Los ejercicios futuros van en `exercises/{tema}-{NN}.html` y se insertan en `.exercise-grid`
+- Los ejercicios van en `exercises/{tema}-{NN}.html` y se insertan en el `.exercise-grid` del sub-panel correspondiente
+- Temas válidos: `hash`, `arboles`, `grafos`, `voraces`, `dinamica`
+- Stylesheet de ejercicios: `exercises/hash.css`, `exercises/arboles.css`, `exercises/grafos.css`, `exercises/algoritmos.css`
 - Estructura de tarjeta: `<article class="exercise-card" data-difficulty="easy|medium|hard">`

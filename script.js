@@ -59,6 +59,41 @@
   var validIds = Array.prototype.map.call(panels, function (p) { return p.id; });
   activateTab(validIds.indexOf(hash) !== -1 ? hash : validIds[0]);
 
+  // ─── Sub-tabs (one independent group per .sub-nav) ───────────────────────────
+  document.querySelectorAll('.sub-nav').forEach(function (subNav) {
+    var subTabs   = Array.prototype.slice.call(subNav.querySelectorAll('.sub-tab'));
+    var panel     = subNav.closest('.tab-panel');
+    var subPanels = panel ? Array.prototype.slice.call(panel.querySelectorAll('.sub-panel')) : [];
+
+    function activateSubTab(targetId) {
+      subTabs.forEach(function (tab) {
+        tab.setAttribute('aria-selected', String(tab.getAttribute('aria-controls') === targetId));
+      });
+      subPanels.forEach(function (sp) {
+        sp.hidden = sp.id !== targetId;
+      });
+    }
+
+    subTabs.forEach(function (tab, index) {
+      tab.addEventListener('click', function () {
+        activateSubTab(tab.getAttribute('aria-controls'));
+      });
+
+      tab.addEventListener('keydown', function (e) {
+        var dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!dir) return;
+        e.preventDefault();
+        var next = (index + dir + subTabs.length) % subTabs.length;
+        subTabs[next].focus();
+        subTabs[next].click();
+      });
+    });
+
+    if (subTabs.length) {
+      activateSubTab(subTabs[0].getAttribute('aria-controls'));
+    }
+  });
+
   // ─── Card scroll-in animation ────────────────────────────────────────────────
   var STAGGER_MS       = 80;
   var TRANSITION_MS    = 450;

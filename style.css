@@ -25,6 +25,10 @@
   --arboles-bg:     #fdfdf5;
   --grafos-accent:  #1a237e;
   --grafos-bg:      #f4f5fb;
+  --voraces-accent: #c62828;
+  --voraces-bg:     #fdf0f0;
+  --dinamica-accent:#004d40;
+  --dinamica-bg:    #e0f2f1;
 }
 
 html {
@@ -134,24 +138,17 @@ body {
 }
 
 /* Active tab states per theme */
-.nav-tab[aria-selected="true"][data-theme="hash"] {
+.nav-tab[aria-selected="true"][data-theme="tads"] {
   color: var(--hash-accent);
   border-bottom-color: transparent;
   background: rgba(27, 94, 32, 0.10);
   border-radius: 8px;
 }
 
-.nav-tab[aria-selected="true"][data-theme="arboles"] {
-  color: var(--arboles-accent);
+.nav-tab[aria-selected="true"][data-theme="algoritmos"] {
+  color: var(--voraces-accent);
   border-bottom-color: transparent;
-  background: rgba(179, 92, 0, 0.10);
-  border-radius: 8px;
-}
-
-.nav-tab[aria-selected="true"][data-theme="grafos"] {
-  color: var(--grafos-accent);
-  border-bottom-color: transparent;
-  background: rgba(26, 35, 126, 0.10);
+  background: rgba(198, 40, 40, 0.10);
   border-radius: 8px;
 }
 
@@ -488,6 +485,132 @@ body {
   50%       { opacity: 1; }
 }
 
+/* ─── Sub-navigation (Algoritmos) ──────────────────────────────────────────── */
+
+.theme-tads,
+.theme-algoritmos {
+  background: #fafafa;
+}
+
+.sub-nav {
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  padding: 0 2rem;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.07);
+  background: #fff;
+}
+
+.sub-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1rem 1.5rem;
+  border: none;
+  border-bottom: 3px solid transparent;
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  color: #999;
+  margin-bottom: -2px;
+  transition: color var(--transition), border-color var(--transition);
+}
+
+.sub-tab:hover { color: #333; }
+
+.sub-tab:focus-visible {
+  outline: 2px solid #555;
+  outline-offset: -2px;
+}
+
+.sub-tab[aria-selected="true"][data-theme="hash"] {
+  color: var(--hash-accent);
+  border-bottom-color: var(--hash-accent);
+}
+
+.sub-tab[aria-selected="true"][data-theme="arboles"] {
+  color: var(--arboles-accent);
+  border-bottom-color: var(--arboles-accent);
+}
+
+.sub-tab[aria-selected="true"][data-theme="grafos"] {
+  color: var(--grafos-accent);
+  border-bottom-color: var(--grafos-accent);
+}
+
+.sub-tab[aria-selected="true"][data-theme="voraces"] {
+  color: var(--voraces-accent);
+  border-bottom-color: var(--voraces-accent);
+}
+
+.sub-tab[aria-selected="true"][data-theme="dinamica"] {
+  color: var(--dinamica-accent);
+  border-bottom-color: var(--dinamica-accent);
+}
+
+/* ─── THEME 4a: Algoritmos Voraces — Ajedrez / Rojo ────────────────────────── */
+
+.theme-voraces {
+  background: var(--voraces-bg);
+}
+
+.theme-voraces .section-title-strip {
+  background: linear-gradient(135deg, #ffebee, #fdf0f0);
+  border-top: 3px solid var(--voraces-accent);
+}
+
+.theme-voraces .section-title-strip .panel-title {
+  font-family: var(--font-ui);
+  color: var(--voraces-accent);
+  text-shadow: none;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+.theme-voraces .exercise-card {
+  border-color: rgba(198, 40, 40, 0.18);
+}
+
+.theme-voraces .exercise-card:hover {
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05), inset 0 3px 0 var(--voraces-accent);
+}
+
+.theme-voraces .card-link { color: var(--voraces-accent); }
+
+/* ─── THEME 4b: Programación Dinámica — Tabla / Teal ───────────────────────── */
+
+.theme-dinamica {
+  background: var(--dinamica-bg);
+}
+
+.theme-dinamica .section-title-strip {
+  background: linear-gradient(135deg, #e0f2f1, #f0fbfa);
+  border-top: 3px solid var(--dinamica-accent);
+}
+
+.theme-dinamica .section-title-strip .panel-title {
+  font-family: var(--font-ui);
+  color: var(--dinamica-accent);
+  text-shadow: none;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+
+.theme-dinamica .exercise-card {
+  border-color: rgba(0, 77, 64, 0.18);
+  background: #f0faf9;
+}
+
+.theme-dinamica .exercise-card:hover {
+  box-shadow: 0 8px 36px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05), inset 0 3px 0 var(--dinamica-accent);
+}
+
+.theme-dinamica .card-link { color: var(--dinamica-accent); }
+
 /* ─── Footer ────────────────────────────────────────────────────────────────── */
 
 .site-footer {
@@ -548,9 +671,18 @@ body {
     font-size: 0.75rem;
   }
 
-  .nav-tab[aria-selected="true"][data-theme="hash"]   { border-left-color: var(--hash-accent);    border-bottom: none; background: rgba(27, 94, 32, 0.10);   border-radius: 0; }
-  .nav-tab[aria-selected="true"][data-theme="arboles"]{ border-left-color: var(--arboles-accent); border-bottom: none; background: rgba(179, 92, 0, 0.10);   border-radius: 0; }
-  .nav-tab[aria-selected="true"][data-theme="grafos"] { border-left-color: var(--grafos-accent);  border-bottom: none; background: rgba(26, 35, 126, 0.10);  border-radius: 0; }
+  .nav-tab[aria-selected="true"][data-theme="tads"]      { border-left-color: var(--hash-accent);    border-bottom: none; background: rgba(27, 94, 32, 0.10);  border-radius: 0; }
+  .nav-tab[aria-selected="true"][data-theme="algoritmos"]{ border-left-color: var(--voraces-accent); border-bottom: none; background: rgba(198, 40, 40, 0.10); border-radius: 0; }
+
+  .sub-nav {
+    padding: 0 1.25rem;
+    flex-wrap: wrap;
+  }
+
+  .sub-tab {
+    padding: 0.75rem 1rem;
+    font-size: 0.75rem;
+  }
 
   .panel-inner { padding: 2.5rem 1.25rem 4rem; }
 }

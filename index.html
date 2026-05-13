@@ -23,161 +23,206 @@
     </button>
     <ul class="nav-list" id="nav-list" role="list">
       <li>
-        <button class="nav-tab" aria-controls="hash" aria-selected="true" data-theme="hash">
-          <span class="tab-icon" aria-hidden="true">⬡</span>
-          <span class="tab-label">Tablas Hash</span>
+        <button class="nav-tab" aria-controls="tads" aria-selected="true" data-theme="tads">
+          <span class="tab-icon" aria-hidden="true">◈</span>
+          <span class="tab-label">TADs no lineales</span>
         </button>
       </li>
       <li>
-        <button class="nav-tab" aria-controls="arboles" aria-selected="false" data-theme="arboles">
-          <span class="tab-icon" aria-hidden="true">🍌</span>
-          <span class="tab-label">Árboles</span>
-        </button>
-      </li>
-      <li>
-        <button class="nav-tab" aria-controls="grafos" aria-selected="false" data-theme="grafos">
-          <span class="tab-icon" aria-hidden="true">✦</span>
-          <span class="tab-label">Grafos</span>
+        <button class="nav-tab" aria-controls="algoritmos" aria-selected="false" data-theme="algoritmos">
+          <span class="tab-icon" aria-hidden="true">⚡</span>
+          <span class="tab-label">Algoritmos</span>
         </button>
       </li>
     </ul>
   </nav>
 
-  <main class="main-content" data-active-theme="hash">
+  <main class="main-content" data-active-theme="tads">
 
-    <!-- TABLAS HASH -->
-    <section class="tab-panel theme-hash" id="hash" role="tabpanel">
-      <div class="section-title-strip">
-        <h2 class="panel-title">Tablas Hash</h2>
-      </div>
-      <div class="panel-inner">
-        <div class="exercise-grid">
-          <article class="exercise-card" data-difficulty="medium">
-            <span class="card-badge">Medio</span>
-            <h3>Direccionamiento Abierto</h3>
-            <p>Inserta claves en una tabla hash usando <code>h(k) = k mod m</code> con sondeo lineal. El tamaño de la tabla cambia en cada ronda.</p>
-            <a class="card-link" href="exercises/hash-01.html">Empezar →</a>
-          </article>
-          <article class="exercise-card" data-difficulty="medium">
-            <span class="card-badge">Medio</span>
-            <h3>Encadenamiento</h3>
-            <p>Construye una tabla hash con listas enlazadas. Inserta claves al frente de la cadena y responde cuántas comparaciones necesita cada búsqueda.</p>
-            <a class="card-link" href="exercises/hash-02.html">Empezar →</a>
-          </article>
+    <!-- TADs NO LINEALES -->
+    <section class="tab-panel theme-tads" id="tads" role="tabpanel">
+
+      <nav class="sub-nav" aria-label="Sub-secciones de TADs no lineales">
+        <button class="sub-tab" aria-controls="hash" aria-selected="true" data-theme="hash">
+          <span aria-hidden="true">⬡</span> Tablas Hash
+        </button>
+        <button class="sub-tab" aria-controls="arboles" aria-selected="false" data-theme="arboles">
+          <span aria-hidden="true">🍌</span> Árboles
+        </button>
+        <button class="sub-tab" aria-controls="grafos" aria-selected="false" data-theme="grafos">
+          <span aria-hidden="true">✦</span> Grafos
+        </button>
+      </nav>
+
+      <!-- Hash -->
+      <div class="sub-panel theme-hash" id="hash" role="tabpanel">
+        <div class="section-title-strip">
+          <h2 class="panel-title">Tablas Hash</h2>
+        </div>
+        <div class="panel-inner">
+          <div class="exercise-grid">
+            <article class="exercise-card" data-difficulty="medium">
+              <span class="card-badge">Medio</span>
+              <h3>Direccionamiento Abierto</h3>
+              <p>Inserta claves en una tabla hash usando <code>h(k) = k mod m</code> con sondeo lineal. El tamaño de la tabla cambia en cada ronda.</p>
+              <a class="card-link" href="exercises/hash-01.html">Empezar →</a>
+            </article>
+            <article class="exercise-card" data-difficulty="medium">
+              <span class="card-badge">Medio</span>
+              <h3>Encadenamiento</h3>
+              <p>Construye una tabla hash con listas enlazadas. Inserta claves al frente de la cadena y responde cuántas comparaciones necesita cada búsqueda.</p>
+              <a class="card-link" href="exercises/hash-02.html">Empezar →</a>
+            </article>
+          </div>
         </div>
       </div>
+
+      <!-- Árboles -->
+      <div class="sub-panel theme-arboles" id="arboles" role="tabpanel" hidden>
+        <div class="section-title-strip">
+          <h2 class="panel-title">Árboles</h2>
+        </div>
+        <div class="panel-inner">
+          <div class="exercise-grid">
+            <article class="exercise-card" data-difficulty="easy">
+              <span class="card-badge">Fácil</span>
+              <h3>Conceptos Básicos</h3>
+              <p>Altura, profundidad, hojas, grado y distancia. Identifica las propiedades de árboles generados aleatoriamente.</p>
+              <a class="card-link" href="exercises/arboles-01.html">Empezar →</a>
+            </article>
+            <article class="exercise-card" data-difficulty="medium">
+              <span class="card-badge">Medio</span>
+              <h3>Lista de Hijos</h3>
+              <p>Construye el array de listas de hijos de un árbol arrastrando cada nodo a la fila de su padre. Representación clásica de árboles generales.</p>
+              <a class="card-link" href="exercises/arboles-02.html">Empezar →</a>
+            </article>
+            <article class="exercise-card" data-difficulty="medium">
+              <span class="card-badge">Medio</span>
+              <h3>Hijo Izq. – Hermano Der.</h3>
+              <p>Traduce entre árbol y tabla de tripletas (izq, clave, der). Practica en ambas direcciones con drag &amp; drop.</p>
+              <a class="card-link" href="exercises/arboles-03.html">Empezar →</a>
+            </article>
+            <article class="exercise-card" data-difficulty="medium">
+              <span class="card-badge">Medio</span>
+              <h3>Puntero al Padre</h3>
+              <p>Construye el array <code>parent[1..N]</code> donde cada entrada guarda el índice del padre. La raíz apunta a sí misma. Practica en ambas direcciones: árbol→array y array→preguntas.</p>
+              <a class="card-link" href="exercises/arboles-04.html">Empezar →</a>
+            </article>
+            <article class="exercise-card" data-difficulty="medium">
+              <span class="card-badge">Medio</span>
+              <h3>Inserta en el ABB</h3>
+              <p>Haz clic en el hueco correcto del árbol para insertar claves según la propiedad del ABB. Observa cómo cada comparación dirige la búsqueda del lugar de inserción.</p>
+              <a class="card-link" href="exercises/arboles-05.html">Empezar →</a>
+            </article>
+            <article class="exercise-card" data-difficulty="easy">
+              <span class="card-badge">Fácil</span>
+              <h3>Busca, Max y Min en el ABB</h3>
+              <p>Traza search, max y min haciendo clic en los nodos visitados por el algoritmo. Comprueba cuántas comparaciones necesita cada operación.</p>
+              <a class="card-link" href="exercises/arboles-06.html">Empezar →</a>
+            </article>
+            <article class="exercise-card" data-difficulty="hard">
+              <span class="card-badge">Difícil</span>
+              <h3>Elimina del ABB</h3>
+              <p>Identifica el caso (hoja, un hijo, dos hijos) y ejecuta remove paso a paso. Para el caso de dos hijos, localiza sucesor y predecesor en inorden y decide cuál es más eficiente.</p>
+              <a class="card-link" href="exercises/arboles-07.html">Empezar →</a>
+            </article>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grafos -->
+      <div class="sub-panel theme-grafos" id="grafos" role="tabpanel" hidden>
+        <div class="section-title-strip">
+          <h2 class="panel-title">Grafos</h2>
+        </div>
+        <div class="panel-inner">
+          <div class="exercise-grid">
+            <article class="exercise-card" data-difficulty="easy">
+              <span class="card-badge">Fácil</span>
+              <h3>Conceptos Básicos</h3>
+              <p>Identifica caminos, su longitud, ciclos y bucles en grafos dirigidos generados aleatoriamente.</p>
+              <a class="card-link" href="exercises/grafos-01.html">Empezar →</a>
+            </article>
+            <article class="exercise-card" data-difficulty="easy">
+              <span class="card-badge">Fácil</span>
+              <h3>Construye la Matriz</h3>
+              <p>Rellena la matriz de adyacencia a partir del grafo. Practica con grafos no dirigidos, dirigidos y ponderados.</p>
+              <a class="card-link" href="exercises/grafos-02.html">Empezar →</a>
+            </article>
+            <article class="exercise-card" data-difficulty="medium">
+              <span class="card-badge">Medio</span>
+              <h3>Interpreta la Matriz</h3>
+              <p>Lee la matriz de adyacencia y responde preguntas sobre grados, aristas y simetría sin ver el grafo dibujado.</p>
+              <a class="card-link" href="exercises/grafos-03.html">Empezar →</a>
+            </article>
+            <article class="exercise-card" data-difficulty="easy">
+              <span class="card-badge">Fácil</span>
+              <h3>Construye la Lista</h3>
+              <p>Añade vecinos a cada nodo para construir la lista de adyacencia. Modos no dirigido, dirigido y ponderado.</p>
+              <a class="card-link" href="exercises/grafos-04.html">Empezar →</a>
+            </article>
+            <article class="exercise-card" data-difficulty="hard">
+              <span class="card-badge">Difícil</span>
+              <h3>¿Qué representación conviene?</h3>
+              <p>Compara matriz y lista de adyacencia en coste de memoria y tiempo de acceso. ¿Cuándo usar cada una?</p>
+              <a class="card-link" href="exercises/grafos-05.html">Empezar →</a>
+            </article>
+            <article class="exercise-card" data-difficulty="medium">
+              <span class="card-badge">Medio</span>
+              <h3>Traza el DFS</h3>
+              <p>Sigue el recorrido en profundidad paso a paso. Decide qué nodo visita DFS a continuación y observa cómo evolucionan CLOSED y PATH.</p>
+              <a class="card-link" href="exercises/grafos-06.html">Empezar →</a>
+            </article>
+            <article class="exercise-card" data-difficulty="medium">
+              <span class="card-badge">Medio</span>
+              <h3>Traza el BFS</h3>
+              <p>Sigue el recorrido en anchura paso a paso. Gestiona la cola OPEN y el conjunto CLOSED sobre el mismo grafo que el DFS.</p>
+              <a class="card-link" href="exercises/grafos-07.html">Empezar →</a>
+            </article>
+            <article class="exercise-card" data-difficulty="hard" hidden>
+              <span class="card-badge">Difícil</span>
+              <h3>Construye el Algoritmo</h3>
+              <p>Toma las decisiones algorítmicas clave —estructura de recorrido, inicialización, condiciones— y observa cómo el pseudocódigo se va ensamblando con cada acierto.</p>
+              <a class="card-link" href="exercises/grafos-08.html">Empezar →</a>
+            </article>
+          </div>
+        </div>
+      </div>
+
     </section>
 
-    <!-- ÁRBOLES -->
-    <section class="tab-panel theme-arboles" id="arboles" role="tabpanel" hidden>
-      <div class="section-title-strip">
-        <h2 class="panel-title">Árboles</h2>
-      </div>
-      <div class="panel-inner">
-        <div class="exercise-grid">
-          <article class="exercise-card" data-difficulty="easy">
-            <span class="card-badge">Fácil</span>
-            <h3>Conceptos Básicos</h3>
-            <p>Altura, profundidad, hojas, grado y distancia. Identifica las propiedades de árboles generados aleatoriamente.</p>
-            <a class="card-link" href="exercises/arboles-01.html">Empezar →</a>
-          </article>
-          <article class="exercise-card" data-difficulty="medium">
-            <span class="card-badge">Medio</span>
-            <h3>Lista de Hijos</h3>
-            <p>Construye el array de listas de hijos de un árbol arrastrando cada nodo a la fila de su padre. Representación clásica de árboles generales.</p>
-            <a class="card-link" href="exercises/arboles-02.html">Empezar →</a>
-          </article>
-          <article class="exercise-card" data-difficulty="medium">
-            <span class="card-badge">Medio</span>
-            <h3>Hijo Izq. – Hermano Der.</h3>
-            <p>Traduce entre árbol y tabla de tripletas (izq, clave, der). Practica en ambas direcciones con drag &amp; drop.</p>
-            <a class="card-link" href="exercises/arboles-03.html">Empezar →</a>
-          </article>
-          <article class="exercise-card" data-difficulty="medium">
-            <span class="card-badge">Medio</span>
-            <h3>Puntero al Padre</h3>
-            <p>Construye el array <code>parent[1..N]</code> donde cada entrada guarda el índice del padre. La raíz apunta a sí misma. Practica en ambas direcciones: árbol→array y array→preguntas.</p>
-            <a class="card-link" href="exercises/arboles-04.html">Empezar →</a>
-          </article>
-          <article class="exercise-card" data-difficulty="medium">
-            <span class="card-badge">Medio</span>
-            <h3>Inserta en el ABB</h3>
-            <p>Haz clic en el hueco correcto del árbol para insertar claves según la propiedad del ABB. Observa cómo cada comparación dirige la búsqueda del lugar de inserción.</p>
-            <a class="card-link" href="exercises/arboles-05.html">Empezar →</a>
-          </article>
-          <article class="exercise-card" data-difficulty="easy">
-            <span class="card-badge">Fácil</span>
-            <h3>Busca, Max y Min en el ABB</h3>
-            <p>Traza search, max y min haciendo clic en los nodos visitados por el algoritmo. Comprueba cuántas comparaciones necesita cada operación.</p>
-            <a class="card-link" href="exercises/arboles-06.html">Empezar →</a>
-          </article>
-          <article class="exercise-card" data-difficulty="hard">
-            <span class="card-badge">Difícil</span>
-            <h3>Elimina del ABB</h3>
-            <p>Identifica el caso (hoja, un hijo, dos hijos) y ejecuta remove paso a paso. Para el caso de dos hijos, localiza sucesor y predecesor en inorden y decide cuál es más eficiente.</p>
-            <a class="card-link" href="exercises/arboles-07.html">Empezar →</a>
-          </article>
-        </div>
-      </div>
-    </section>
+    <!-- ALGORITMOS -->
+    <section class="tab-panel theme-algoritmos" id="algoritmos" role="tabpanel" hidden>
 
-    <!-- GRAFOS -->
-    <section class="tab-panel theme-grafos" id="grafos" role="tabpanel" hidden>
-      <div class="section-title-strip">
-        <h2 class="panel-title">Grafos</h2>
-      </div>
-      <div class="panel-inner">
-        <div class="exercise-grid">
-          <article class="exercise-card" data-difficulty="easy">
-            <span class="card-badge">Fácil</span>
-            <h3>Conceptos Básicos</h3>
-            <p>Identifica caminos, su longitud, ciclos y bucles en grafos dirigidos generados aleatoriamente.</p>
-            <a class="card-link" href="exercises/grafos-01.html">Empezar →</a>
-          </article>
-          <article class="exercise-card" data-difficulty="easy">
-            <span class="card-badge">Fácil</span>
-            <h3>Construye la Matriz</h3>
-            <p>Rellena la matriz de adyacencia a partir del grafo. Practica con grafos no dirigidos, dirigidos y ponderados.</p>
-            <a class="card-link" href="exercises/grafos-02.html">Empezar →</a>
-          </article>
-          <article class="exercise-card" data-difficulty="medium">
-            <span class="card-badge">Medio</span>
-            <h3>Interpreta la Matriz</h3>
-            <p>Lee la matriz de adyacencia y responde preguntas sobre grados, aristas y simetría sin ver el grafo dibujado.</p>
-            <a class="card-link" href="exercises/grafos-03.html">Empezar →</a>
-          </article>
-          <article class="exercise-card" data-difficulty="easy">
-            <span class="card-badge">Fácil</span>
-            <h3>Construye la Lista</h3>
-            <p>Añade vecinos a cada nodo para construir la lista de adyacencia. Modos no dirigido, dirigido y ponderado.</p>
-            <a class="card-link" href="exercises/grafos-04.html">Empezar →</a>
-          </article>
-          <article class="exercise-card" data-difficulty="hard">
-            <span class="card-badge">Difícil</span>
-            <h3>¿Qué representación conviene?</h3>
-            <p>Compara matriz y lista de adyacencia en coste de memoria y tiempo de acceso. ¿Cuándo usar cada una?</p>
-            <a class="card-link" href="exercises/grafos-05.html">Empezar →</a>
-          </article>
-          <article class="exercise-card" data-difficulty="medium">
-            <span class="card-badge">Medio</span>
-            <h3>Traza el DFS</h3>
-            <p>Sigue el recorrido en profundidad paso a paso. Decide qué nodo visita DFS a continuación y observa cómo evolucionan CLOSED y PATH.</p>
-            <a class="card-link" href="exercises/grafos-06.html">Empezar →</a>
-          </article>
-          <article class="exercise-card" data-difficulty="medium">
-            <span class="card-badge">Medio</span>
-            <h3>Traza el BFS</h3>
-            <p>Sigue el recorrido en anchura paso a paso. Gestiona la cola OPEN y el conjunto CLOSED sobre el mismo grafo que el DFS.</p>
-            <a class="card-link" href="exercises/grafos-07.html">Empezar →</a>
-          </article>
-          <article class="exercise-card" data-difficulty="hard" hidden>
-            <span class="card-badge">Difícil</span>
-            <h3>Construye el Algoritmo</h3>
-            <p>Toma las decisiones algorítmicas clave —estructura de recorrido, inicialización, condiciones— y observa cómo el pseudocódigo se va ensamblando con cada acierto.</p>
-            <a class="card-link" href="exercises/grafos-08.html">Empezar →</a>
-          </article>
+      <nav class="sub-nav" aria-label="Sub-secciones de Algoritmos">
+        <button class="sub-tab" aria-controls="voraces" aria-selected="true" data-theme="voraces">
+          <span aria-hidden="true">♟</span> Voraces
+        </button>
+        <button class="sub-tab" aria-controls="dinamica" aria-selected="false" data-theme="dinamica">
+          <span aria-hidden="true">⊞</span> P. Dinámica
+        </button>
+      </nav>
+
+      <div class="sub-panel theme-voraces" id="voraces" role="tabpanel">
+        <div class="section-title-strip">
+          <h2 class="panel-title">Algoritmos Voraces</h2>
+        </div>
+        <div class="panel-inner">
+          <div class="exercise-grid">
+          </div>
         </div>
       </div>
+
+      <div class="sub-panel theme-dinamica" id="dinamica" role="tabpanel" hidden>
+        <div class="section-title-strip">
+          <h2 class="panel-title">Programación Dinámica</h2>
+        </div>
+        <div class="panel-inner">
+          <div class="exercise-grid">
+          </div>
+        </div>
+      </div>
+
     </section>
 
   </main>
