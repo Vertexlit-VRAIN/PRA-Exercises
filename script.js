@@ -90,7 +90,9 @@
 
     subTabs.forEach(function (tab, index) {
       tab.addEventListener('click', function () {
-        activateSubTab(tab.getAttribute('aria-controls'));
+        var targetId = tab.getAttribute('aria-controls');
+        activateSubTab(targetId);
+        history.replaceState(null, '', '#' + targetId);
       });
 
       tab.addEventListener('keydown', function (e) {
