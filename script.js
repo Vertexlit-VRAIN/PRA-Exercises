@@ -54,10 +54,24 @@
     burger.setAttribute('aria-expanded', String(isOpen));
   });
 
-  // Activate tab from URL hash, falling back to first tab
-  var hash = window.location.hash.replace('#', '');
+  // Resolve URL hash: may be a main-tab id or a sub-panel id (e.g. #arboles from back-links)
+  var hash     = window.location.hash.replace('#', '');
   var validIds = Array.prototype.map.call(panels, function (p) { return p.id; });
-  activateTab(validIds.indexOf(hash) !== -1 ? hash : validIds[0]);
+
+  var targetMainId = null;
+  var targetSubId  = null;
+
+  if (validIds.indexOf(hash) !== -1) {
+    targetMainId = hash;
+  } else if (hash) {
+    var hashEl = document.getElementById(hash);
+    if (hashEl && hashEl.classList.contains('sub-panel')) {
+      var parentTabEl = hashEl.closest('.tab-panel');
+      if (parentTabEl) { targetMainId = parentTabEl.id; targetSubId = hash; }
+    }
+  }
+
+  activateTab(targetMainId || validIds[0]);
 
   // ─── Sub-tabs (one independent group per .sub-nav) ───────────────────────────
   document.querySelectorAll('.sub-nav').forEach(function (subNav) {
@@ -89,17 +103,13 @@
       });
     });
 
+    // Use targetSubId if it belongs to this panel, otherwise activate the first sub-tab
+    var inThisPanel = targetSubId &&
+      subPanels.some(function (sp) { return sp.id === targetSubId; });
     if (subTabs.length) {
-      activateSubTab(subTabs[0].getAttribute('aria-controls'));
+      activateSubTab(inThisPanel ? targetSubId : subTabs[0].getAttribute('aria-controls'));
     }
   });
-
-  // If the URL hash points to a sub-panel (e.g. #arboles from an exercise back-link),
-  // click the matching sub-tab now that all sub-navs are initialised.
-  if (hash && validIds.indexOf(hash) === -1) {
-    var subTabTarget = document.querySelector('.sub-tab[aria-controls="' + hash + '"]');
-    if (subTabTarget) subTabTarget.click();
-  }
 
   // ─── Card scroll-in animation ────────────────────────────────────────────────
   var STAGGER_MS       = 80;
