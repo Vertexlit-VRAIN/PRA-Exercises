@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mochila Fraccionaria — PRA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="algoritmos.css" />
+  <style>
+    /* ── Controls bar ────────────────────────────────────────────── */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .diff-group {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .diff-btn {
+      padding: 0.45rem 1.1rem;
+      border: 1.5px solid rgba(198, 40, 40, 0.3);
+      border-radius: 100px;
+      background: transparent;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      color: #888;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+
+    .diff-btn:hover { border-color: var(--crimson); color: var(--crimson); }
+
+    .diff-btn.active {
+      background: var(--crimson);
+      border-color: var(--crimson);
+      color: #fff;
+    }
+
+    .new-round-btn {
+      padding: 0.45rem 1.1rem;
+      border: 1.5px solid var(--crimson);
+      border-radius: 100px;
+      background: transparent;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      color: var(--crimson);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .new-round-btn:hover { background: var(--crimson); color: #fff; }
+
+    /* ── Layout ─────────────────────────────────────────────────── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    /* ── State panel (left) ──────────────────────────────────────── */
+    .state-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .target-display {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--crimson);
+      letter-spacing: -0.02em;
+    }
+
+    .state-row {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .state-item {
+      flex: 1;
+      background: #fff;
+      border: 1.5px solid rgba(198, 40, 40, 0.2);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      text-align: center;
+    }
+
+    .state-label {
+      display: block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 0.25rem;
+    }
+
+    .state-val {
+      display: block;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #111;
+      line-height: 1;
+    }
+
+    .state-val.highlight { color: var(--crimson); }
+
+    /* ── x-vector display ────────────────────────────────────────── */
+    .x-vector {
+      background: #fff;
+      border: 1.5px solid rgba(198, 40, 40, 0.2);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+    }
+
+    .x-vector-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 0.5rem;
+    }
+
+    .x-vector-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.4rem;
+      font-size: 1.05rem;
+      font-weight: 700;
+      flex-wrap: wrap;
+    }
+
+    .x-vec-math { color: #555; }
+
+    .x-cells {
+      display: flex;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+    }
+
+    .x-cell {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.1rem;
+    }
+
+    .x-cell-val {
+      min-width: 2.4rem;
+      text-align: center;
+      font-weight: 700;
+      color: #111;
+      transition: color 0.25s;
+      font-size: 0.95rem;
+    }
+
+    .x-cell-val.nonzero { color: var(--crimson); }
+
+    .x-cell-sub {
+      font-size: 0.65rem;
+      color: #aaa;
+      font-weight: 400;
+    }
+
+    .x-comma { color: #bbb; align-self: flex-end; margin-bottom: 0.15rem; }
+
+    /* ── Question area ───────────────────────────────────────────── */
+    .step-counter {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #bbb;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .question-text {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: #333;
+      min-height: 1.6rem;
+    }
+
+    .question-text code {
+      font-family: 'Courier New', monospace;
+      background: #f4f4f4;
+      padding: 0.1em 0.4em;
+      border-radius: 4px;
+      font-size: 0.9em;
+      color: var(--crimson);
+    }
+
+    .feedback {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      border-radius: 8px;
+      padding: 0.6rem 0.85rem;
+      min-height: 2.8rem;
+      display: none;
+    }
+
+    .feedback.ok  { display: block; background: #f1fbf1; color: #2e7d32; border: 1px solid #c8e6c9; }
+    .feedback.bad { display: block; background: #fff5f5; color: #c62828; border: 1px solid #ffcdd2; }
+
+    /* ── Score strip ─────────────────────────────────────────────── */
+    .score-strip {
+      font-size: 0.75rem;
+      color: #999;
+      letter-spacing: 0.05em;
+    }
+
+    .score-strip strong { color: #333; }
+
+    /* ── Item panel (right) ──────────────────────────────────────── */
+    .item-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .item-panel-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+    }
+
+    /* ── Item table ──────────────────────────────────────────────── */
+    .item-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 0.35rem;
+    }
+
+    .item-table thead th {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #aaa;
+      text-align: center;
+      padding: 0 0.5rem 0.3rem;
+    }
+
+    .item-table thead th:first-child { text-align: left; }
+
+    .item-btn {
+      cursor: pointer;
+      background: #fff;
+      border: 1.5px solid rgba(198, 40, 40, 0.2);
+      border-radius: 8px;
+      transition: border-color 0.15s, background 0.15s, transform 0.12s, box-shadow 0.15s;
+    }
+
+    .item-btn td {
+      padding: 0.6rem 0.5rem;
+      text-align: center;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .item-btn td:first-child {
+      text-align: left;
+      padding-left: 0.75rem;
+      font-size: 0.8rem;
+      color: #999;
+      min-width: 2rem;
+    }
+
+    .item-btn td.ratio-cell {
+      color: var(--crimson);
+      font-size: 0.9rem;
+    }
+
+    .item-btn td.status-cell {
+      font-size: 0.78rem;
+      color: #bbb;
+      min-width: 3.5rem;
+    }
+
+    .item-btn:hover:not([disabled]) {
+      border-color: var(--crimson);
+      background: #fff8f8;
+      transform: translateX(3px);
+      box-shadow: 0 2px 12px rgba(198, 40, 40, 0.15);
+    }
+
+    .item-btn[disabled] {
+      cursor: default;
+      opacity: 0.55;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .item-btn.is-correct {
+      border-color: #4caf50;
+      background: #f1fbf1;
+    }
+
+    .item-btn.is-correct td { color: #2e7d32; }
+    .item-btn.is-correct td.ratio-cell { color: #2e7d32; }
+
+    .item-btn.is-wrong {
+      border-color: #e53935;
+      background: #fff5f5;
+    }
+
+    .item-btn.is-wrong td { color: #c62828; }
+    .item-btn.is-wrong td.ratio-cell { color: #c62828; }
+
+    .item-btn.is-taken {
+      border-color: #e0e0e0;
+      background: #fafafa;
+      opacity: 0.6;
+    }
+
+    .item-btn.is-taken td { color: #bbb; }
+    .item-btn.is-taken td.ratio-cell { color: #bbb; }
+
+    /* ── Pseudocode reference ────────────────────────────────────── */
+    .pseudo-box {
+      background: #1a1a2e;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      line-height: 1.8;
+      color: #cdd6f4;
+    }
+
+    .pseudo-box .kw  { color: #cba6f7; font-weight: bold; }
+    .pseudo-box .fn  { color: #89dceb; }
+    .pseudo-box .cmt { color: #6c7086; }
+    .pseudo-box .hl  { background: rgba(198, 40, 40, 0.28); border-radius: 3px; padding: 0 0.2em; }
+
+    /* ── Done banner ─────────────────────────────────────────────── */
+    .done-banner {
+      margin-top: 1.5rem;
+      text-align: center;
+      padding: 2rem 1.5rem;
+      background: #f1fbf1;
+      border-radius: 14px;
+      border: 2px solid #c8e6c9;
+      color: #2e7d32;
+    }
+
+    .done-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .done-x {
+      font-family: 'Courier New', monospace;
+      font-size: 0.95rem;
+      margin: 0.4rem 0;
+      color: #1b5e20;
+    }
+
+    .done-stats {
+      font-size: 0.85rem;
+      color: #555;
+      margin-bottom: 0;
+    }
+
+    /* ── Responsive ──────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .two-col { grid-template-columns: 1fr; }
+      .controls-bar { flex-direction: column; align-items: flex-start; }
+      .item-btn td { font-size: 0.85rem; padding: 0.5rem 0.35rem; }
+    }
+  </style>
+</head>
+<body class="voraces">
+
+<header class="ex-header">
+  <a class="back-link" href="../index.html#algoritmos">← Algoritmos Voraces</a>
+  <h1 class="ex-title">02 — Mochila Fraccionaria</h1>
+  <p class="ex-desc">
+    Traza el algoritmo voraz <code>backpack</code> paso a paso.
+    En cada iteración selecciona el objeto con mayor ratio <code>v<sub>i</sub>/w<sub>i</sub></code>
+    entre los disponibles — si no cabe entero, se toma la fracción que llena la mochila — y observa cómo se construye el vector solución <strong>x</strong>.
+  </p>
+</header>
+
+<main class="ex-main">
+
+  <div class="controls-bar">
+    <div class="diff-group" role="group" aria-label="Rango de W">
+      <button class="diff-btn active" data-diff="easy">W: 20–40</button>
+      <button class="diff-btn" data-diff="medium">W: 60–100</button>
+      <button class="diff-btn" data-diff="hard">W: 80–130</button>
+    </div>
+    <button class="new-round-btn" id="new-round-btn">Nueva ronda →</button>
+  </div>
+
+  <div class="two-col">
+
+    <!-- ── Estado / Pregunta ── -->
+    <div class="state-panel q-panel">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem">
+        <span class="round-badge" id="round-badge">Ronda 1</span>
+        <span class="score-strip">A la primera: <strong id="score-ok">0</strong> / <strong id="score-total">0</strong></span>
+      </div>
+
+      <div class="target-display">W&nbsp;=&nbsp;<span id="W-val">—</span></div>
+
+      <div class="state-row">
+        <div class="state-item">
+          <span class="state-label">peso usado</span>
+          <span class="state-val" id="used-val">0</span>
+        </div>
+        <div class="state-item">
+          <span class="state-label">capacidad restante</span>
+          <span class="state-val highlight" id="rest-val">—</span>
+        </div>
+      </div>
+
+      <div class="state-item" style="text-align:center">
+        <span class="state-label">valor acumulado</span>
+        <span class="state-val" id="value-val" style="color:var(--crimson)">0</span>
+      </div>
+
+      <div class="x-vector">
+        <div class="x-vector-label">vector solución</div>
+        <div class="x-vector-row">
+          <span class="x-vec-math">x&nbsp;=&nbsp;[</span>
+          <div class="x-cells" id="x-cells"></div>
+          <span class="x-vec-math">]</span>
+        </div>
+      </div>
+
+      <div class="step-counter">Paso <span id="step-cur">1</span></div>
+      <p class="question-text" id="question-text"></p>
+      <p class="feedback" id="feedback"></p>
+
+    </div>
+
+    <!-- ── Tabla de objetos + pseudocódigo ── -->
+    <div class="item-panel">
+      <div class="item-panel-label">objetos (orden original)</div>
+
+      <table class="item-table" id="item-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>v<sub>i</sub></th>
+            <th>w<sub>i</sub></th>
+            <th>v<sub>i</sub>/w<sub>i</sub></th>
+            <th>estado</th>
+          </tr>
+        </thead>
+        <tbody id="item-tbody"></tbody>
+      </table>
+
+      <div class="pseudo-box">
+        <span class="cmt">// Objetos ordenados por mayor ratio v/w</span><br>
+        <span class="kw">function</span> <span class="fn">backpack</span>(w[1..N], v[1..N], W)<br>
+        &nbsp;&nbsp;x[1..N] = [0..0]<br>
+        &nbsp;&nbsp;peso = 0 &nbsp; valor = 0 &nbsp; i = 1<br>
+        &nbsp;&nbsp;<span class="kw">while</span> (i ≤ N) <span class="kw">and</span> (peso &lt; W) <span class="kw">do</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="hl"><span class="kw">if</span> (peso + w[i]) ≤ W <span class="kw">then</span></span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;x[i] = 1<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;peso += w[i] &nbsp; valor += v[i]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">else</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="hl">x[i] = (W − peso) / w[i]</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;peso = W &nbsp; valor += x[i]·v[i]<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">end_if</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;i += 1<br>
+        &nbsp;&nbsp;<span class="kw">end_while</span><br>
+        &nbsp;&nbsp;<span class="kw">return</span> x, peso, valor
+      </div>
+    </div>
+
+  </div><!-- two-col -->
+
+  <div class="done-banner" id="done-banner" hidden>
+    <div class="done-title">✓ ¡Mochila completada!</div>
+    <p class="done-x" id="done-x"></p>
+    <p class="done-stats" id="done-stats"></p>
+  </div>
+
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  var SETS = {
+    easy: [
+      [{v:10,w:5},{v:6,w:4},{v:15,w:6},{v:8,w:10}],
+      [{v:12,w:4},{v:9,w:6},{v:18,w:8},{v:5,w:5}],
+      [{v:20,w:8},{v:6,w:3},{v:15,w:10},{v:10,w:6}]
+    ],
+    medium: [
+      [{v:20,w:10},{v:30,w:20},{v:66,w:30},{v:40,w:40},{v:60,w:50}],
+      [{v:25,w:10},{v:18,w:12},{v:45,w:20},{v:10,w:15},{v:30,w:25}],
+      [{v:40,w:16},{v:15,w:10},{v:35,w:20},{v:20,w:25},{v:50,w:30}]
+    ],
+    hard: [
+      [{v:28,w:12},{v:35,w:15},{v:50,w:22},{v:42,w:20},{v:18,w:8},{v:60,w:30}],
+      [{v:44,w:20},{v:30,w:14},{v:55,w:25},{v:22,w:11},{v:38,w:18},{v:15,w:9}],
+      [{v:30,w:13},{v:48,w:22},{v:20,w:9},{v:55,w:28},{v:35,w:16},{v:25,w:12}]
+    ]
+  };
+
+  var W_RANGE = {
+    easy:   [20, 40],
+    medium: [60, 100],
+    hard:   [80, 130]
+  };
+
+  var currentDiff = 'easy';
+  var items, W, usedWeight, accValue, answered, stepCount;
+  var roundNum = 0, gOk = 0, gTotal = 0;
+
+  function subscript(n) {
+    var s = ['₀','₁','₂','₃','₄','₅','₆','₇','₈','₉'];
+    return String(n).split('').map(function(d){ return s[+d]; }).join('');
+  }
+
+  function fmtRatio(r) {
+    return r % 1 === 0 ? r.toFixed(1) : r.toFixed(2);
+  }
+
+  function fmtX(x) {
+    if (x === 0) return '0';
+    if (x === 1) return '1';
+    return x.toFixed(2);
+  }
+
+  function maxAvailableRatio() {
+    var best = -1;
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].x === 0 && items[i].ratio > best) best = items[i].ratio;
+    }
+    return best;
+  }
+
+  function bestItem() {
+    var maxR = maxAvailableRatio();
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].x === 0 && items[i].ratio === maxR) return i;
+    }
+    return -1;
+  }
+
+  function allTaken() {
+    return items.every(function(it){ return it.x > 0; });
+  }
+
+  // ── Round lifecycle ──────────────────────────────────────────
+  function generate() {
+    var sets = SETS[currentDiff];
+    var raw  = sets[Math.floor(Math.random() * sets.length)];
+    var range = W_RANGE[currentDiff];
+
+    W = range[0] + Math.floor(Math.random() * (range[1] - range[0] + 1));
+
+    items = raw.map(function(it, i) {
+      var ratio = it.v / it.w;
+      return { v: it.v, w: it.w, ratio: ratio, x: 0, idx: i };
+    });
+
+    usedWeight = 0;
+    accValue   = 0;
+    answered   = false;
+    stepCount  = 0;
+    roundNum++;
+
+    document.getElementById('round-badge').textContent = 'Ronda ' + roundNum;
+    document.getElementById('done-banner').hidden = true;
+
+    renderState();
+    renderItems();
+    renderQuestion();
+    updateScore();
+  }
+
+  // ── Rendering ────────────────────────────────────────────────
+  function renderState() {
+    var rest = W - usedWeight;
+    document.getElementById('W-val').textContent    = W;
+    document.getElementById('used-val').textContent = usedWeight % 1 === 0
+      ? usedWeight : usedWeight.toFixed(2);
+    document.getElementById('rest-val').textContent = rest % 1 === 0
+      ? rest : rest.toFixed(2);
+    document.getElementById('value-val').textContent = accValue % 1 === 0
+      ? accValue : accValue.toFixed(2);
+
+    document.getElementById('step-cur').textContent = stepCount + 1;
+
+    var cellsEl = document.getElementById('x-cells');
+    cellsEl.innerHTML = '';
+    items.forEach(function(it, i) {
+      var cell = document.createElement('span');
+      cell.className = 'x-cell';
+
+      var val = document.createElement('span');
+      val.className = 'x-cell-val' + (it.x > 0 ? ' nonzero' : '');
+      val.textContent = fmtX(it.x);
+
+      var sub = document.createElement('span');
+      sub.className = 'x-cell-sub';
+      sub.textContent = 'x' + subscript(i + 1);
+
+      cell.appendChild(val);
+      cell.appendChild(sub);
+      cellsEl.appendChild(cell);
+
+      if (i < items.length - 1) {
+        var comma = document.createElement('span');
+        comma.className = 'x-comma';
+        comma.textContent = ',';
+        cellsEl.appendChild(comma);
+      }
+    });
+  }
+
+  function renderItems() {
+    var tbody = document.getElementById('item-tbody');
+    tbody.innerHTML = '';
+    items.forEach(function(it, i) {
+      var tr = document.createElement('tr');
+      tr.className = 'item-btn' + (it.x > 0 ? ' is-taken' : '');
+      tr.dataset.idx = i;
+      if (it.x > 0) tr.setAttribute('disabled', '');
+
+      var status = it.x === 0 ? '—'
+        : it.x === 1 ? '✓ x=1'
+        : '✓ x=' + it.x.toFixed(2);
+
+      tr.innerHTML =
+        '<td>' + (i + 1) + '</td>' +
+        '<td>' + it.v + '</td>' +
+        '<td>' + it.w + '</td>' +
+        '<td class="ratio-cell">' + fmtRatio(it.ratio) + '</td>' +
+        '<td class="status-cell">' + status + '</td>';
+
+      if (it.x === 0) {
+        tr.addEventListener('click', function() {
+          handleItemClick(parseInt(tr.dataset.idx, 10));
+        });
+      }
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function renderQuestion() {
+    var rest = W - usedWeight;
+    document.getElementById('question-text').innerHTML =
+      '¿Qué objeto tiene el mayor ratio <code>v/w</code> y debería añadirse ahora?';
+
+    var fb = document.getElementById('feedback');
+    fb.className   = 'feedback';
+    fb.textContent = '';
+  }
+
+  function setItemStates(bestRatio, clickedIdx) {
+    document.getElementById('item-tbody').querySelectorAll('.item-btn')
+      .forEach(function(tr) {
+        var i = parseInt(tr.dataset.idx, 10);
+        tr.setAttribute('disabled', '');
+        if (items[i].x === 0 && items[i].ratio === bestRatio) tr.classList.add('is-correct');
+        if (clickedIdx !== null && i === clickedIdx && items[i].ratio !== bestRatio)
+          tr.classList.add('is-wrong');
+      });
+  }
+
+  function updateScore() {
+    document.getElementById('score-ok').textContent    = gOk;
+    document.getElementById('score-total').textContent = gTotal;
+  }
+
+  // ── Interaction ──────────────────────────────────────────────
+  function handleItemClick(idx) {
+    if (answered) return;
+    answered = true;
+
+    var maxRatio = maxAvailableRatio();
+    var fb       = document.getElementById('feedback');
+    gTotal++;
+
+    if (items[idx].ratio === maxRatio) {
+      gOk++;
+      stepCount++;
+
+      var remaining = W - usedWeight;
+      var it = items[idx];
+
+      if (it.w <= remaining) {
+        it.x = 1;
+        usedWeight += it.w;
+        accValue   += it.v;
+      } else {
+        it.x = remaining / it.w;
+        accValue   += it.x * it.v;
+        usedWeight  = W;
+      }
+
+      var isFrac = it.x < 1;
+      fb.className = 'feedback ok';
+      fb.innerHTML = '✓ Objeto ' + (idx + 1) + ' (v/w = ' + fmtRatio(it.ratio) + ') — mayor ratio disponible'
+        + (isFrac
+           ? '. Solo caben <strong>' + remaining + ' kg</strong> → x' + subscript(idx+1)
+             + ' = ' + remaining + '/' + it.w + ' = <strong>' + it.x.toFixed(2) + '</strong>'
+           : ' → x' + subscript(idx+1) + ' = 1 (completo)');
+
+      setItemStates(maxRatio, null);
+      updateScore();
+
+      setTimeout(function() {
+        answered = false;
+        renderState();
+        renderItems();
+        if (usedWeight >= W || allTaken()) {
+          showDone();
+        } else {
+          renderQuestion();
+        }
+      }, 900);
+
+    } else {
+      var it2 = items[idx];
+      var itC = items[bestItem()];
+      fb.className = 'feedback bad';
+      fb.innerHTML = '✗ Objeto ' + (idx + 1) + ' tiene ratio ' + fmtRatio(it2.ratio)
+        + ', pero hay objetos con mayor ratio: <strong>'
+        + fmtRatio(maxRatio) + '</strong>';
+
+      setItemStates(maxRatio, idx);
+      updateScore();
+
+      setTimeout(function() {
+        answered = false;
+        renderItems();
+        var fb2 = document.getElementById('feedback');
+        fb2.className   = 'feedback';
+        fb2.textContent = '';
+      }, 1400);
+    }
+  }
+
+  function showDone() {
+    var xStr = 'x = [ ' + items.map(function(it, i) {
+      return fmtX(it.x) + ' (x' + subscript(i + 1) + ')';
+    }).join(', ') + ' ]';
+
+    var pesoFmt = usedWeight % 1 === 0 ? usedWeight : usedWeight.toFixed(2);
+    var valFmt  = accValue % 1 === 0 ? accValue : accValue.toFixed(2);
+
+    document.getElementById('done-x').textContent     = xStr;
+    document.getElementById('done-stats').textContent =
+      'Peso total: ' + pesoFmt + ' kg  ·  Valor total: ' + valFmt + '  — solución óptima greedy';
+    document.getElementById('done-banner').hidden = false;
+
+    document.getElementById('item-tbody').querySelectorAll('.item-btn')
+      .forEach(function(tr) { tr.setAttribute('disabled', ''); });
+
+    document.getElementById('feedback').className   = 'feedback';
+    document.getElementById('question-text').textContent = '— completado —';
+    document.getElementById('step-cur').textContent = stepCount;
+  }
+
+  // ── Init ─────────────────────────────────────────────────────
+  document.getElementById('new-round-btn').addEventListener('click', generate);
+
+  document.querySelectorAll('.diff-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.diff-btn').forEach(function(b) {
+        b.classList.remove('active');
+      });
+      btn.classList.add('active');
+      currentDiff = btn.dataset.diff;
+      generate();
+    });
+  });
+
+  generate();
+
+})();
+</script>
+</body>
+</html>
