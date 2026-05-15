@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generalización Voraz — PRA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="algoritmos.css" />
+  <style>
+    /* ── Controls bar ────────────────────────────────────────────── */
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .prob-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+    }
+
+    .prob-btn {
+      padding: 0.38rem 0.9rem;
+      border: 1.5px solid rgba(198, 40, 40, 0.3);
+      border-radius: 100px;
+      background: transparent;
+      font-family: var(--font-ui);
+      font-size: 0.74rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: #888;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+    }
+
+    .prob-btn:hover { border-color: var(--crimson); color: var(--crimson); }
+
+    .prob-btn.active {
+      background: var(--crimson);
+      border-color: var(--crimson);
+      color: #fff;
+    }
+
+    .new-round-btn {
+      padding: 0.45rem 1.1rem;
+      border: 1.5px solid var(--crimson);
+      border-radius: 100px;
+      background: transparent;
+      font-family: var(--font-ui);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      color: var(--crimson);
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .new-round-btn:hover { background: var(--crimson); color: #fff; }
+
+    /* ── Layout ─────────────────────────────────────────────────── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    /* ── State panel (left) ──────────────────────────────────────── */
+    .state-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .score-strip {
+      font-size: 0.75rem;
+      color: #999;
+      letter-spacing: 0.05em;
+    }
+
+    .score-strip strong { color: #333; }
+
+    .feedback {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      border-radius: 8px;
+      padding: 0.6rem 0.85rem;
+      min-height: 2.8rem;
+      display: none;
+    }
+
+    .feedback.ok  { display: block; background: #f1fbf1; color: #2e7d32; border: 1px solid #c8e6c9; }
+    .feedback.bad { display: block; background: #fff5f5; color: #c62828; border: 1px solid #ffcdd2; }
+
+    /* ── Problem display ─────────────────────────────────────────── */
+    .problem-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--crimson);
+      line-height: 1.3;
+      letter-spacing: -0.01em;
+    }
+
+    .problem-desc {
+      font-size: 0.92rem;
+      line-height: 1.65;
+      color: #333;
+    }
+
+    /* ── Schema reference (progress + definiciones) ─────────────── */
+    .schema-ref {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .schema-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.6rem;
+      padding: 0.5rem 0.8rem;
+      border-radius: 8px;
+      border: 1.5px solid rgba(198, 40, 40, 0.15);
+      background: #fff;
+      transition: border-color 0.3s, background 0.3s;
+    }
+
+    .schema-item.solved {
+      background: #f1fbf1;
+      border-color: #a5d6a7;
+    }
+
+    .schema-letter {
+      font-family: 'Courier New', monospace;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--crimson);
+      min-width: 1rem;
+      padding-top: 0.05rem;
+      transition: color 0.3s;
+    }
+
+    .schema-item.solved .schema-letter { color: #2e7d32; }
+
+    .schema-def {
+      flex: 1;
+      font-size: 0.85rem;
+      line-height: 1.45;
+      color: #555;
+    }
+
+    .schema-def strong { color: #222; }
+
+    .schema-check {
+      font-size: 0.85rem;
+      color: #4caf50;
+      font-weight: 700;
+      opacity: 0;
+      transition: opacity 0.3s;
+      padding-top: 0.05rem;
+    }
+
+    .schema-item.solved .schema-check { opacity: 1; }
+
+    /* ── Pseudocode reference ────────────────────────────────────── */
+    .pseudo-box {
+      background: #1a1a2e;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      line-height: 1.8;
+      color: #cdd6f4;
+    }
+
+    .pseudo-box .kw  { color: #cba6f7; font-weight: bold; }
+    .pseudo-box .fn  { color: #89dceb; }
+    .pseudo-box .cmt { color: #6c7086; }
+    .pseudo-box .hl  { background: rgba(198, 40, 40, 0.28); border-radius: 3px; padding: 0 0.2em; }
+
+    /* ── Right panel ─────────────────────────────────────────────── */
+    .classify-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .classify-panel-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #888;
+    }
+
+    /* ── Element cards ───────────────────────────────────────────── */
+    .cards-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .elem-card {
+      background: #fff;
+      border: 1.5px solid rgba(198, 40, 40, 0.2);
+      border-radius: 10px;
+      padding: 0.75rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .elem-card.is-wrong {
+      border-color: #e53935;
+      background: #fff5f5;
+    }
+
+    .elem-card.is-solved {
+      border-color: #4caf50;
+      background: #f8fef8;
+      opacity: 0.72;
+      pointer-events: none;
+    }
+
+    .elem-text {
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: #222;
+      line-height: 1.4;
+    }
+
+    .elem-solved-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #4caf50;
+      display: none;
+    }
+
+    .elem-card.is-solved .elem-solved-label { display: block; }
+    .elem-card.is-solved .comp-btn-row      { display: none; }
+
+    /* ── Component mini-buttons per card ─────────────────────────── */
+    .comp-btn-row {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .comp-btn {
+      padding: 0.28rem 0.7rem;
+      border: 1.5px solid rgba(198, 40, 40, 0.3);
+      border-radius: 100px;
+      background: transparent;
+      font-family: var(--font-ui);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      color: #888;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+
+    .comp-btn:hover { border-color: var(--crimson); color: var(--crimson); }
+
+    .comp-btn.flash-ok {
+      background: #4caf50;
+      border-color: #4caf50;
+      color: #fff;
+    }
+
+    .comp-btn.flash-bad {
+      background: #ffcdd2;
+      border-color: #e53935;
+      color: #c62828;
+    }
+
+    /* ── Done banner ─────────────────────────────────────────────── */
+    .done-banner {
+      margin-top: 1.5rem;
+      text-align: center;
+      padding: 2rem 1.5rem;
+      background: #f1fbf1;
+      border-radius: 14px;
+      border: 2px solid #c8e6c9;
+      color: #2e7d32;
+    }
+
+    .done-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .done-x {
+      font-family: 'Courier New', monospace;
+      font-size: 0.88rem;
+      margin: 0.4rem 0;
+      color: #1b5e20;
+      word-break: break-word;
+    }
+
+    .done-stats {
+      font-size: 0.85rem;
+      color: #555;
+      margin-bottom: 0;
+    }
+
+    /* ── Responsive ──────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .two-col      { grid-template-columns: 1fr; }
+      .controls-bar { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body class="voraces">
+
+<header class="ex-header">
+  <a class="back-link" href="../index.html#algoritmos">← Algoritmos Voraces</a>
+  <h1 class="ex-title">03 — Generalización del Algoritmo Voraz</h1>
+  <p class="ex-desc">
+    Dado un problema, identifica los cuatro componentes del esquema voraz general:
+    <strong>C</strong> (candidatos), <strong>S</strong> (solución parcial),
+    <strong>f</strong> (función objetivo) y <strong>R</strong> (restricciones).
+    Pulsa el botón correcto en cada tarjeta.
+  </p>
+</header>
+
+<main class="ex-main">
+
+  <!-- ── Barra de controles ── -->
+  <div class="controls-bar">
+    <div class="prob-selector" role="group" aria-label="Problema" id="prob-selector">
+      <button class="prob-btn" data-prob-id="coin-change">Cambio de Monedas</button>
+      <button class="prob-btn" data-prob-id="activity-selection">Selección de Actividades</button>
+      <button class="prob-btn" data-prob-id="backpack-easy">Mochila Fraccionaria</button>
+      <button class="prob-btn" data-prob-id="job-scheduling">Tareas con Plazos</button>
+      <button class="prob-btn" data-prob-id="huffman">Huffman</button>
+      <button class="prob-btn" data-prob-id="interval-coloring">Coloreo de Intervalos</button>
+      <button class="prob-btn" data-prob-id="kruskal">Kruskal</button>
+      <button class="prob-btn" data-prob-id="dijkstra">Dijkstra</button>
+      <button class="prob-btn" data-prob-id="set-cover">Set Cover</button>
+    </div>
+    <button class="new-round-btn" id="new-round-btn">Aleatorio →</button>
+  </div>
+
+  <div class="two-col">
+
+    <!-- ── Panel izquierdo: problema y progreso ── -->
+    <div class="state-panel q-panel">
+
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem">
+        <span class="round-badge" id="round-badge">Ronda 1</span>
+        <span class="score-strip">A la primera: <strong id="score-ok">0</strong> / <strong id="score-total">0</strong></span>
+      </div>
+
+      <div class="problem-title" id="problem-title">—</div>
+      <p class="problem-desc" id="problem-desc"></p>
+
+      <div class="schema-ref">
+        <div class="schema-item" id="schema-C">
+          <span class="schema-letter">C</span>
+          <span class="schema-def"><strong>Candidatos</strong> — elementos que pueden incorporarse a la solución</span>
+          <span class="schema-check">✓</span>
+        </div>
+        <div class="schema-item" id="schema-S">
+          <span class="schema-letter">S</span>
+          <span class="schema-def"><strong>Solución</strong> — subconjunto construido progresivamente, empieza vacío</span>
+          <span class="schema-check">✓</span>
+        </div>
+        <div class="schema-item" id="schema-f">
+          <span class="schema-letter">f</span>
+          <span class="schema-def"><strong>Objetivo</strong> — qué queremos maximizar o minimizar</span>
+          <span class="schema-check">✓</span>
+        </div>
+        <div class="schema-item" id="schema-R">
+          <span class="schema-letter">R</span>
+          <span class="schema-def"><strong>Restricciones</strong> — condiciones que definen cuándo una solución es válida</span>
+          <span class="schema-check">✓</span>
+        </div>
+      </div>
+
+      <p class="feedback" id="feedback"></p>
+
+    </div>
+
+    <!-- ── Panel derecho: pseudocódigo + tarjetas ── -->
+    <div class="classify-panel">
+
+      <div class="pseudo-box">
+        <span class="cmt">// C: candidatos  S: solución  f: objetivo  R: restricciones</span><br>
+        <span class="kw">function</span> <span class="fn">greedy</span>(C, R)<br>
+        &nbsp;&nbsp;S = ∅<br>
+        &nbsp;&nbsp;<span class="kw">while</span> C ≠ ∅ <span class="kw">and not</span> <span class="fn">complete</span>(S) <span class="kw">do</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="hl">c = <span class="fn">select_best_feasible</span>(S, C, R)</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> c ≠ NULL <span class="kw">then</span><br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;S = S ∪ {c} ; C = C − {c}<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">else break</span><br>
+        &nbsp;&nbsp;<span class="kw">end_while</span><br>
+        &nbsp;&nbsp;<span class="kw">if</span> <span class="fn">complete</span>(S) <span class="kw">then return</span> S <span class="kw">else return</span> ∅
+      </div>
+
+      <div class="classify-panel-label">Asigna cada elemento a su componente</div>
+      <div class="cards-list" id="cards-list"></div>
+
+    </div>
+
+  </div><!-- two-col -->
+
+  <!-- ── Banner de completado ── -->
+  <div class="done-banner" id="done-banner" hidden>
+    <div class="done-title">✓ ¡Correcto en los cuatro componentes!</div>
+    <p class="done-x" id="done-summary"></p>
+    <p class="done-stats" id="done-stats"></p>
+  </div>
+
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Problem bank ────────────────────────────────────────────── */
+  var PROBLEMS = {
+    easy: [
+      {
+        id: 'coin-change',
+        title: 'Cambio de Monedas',
+        desc: 'Dado un conjunto de denominaciones de monedas y un importe W, '
+            + 'devolver el menor número de monedas que sumen exactamente W. '
+            + 'En cada paso se escoge la moneda de mayor valor que no supere el importe restante.',
+        elements: [
+          { text: 'Conjunto de todas las denominaciones disponibles',   component: 'C' },
+          { text: 'Multiconjunto de monedas seleccionadas hasta ahora', component: 'S' },
+          { text: 'Minimizar el número total de monedas usadas',        component: 'f' },
+          { text: 'La suma de las monedas elegidas no supera W',        component: 'R' }
+        ]
+      },
+      {
+        id: 'activity-selection',
+        title: 'Selección de Actividades',
+        desc: 'Tenemos N actividades, cada una con hora de inicio y de fin. '
+            + 'Queremos realizar el máximo número de actividades sin solapamiento. '
+            + 'Se elige siempre la actividad que termina más pronto.',
+        elements: [
+          { text: 'Conjunto de todas las actividades del día',          component: 'C' },
+          { text: 'Subconjunto de actividades planificadas',            component: 'S' },
+          { text: 'Maximizar el número de actividades completadas',     component: 'f' },
+          { text: 'Ninguna actividad en S puede solaparse con otra',    component: 'R' }
+        ]
+      },
+      {
+        id: 'backpack-easy',
+        title: 'Mochila Fraccionaria',
+        desc: 'Hay N objetos, cada uno con peso wᵢ y valor vᵢ. '
+            + 'Se puede tomar la fracción de un objeto que quepa. '
+            + 'El algoritmo ordena por ratio v/w y llena la mochila de mayor a menor ratio.',
+        elements: [
+          { text: 'Conjunto de los N objetos disponibles',              component: 'C' },
+          { text: 'Vector x con la fracción tomada de cada objeto',     component: 'S' },
+          { text: 'Maximizar el valor total transportado',              component: 'f' },
+          { text: 'El peso total cargado no supera la capacidad W',     component: 'R' }
+        ]
+      }
+    ],
+    medium: [
+      {
+        id: 'job-scheduling',
+        title: 'Planificación de Tareas con Plazos',
+        desc: 'Cada tarea tiene un beneficio bᵢ y un plazo dᵢ (unidades de tiempo). '
+            + 'Solo se puede ejecutar una tarea por unidad de tiempo. '
+            + 'El objetivo es seleccionar las tareas que maximicen el beneficio total '
+            + 'sin incumplir ningún plazo.',
+        elements: [
+          { text: 'Conjunto de todas las tareas pendientes',                         component: 'C' },
+          { text: 'Secuencia de tareas asignadas a instantes de tiempo',             component: 'S' },
+          { text: 'Maximizar la suma de beneficios de las tareas ejecutadas',        component: 'f' },
+          { text: 'Cada tarea en S debe completarse antes o en su plazo dᵢ',         component: 'R' }
+        ]
+      },
+      {
+        id: 'huffman',
+        title: 'Codificación de Huffman',
+        desc: 'Dado un alfabeto con frecuencias fᵢ, construir un código prefijo óptimo. '
+            + 'En cada paso se fusionan los dos nodos de menor frecuencia '
+            + 'formando un nuevo nodo en el árbol.',
+        elements: [
+          { text: 'Conjunto de nodos hoja (un nodo por símbolo del alfabeto)',       component: 'C' },
+          { text: 'Árbol binario construido fusionando nodos parciales',             component: 'S' },
+          { text: 'Minimizar la longitud media del código (∑ fᵢ · profundidadᵢ)', component: 'f' },
+          { text: 'El código debe ser libre de prefijos (prefix-free)',              component: 'R' }
+        ]
+      },
+      {
+        id: 'interval-coloring',
+        title: 'Coloreo de Intervalos',
+        desc: 'Se tienen N intervalos de tiempo. Asignar a cada intervalo un "color" '
+            + '(recurso o aula) de forma que dos intervalos solapados no compartan color. '
+            + 'Se procesan por hora de inicio y se reutiliza el color que quede libre antes.',
+        elements: [
+          { text: 'Conjunto de intervalos aún sin asignar',                          component: 'C' },
+          { text: 'Asignación parcial intervalo → color construida hasta el momento',component: 'S' },
+          { text: 'Minimizar el número de colores (recursos) utilizados',            component: 'f' },
+          { text: 'Dos intervalos solapados deben tener colores distintos',          component: 'R' }
+        ]
+      }
+    ],
+    hard: [
+      {
+        id: 'kruskal',
+        title: 'Árbol de Expansión Mínima — Kruskal',
+        desc: 'Dado un grafo conexo con aristas de peso, construir el subgrafo que conecte '
+            + 'todos los vértices con coste mínimo. Kruskal ordena las aristas por peso '
+            + 'y añade la siguiente solo si no forma un ciclo (comprobado con Union-Find).',
+        elements: [
+          { text: 'Conjunto de aristas del grafo aún no examinadas',                              component: 'C' },
+          { text: 'Subgrafo acíclico de aristas seleccionadas (bosque parcial)',                  component: 'S' },
+          { text: 'Minimizar la suma de pesos de las aristas del árbol',                         component: 'f' },
+          { text: 'Las aristas añadidas no forman ciclos; al final conectan todos los vértices', component: 'R' }
+        ]
+      },
+      {
+        id: 'dijkstra',
+        title: 'Camino Mínimo — Dijkstra',
+        desc: 'En un grafo con pesos no negativos, encontrar el camino de menor coste '
+            + 'desde un nodo fuente s a todos los demás. En cada paso se extrae el nodo '
+            + 'no visitado con menor distancia tentativa y se relajan sus aristas.',
+        elements: [
+          { text: 'Conjunto de vértices aún no visitados (cola de prioridad)',       component: 'C' },
+          { text: 'Conjunto de vértices con distancia definitiva ya asignada',       component: 'S' },
+          { text: 'Minimizar la distancia acumulada desde la fuente s',              component: 'f' },
+          { text: 'Solo se procesan aristas con pesos no negativos',                 component: 'R' }
+        ]
+      },
+      {
+        id: 'set-cover',
+        title: 'Cobertura de Conjuntos (greedy aproximado)',
+        desc: 'Dado un universo U y una colección de subconjuntos Sᵢ, elegir el menor '
+            + 'número de subconjuntos que juntos cubran U. En cada paso se elige el Sᵢ '
+            + 'que cubre más elementos no cubiertos todavía.',
+        elements: [
+          { text: 'Colección de subconjuntos candidatos aún no seleccionados',       component: 'C' },
+          { text: 'Familia de subconjuntos elegidos hasta el momento',               component: 'S' },
+          { text: 'Minimizar el número de subconjuntos necesarios para cubrir U',    component: 'f' },
+          { text: 'La unión de los subconjuntos elegidos debe cubrir todo U',        component: 'R' }
+        ]
+      }
+    ]
+  };
+
+  /* ── Component metadata ──────────────────────────────────────── */
+  var COMP_NAMES = {
+    C: 'candidatos',
+    S: 'solución parcial',
+    f: 'función objetivo',
+    R: 'restricciones'
+  };
+
+  var COMP_HINTS = {
+    C: 'C es el conjunto de partida — todos los candidatos que podríamos elegir.',
+    S: 'S es lo que hemos construido — el subconjunto elegido hasta ahora.',
+    f: 'f es lo que optimizamos — lo que queremos maximizar o minimizar.',
+    R: 'R define cuándo una solución es válida (factible).'
+  };
+
+  /* ── Flat problem list ───────────────────────────────────────── */
+  var ALL_PROBLEMS = PROBLEMS.easy.concat(PROBLEMS.medium, PROBLEMS.hard);
+
+  /* ── State ───────────────────────────────────────────────────── */
+  var currentProb   = null;
+  var shuffledElems = [];
+  var solved        = {};
+  var answered      = {};
+  var solvedCount   = 0;
+  var roundNum      = 0;
+  var gOk           = 0;
+  var gTotal        = 0;
+
+  /* ── Helpers ─────────────────────────────────────────────────── */
+  function shuffleArray(arr) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+    }
+    return a;
+  }
+
+  function setActiveBtn(probId) {
+    document.querySelectorAll('.prob-btn').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.probId === probId);
+    });
+  }
+
+  function updateScore() {
+    document.getElementById('score-ok').textContent    = gOk;
+    document.getElementById('score-total').textContent = gTotal;
+  }
+
+  /* ── Round lifecycle ─────────────────────────────────────────── */
+  function generate(probId) {
+    if (probId) {
+      currentProb = ALL_PROBLEMS.filter(function (p) { return p.id === probId; })[0];
+    } else {
+      var candidates = currentProb
+        ? ALL_PROBLEMS.filter(function (p) { return p.id !== currentProb.id; })
+        : ALL_PROBLEMS;
+      currentProb = candidates[Math.floor(Math.random() * candidates.length)];
+    }
+
+    shuffledElems = shuffleArray(currentProb.elements);
+    solved        = {};
+    answered      = {};
+    solvedCount   = 0;
+    roundNum++;
+
+    setActiveBtn(currentProb.id);
+    document.getElementById('round-badge').textContent = 'Ronda ' + roundNum;
+    document.getElementById('done-banner').hidden = true;
+
+    renderLeftPanel();
+    renderCards();
+    clearFeedback();
+    updateScore();
+  }
+
+  /* ── Rendering ───────────────────────────────────────────────── */
+  function renderLeftPanel() {
+    document.getElementById('problem-title').textContent = currentProb.title;
+    document.getElementById('problem-desc').textContent  = currentProb.desc;
+
+    ['C', 'S', 'f', 'R'].forEach(function (comp) {
+      document.getElementById('schema-' + comp).classList.remove('solved');
+    });
+  }
+
+  function renderCards() {
+    var list = document.getElementById('cards-list');
+    list.innerHTML = '';
+
+    shuffledElems.forEach(function (elem, i) {
+      var card = document.createElement('div');
+      card.className = 'elem-card';
+      card.id        = 'card-' + i;
+
+      var textEl = document.createElement('div');
+      textEl.className   = 'elem-text';
+      textEl.textContent = elem.text;
+      card.appendChild(textEl);
+
+      var solvedLabel = document.createElement('div');
+      solvedLabel.className = 'elem-solved-label';
+      solvedLabel.id        = 'card-solved-label-' + i;
+      card.appendChild(solvedLabel);
+
+      var btnRow = document.createElement('div');
+      btnRow.className = 'comp-btn-row';
+      btnRow.id        = 'card-btnrow-' + i;
+
+      ['C', 'S', 'f', 'R'].forEach(function (comp) {
+        var btn = document.createElement('button');
+        btn.className        = 'comp-btn';
+        btn.textContent      = comp;
+        btn.dataset.cardIdx  = i;
+        btn.dataset.comp     = comp;
+        btn.addEventListener('click', function () {
+          handleAssignment(i, comp);
+        });
+        btnRow.appendChild(btn);
+      });
+
+      card.appendChild(btnRow);
+      list.appendChild(card);
+    });
+  }
+
+  /* ── Interaction ─────────────────────────────────────────────── */
+  function handleAssignment(cardIdx, chosenComp) {
+    if (answered[cardIdx]) return;
+    if (solved[cardIdx])   return;
+
+    var elem    = shuffledElems[cardIdx];
+    var correct = elem.component;
+    var isRight = (chosenComp === correct);
+    gTotal++;
+    answered[cardIdx] = true;
+
+    var card = document.getElementById('card-' + cardIdx);
+
+    if (isRight) {
+      gOk++;
+      solved[cardIdx] = true;
+      solvedCount++;
+
+      card.classList.add('is-solved');
+
+      var lbl = document.getElementById('card-solved-label-' + cardIdx);
+      lbl.textContent = '✓ ' + correct + ' — ' + COMP_NAMES[correct];
+
+      flashButton(cardIdx, chosenComp, true);
+
+      document.getElementById('schema-' + correct).classList.add('solved');
+
+      showFeedback('ok',
+        '✓ Correcto: «' + elem.text + '» es ' + correct + ' (' + COMP_NAMES[correct] + ').');
+
+      answered[cardIdx] = false;
+      updateScore();
+
+      if (solvedCount === 4) {
+        setTimeout(showDone, 700);
+      }
+
+    } else {
+      card.classList.add('is-wrong');
+      flashButton(cardIdx, chosenComp, false);
+
+      showFeedback('bad',
+        '✗ Esa asignación no es correcta. ' + COMP_HINTS[chosenComp]);
+
+      updateScore();
+
+      setTimeout(function () {
+        answered[cardIdx] = false;
+        card.classList.remove('is-wrong');
+        clearFeedback();
+      }, 1400);
+    }
+  }
+
+  function flashButton(cardIdx, comp, isOk) {
+    var row = document.getElementById('card-btnrow-' + cardIdx);
+    if (!row) return;
+    row.querySelectorAll('.comp-btn').forEach(function (btn) {
+      if (btn.dataset.comp === comp) {
+        btn.classList.add(isOk ? 'flash-ok' : 'flash-bad');
+        if (!isOk) {
+          setTimeout(function () {
+            btn.classList.remove('flash-bad');
+          }, 1400);
+        }
+      }
+    });
+  }
+
+  function showFeedback(type, html) {
+    var fb = document.getElementById('feedback');
+    fb.className = 'feedback ' + (type === 'ok' ? 'ok' : 'bad');
+    fb.textContent = html;
+  }
+
+  function clearFeedback() {
+    var fb = document.getElementById('feedback');
+    fb.className   = 'feedback';
+    fb.textContent = '';
+  }
+
+  function showDone() {
+    var summary = currentProb.elements.map(function (e) {
+      return e.component + ': ' + e.text;
+    }).join(' · ');
+
+    document.getElementById('done-summary').textContent = summary;
+    document.getElementById('done-stats').textContent   =
+      'Problema: ' + currentProb.title
+      + ' · Asignaciones correctas a la primera: ' + gOk + '/' + gTotal;
+    document.getElementById('done-banner').hidden = false;
+    clearFeedback();
+  }
+
+  /* ── Init ────────────────────────────────────────────────────── */
+  document.getElementById('new-round-btn').addEventListener('click', function () {
+    generate(null);
+  });
+
+  document.querySelectorAll('.prob-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      generate(btn.dataset.probId);
+    });
+  });
+
+  generate(null);
+
+})();
+</script>
+</body>
+</html>
