@@ -316,18 +316,21 @@ body {
 }
 
 .card-badge {
-  font-size: 0.78rem;
+  font-size: 0.62rem;
   font-weight: 700;
-  padding: 0.3rem 0.85rem;
+  padding: 0.22em 0.72em;
   border-radius: 100px;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   align-self: flex-start;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  box-shadow: inset 0 -2px 0 rgba(0,0,0,0.18);
+  color: #fff;
 }
 
-.exercise-card[data-difficulty="easy"]   .card-badge { background: #d1f5d3; color: #1b5e20; border: 1px solid rgba(46, 125, 50, 0.25); }
-.exercise-card[data-difficulty="medium"] .card-badge { background: #fde8c8; color: #a63200; border: 1px solid rgba(191, 54, 12, 0.25); }
-.exercise-card[data-difficulty="hard"]   .card-badge { background: #ffd6da; color: #b71c1c; border: 1px solid rgba(183, 28, 28, 0.25); }
+.exercise-card[data-difficulty="easy"]   .card-badge { background: #7AC74C; color: #fff; }
+.exercise-card[data-difficulty="medium"] .card-badge { background: #EE8130; color: #fff; }
+.exercise-card[data-difficulty="hard"]   .card-badge { background: #6F35FC; color: #fff; }
 
 .card-link {
   margin-top: auto;
@@ -685,4 +688,215 @@ body {
   }
 
   .panel-inner { padding: 2.5rem 1.25rem 4rem; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   THEMED BACKGROUND ANIMATIONS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Shared setup ─────────────────────────────────────────────── */
+
+.sub-panel          { position: relative; overflow: hidden; }
+.section-title-strip,
+.panel-inner        { position: relative; z-index: 1; }
+
+.sub-panel::before,
+.sub-panel::after {
+  position: absolute;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Hash: cortina de binario cayendo ─────────────────────────── */
+
+.theme-hash::before {
+  content:
+    '0 1 0 0 1 1 0 1  0 0 1 1  1 0 1 0\A'
+    '1 0 1 1 0 0 1 0  1 1 0 0  0 1 0 1\A'
+    '0 1 1 0 1 0 0 1  0 1 1 0  1 0 0 1\A'
+    '1 0 0 1 1 0 1 0  1 0 0 1  0 1 1 0\A'
+    '0 1 0 1 0 1 1 0  0 1 0 1  1 0 1 1\A'
+    '1 1 0 0 1 0 0 1  1 0 1 1  0 0 1 0\A'
+    '0 0 1 1 0 1 1 0  0 0 1 0  1 1 0 1\A'
+    '1 0 1 0 1 0 1 0  1 1 0 1  0 1 0 0\A'
+    '0 1 0 0 1 1 0 1  0 0 1 1  0 1 1 0\A'
+    '1 0 1 1 0 0 1 0  1 1 0 0  1 0 1 0\A'
+    '0 1 1 0 1 0 0 1  0 1 1 0  0 1 0 1\A'
+    '1 0 0 1 1 0 1 0  1 0 0 1  1 0 0 1';
+  white-space: pre;
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+  line-height: 2.6;
+  letter-spacing: 0.25em;
+  color: #1b5e20;
+  opacity: 0.18;
+  top: 0; left: 0; right: 0;
+  animation: hash-fall 32s linear infinite;
+}
+
+@keyframes hash-fall {
+  from { transform: translateY(-65%); }
+  to   { transform: translateY(0); }
+}
+
+/* ── Árboles: hojas y semillas cayendo ────────────────────────── */
+
+.theme-arboles::before {
+  content:
+    '◆    ◇       ◆   ◇    ◆   ◇\A'
+    '   ◇    ◆       ◇    ◆     \A'
+    '◆       ◆   ◇      ◆    ◇  \A'
+    '   ◆  ◇    ◆      ◇   ◆    \A'
+    '◇    ◆       ◇  ◆    ◇   ◆ \A'
+    '   ◆    ◇       ◆     ◇    \A'
+    '◆       ◇   ◆    ◇  ◆      ';
+  white-space: pre;
+  font-size: 1.3rem;
+  line-height: 4;
+  letter-spacing: 0.4em;
+  color: #6a8a20;
+  opacity: 0.25;
+  top: -35%;
+  left: 0; right: 0;
+  animation: leaves-fall 18s linear infinite;
+}
+
+.theme-arboles::after {
+  content:
+    '  ◇    ◆       ◇   ◆    \A'
+    '◆    ◇    ◆       ◇    ◆ \A'
+    '   ◆       ◇  ◆      ◇   \A'
+    '◇    ◆  ◇    ◆      ◆    \A'
+    '   ◇    ◆       ◇  ◆   ◇ \A'
+    '◆       ◇   ◆    ◇      ◆\A'
+    '   ◆  ◇    ◆       ◇     ';
+  white-space: pre;
+  font-size: 1rem;
+  line-height: 4;
+  letter-spacing: 0.4em;
+  color: #b35c00;
+  opacity: 0.18;
+  top: -70%;
+  left: 0; right: 0;
+  animation: leaves-fall 24s linear infinite;
+  animation-delay: -10s;
+}
+
+@keyframes leaves-fall {
+  from { transform: translateY(0)    rotate(2deg); }
+  to   { transform: translateY(145%) rotate(-2deg); }
+}
+
+
+/* ── Grafos: constelación de nodos ────────────────────────────── */
+
+.theme-grafos::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: rgba(26, 35, 126, 0.7);
+  top: 4%; left: 4%;
+  box-shadow:
+    12vw  18vh 6px 2px rgba(26, 35, 126, 0.45),
+    26vw  52vh 8px 3px rgba(26, 35, 126, 0.38),
+    42vw   8vh 6px 2px rgba(26, 35, 126, 0.5),
+    56vw  68vh 8px 2px rgba(26, 35, 126, 0.4),
+    70vw  28vh 6px 3px rgba(26, 35, 126, 0.35),
+    84vw  72vh 8px 2px rgba(26, 35, 126, 0.45),
+    94vw  14vh 6px 2px rgba(26, 35, 126, 0.38),
+    18vw  80vh 8px 3px rgba(26, 35, 126, 0.3),
+    36vw  38vh 6px 2px rgba(26, 35, 126, 0.55),
+    52vw  90vh 8px 2px rgba(26, 35, 126, 0.35),
+    66vw  48vh 6px 3px rgba(26, 35, 126, 0.42),
+    80vw  10vh 8px 2px rgba(26, 35, 126, 0.48);
+  animation: starfield 50s ease-in-out infinite alternate;
+}
+
+.theme-grafos::after {
+  content: '';
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: rgba(63, 81, 181, 0.6);
+  top: 25%; left: 18%;
+  box-shadow:
+    -15vw  22vh 6px 2px rgba(63, 81, 181, 0.38),
+     22vw -18vh 8px 2px rgba(63, 81, 181, 0.32),
+     38vw  35vh 6px 3px rgba(63, 81, 181, 0.45),
+    -28vw  48vh 8px 2px rgba(63, 81, 181, 0.28),
+     55vw -12vh 6px 2px rgba(63, 81, 181, 0.4),
+    -42vw -25vh 8px 2px rgba(63, 81, 181, 0.32),
+     68vw  28vh 6px 3px rgba(63, 81, 181, 0.38);
+  animation: starfield 38s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes starfield {
+  from { transform: translate(0,     0); opacity: 0.9; }
+  40%  { opacity: 0.5; }
+  70%  { opacity: 1; }
+  to   { transform: translate(-28px, -18px); opacity: 0.7; }
+}
+
+/* ── Voraces: piezas de ajedrez a la deriva ───────────────────── */
+
+.theme-voraces::before {
+  content: '♟  ♛  ♜  ♝  ♞';
+  white-space: nowrap;
+  font-size: 5rem;
+  line-height: 1;
+  letter-spacing: 2rem;
+  color: #c62828;
+  opacity: 0.13;
+  top: 6%; left: 2%;
+  animation: chess-drift 42s ease-in-out infinite alternate;
+}
+
+.theme-voraces::after {
+  content: '♚  ♖  ♗  ♘  ♙';
+  white-space: nowrap;
+  font-size: 4rem;
+  line-height: 1;
+  letter-spacing: 1.8rem;
+  color: #c62828;
+  opacity: 0.10;
+  bottom: 10%; right: 2%;
+  animation: chess-drift 32s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes chess-drift {
+  from { transform: translate(0,    0)    rotate(-5deg); }
+  to   { transform: translate(22px, -14px) rotate(5deg); }
+}
+
+/* ── P. Dinámica: cuadrícula + barrido diagonal ───────────────── */
+
+.theme-dinamica::before {
+  content: '';
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0, 77, 64, 0.13) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 77, 64, 0.13) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.theme-dinamica::after {
+  content: '';
+  inset: 0;
+  background: linear-gradient(
+    128deg,
+    transparent              0%,
+    transparent             40%,
+    rgba(0, 150, 120, 0.18) 47%,
+    rgba(0, 210, 170, 0.28) 50%,
+    rgba(0, 150, 120, 0.18) 53%,
+    transparent             60%,
+    transparent            100%
+  );
+  background-size: 250% 250%;
+  animation: dp-sweep 9s ease-in-out infinite;
+}
+
+@keyframes dp-sweep {
+  0%   { background-position: 0%   0%; }
+  50%  { background-position: 100% 100%; }
+  100% { background-position: 0%   0%; }
 }

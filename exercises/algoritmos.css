@@ -75,6 +75,7 @@ body {
 .voraces  .back-link { color: var(--crimson); }
 .dinamica .back-link { color: var(--teal); }
 
+
 .ex-title {
   font-size: clamp(0.88rem, 2.5vw, 1.1rem);
   font-weight: 700;
