@@ -164,6 +164,33 @@ body {
   color: #2e7d32;
 }
 
+.table-dp td.cell-ask {
+  background: #fff9c4;
+  border: 2px solid #f9a825;
+  font-weight: 700;
+  outline: 3px solid #f9a825;
+  outline-offset: -2px;
+}
+
+.table-dp td.dep-skip {
+  background: #e3f2fd;
+  border-color: #1565c0;
+  color: #1565c0;
+  font-weight: 700;
+}
+
+.table-dp td.dep-use {
+  background: #e8f5e9;
+  border-color: #2e7d32;
+  color: #2e7d32;
+  font-weight: 700;
+}
+
+.table-dp td.cell-inf {
+  color: #9e9e9e;
+  font-style: italic;
+}
+
 /* ─── Greedy steps (.greedy-step) ───────────────────────────────────────────── */
 
 .greedy-step {
