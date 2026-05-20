@@ -191,6 +191,21 @@ body {
   font-style: italic;
 }
 
+/* Celda en la que está el cursor de reconstrucción */
+.table-dp td.cell-cursor {
+  background: #fff9c4;
+  outline: 3px solid #f9a825;
+  outline-offset: -2px;
+  font-weight: 700;
+}
+
+/* Celda del camino ya decidido (decisión "sí") */
+.table-dp td.cell-path-yes {
+  background: #c8e6c9;
+  color: #1b5e20;
+  font-weight: 700;
+}
+
 /* ─── Greedy steps (.greedy-step) ───────────────────────────────────────────── */
 
 .greedy-step {

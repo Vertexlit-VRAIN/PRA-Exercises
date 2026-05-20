@@ -1,0 +1,670 @@
+<!doctype html>
+<html lang="es" class="dinamica">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mochila 0/1 — Tabla DP | PRA</title>
+  <link rel="stylesheet" href="algoritmos.css">
+  <style>
+    /* ── Layout ───────────────────────────────────────────────────────── */
+    .controls-bar {
+      display: flex; align-items: center; gap: 0.75rem;
+      flex-wrap: wrap; margin-bottom: 1.25rem;
+    }
+    .diff-btns { display: flex; gap: 0.4rem; }
+    .diff-btn {
+      padding: 0.4rem 0.9rem; border-radius: 100px;
+      border: 2px solid var(--teal-lt); background: #fff;
+      font-family: var(--font-ui); font-size: 0.8rem; font-weight: 700;
+      cursor: pointer; color: var(--teal);
+      transition: background var(--transition), color var(--transition);
+    }
+    .diff-btn.is-active,
+    .diff-btn:hover { background: var(--teal); color: #fff; border-color: var(--teal); }
+
+    .nueva-btn {
+      margin-left: auto; padding: 0.45rem 1.1rem; border-radius: 100px;
+      border: none; background: var(--teal); color: #fff;
+      font-family: var(--font-ui); font-size: 0.82rem; font-weight: 700;
+      cursor: pointer; transition: background var(--transition);
+    }
+    .nueva-btn:hover { background: var(--teal-dark); }
+
+    .dp-layout {
+      display: grid; grid-template-columns: 270px 1fr;
+      gap: 1.25rem; align-items: start;
+    }
+    @media (max-width: 780px) { .dp-layout { grid-template-columns: 1fr; } }
+
+    /* panel izquierdo */
+    .score-row { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 1rem; }
+    .score-num { font-size: 1.6rem; font-weight: 700; color: var(--teal); line-height: 1; }
+    .score-label { font-size: 0.78rem; color: #777; }
+
+    .problem-box {
+      background: var(--teal-bg); border-radius: 8px;
+      padding: 0.75rem 1rem; margin-bottom: 1rem;
+      font-size: 0.88rem; line-height: 1.6;
+    }
+    .problem-box strong { color: var(--teal-dark); }
+
+    /* tabla de items dentro del problem-box */
+    .items-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 0.82rem; margin: 0.4rem 0 0.5rem;
+    }
+    .items-table th {
+      background: rgba(0,77,64,0.12); color: var(--teal-dark);
+      padding: 0.2rem 0.5rem; text-align: center; font-weight: 700;
+    }
+    .items-table td {
+      padding: 0.18rem 0.5rem; text-align: center;
+      border-top: 1px solid rgba(0,77,64,0.1);
+    }
+
+    .rec-box {
+      background: #fff; border: 1.5px solid var(--teal-lt);
+      border-radius: 8px; padding: 0.75rem 1rem;
+      font-size: 0.82rem; line-height: 1.6; color: #333;
+      margin-bottom: 1rem; min-height: 4rem;
+    }
+    .rec-box .rec-label {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--teal);
+      display: block; margin-bottom: 0.3rem;
+    }
+    .rec-formula { font-family: monospace; font-size: 0.88rem; }
+
+    .feedback-box {
+      border-radius: 8px; padding: 0.75rem 1rem;
+      font-size: 0.85rem; line-height: 1.55; display: none;
+    }
+    .feedback-box.ok  { background: #f1fbf1; border: 1.5px solid #4caf50; color: #2e7d32; }
+    .feedback-box.bad { background: #fff5f5; border: 1.5px solid #e53935; color: #c62828; }
+
+    /* panel derecho */
+    .table-scroll { overflow-x: auto; margin-bottom: 1.25rem; }
+
+    .question-area { margin-top: 0.75rem; }
+    .question-text { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.75rem; color: #222; }
+    .choices { display: flex; flex-direction: column; gap: 0; }
+
+    .next-btn {
+      margin-top: 0.75rem; padding: 0.5rem 1.2rem; border-radius: 100px;
+      border: none; background: var(--teal); color: #fff;
+      font-family: var(--font-ui); font-size: 0.85rem; font-weight: 700;
+      cursor: pointer; display: none;
+    }
+    .next-btn:hover { background: var(--teal-dark); }
+
+    .done-banner {
+      text-align: center; padding: 2.5rem 1rem;
+      background: #f1fbf1; border-radius: var(--radius);
+      border: 2px solid #c8e6c9; margin-top: 1rem;
+    }
+    .done-banner .done-title { font-size: 1.3rem; font-weight: 700; color: #2e7d32; margin-bottom: 0.5rem; }
+    .done-banner .done-value { font-size: 1rem; color: #333; margin-bottom: 1rem; }
+    .done-banner .done-value strong { color: var(--teal); }
+    .done-banner .done-again {
+      padding: 0.5rem 1.4rem; border-radius: 100px; border: none;
+      background: var(--teal); color: #fff;
+      font-family: var(--font-ui); font-size: 0.88rem; font-weight: 700; cursor: pointer;
+    }
+    .done-banner .done-again:hover { background: var(--teal-dark); }
+
+    .progress-strip { font-size: 0.78rem; color: #888; margin-bottom: 0.5rem; }
+
+    /* ecuación a trozos */
+    .rec-def-panel {
+      display: flex; align-items: center; gap: 1rem;
+      background: #fff; border-radius: var(--radius);
+      padding: 0.9rem 1.4rem; margin-bottom: 1.25rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      font-size: 0.86rem; overflow-x: auto;
+    }
+    .rec-def-lhs {
+      white-space: nowrap; font-weight: 700; color: var(--teal-dark);
+      font-family: monospace; font-size: 0.9rem;
+    }
+    .rec-def-cases { border-left: 2.5px solid var(--teal); padding-left: 0.9rem; }
+    .rec-def-row {
+      display: flex; gap: 1.25rem; padding: 0.18rem 0.5rem;
+      border-radius: 6px; transition: background 0.2s, border 0.2s;
+      border: 1px solid transparent;
+    }
+    .rec-def-val { min-width: 26ch; font-family: monospace; color: #222; }
+    .rec-def-cond {
+      font-family: var(--font-ui); font-size: 0.8rem;
+      color: #777; align-self: center; white-space: nowrap;
+    }
+    .rec-def-row.is-active { background: #fff9c4; border-color: #f9a825; }
+    .rec-def-row.is-active .rec-def-val  { color: #7a4800; font-weight: 700; }
+    .rec-def-row.is-active .rec-def-cond { color: #7a4800; }
+
+    /* flashes tabla */
+    @keyframes flash-cell-ok  { 0% { background:#a5d6a7; } 100% { background:#e8f5e9; } }
+    @keyframes flash-cell-bad { 0% { background:#ef9a9a; } 100% { background:#fff; } }
+    .table-dp td.flash-ok-cell  { animation: flash-cell-ok  0.6s ease forwards; }
+    .table-dp td.flash-bad-cell { animation: flash-cell-bad 0.6s ease forwards; }
+  </style>
+</head>
+<body>
+
+<header class="ex-header">
+  <a class="back-link" href="../index.html#dinamica">← Volver a P. Dinámica</a>
+  <h1 class="ex-title">Mochila 0/1 — Tabla DP</h1>
+  <p class="ex-desc">
+    Rellena la tabla V[i,j] celda a celda aplicando la recurrencia de programación dinámica.
+    Las celdas en <span style="color:#f9a825;font-weight:700">amarillo</span> son las que debes calcular;
+    ambas dependencias vienen de la <span style="color:#1565c0;font-weight:700">fila anterior</span>:
+    <span style="color:#1565c0;font-weight:700">azul</span> = no coger,
+    <span style="color:#2e7d32;font-weight:700">verde</span> = coger.
+  </p>
+</header>
+
+<main class="ex-main">
+
+  <div class="controls-bar">
+    <div class="diff-btns">
+      <button class="diff-btn is-active" data-diff="easy">3 objetos</button>
+      <button class="diff-btn" data-diff="medium">4 objetos</button>
+      <button class="diff-btn" data-diff="hard">5 objetos</button>
+    </div>
+    <button class="nueva-btn" id="btn-nueva">Nueva ronda</button>
+  </div>
+
+  <!-- Ecuación a trozos -->
+  <div class="rec-def-panel">
+    <span class="rec-def-lhs">V[i, j] =</span>
+    <div class="rec-def-cases">
+      <div class="rec-def-row" id="rec-case-base">
+        <span class="rec-def-val">0</span>
+        <span class="rec-def-cond">si j = 0</span>
+      </div>
+      <div class="rec-def-row" id="rec-case-zero">
+        <span class="rec-def-val">0</span>
+        <span class="rec-def-cond">si i = 1 y w<sub>i</sub> &gt; j</span>
+      </div>
+      <div class="rec-def-row" id="rec-case-row1">
+        <span class="rec-def-val">v<sub>1</sub></span>
+        <span class="rec-def-cond">si i = 1 y w<sub>i</sub> ≤ j</span>
+      </div>
+      <div class="rec-def-row" id="rec-case-skip">
+        <span class="rec-def-val">V[i−1, j]</span>
+        <span class="rec-def-cond">si w<sub>i</sub> &gt; j &nbsp;(i &gt; 1)</span>
+      </div>
+      <div class="rec-def-row" id="rec-case-max">
+        <span class="rec-def-val">max( V[i−1, j] ,&ensp;v<sub>i</sub> + V[i−1, j − w<sub>i</sub>] )</span>
+        <span class="rec-def-cond">si w<sub>i</sub> ≤ j &nbsp;(i &gt; 1)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="dp-layout">
+
+    <!-- Panel izquierdo -->
+    <aside class="q-panel">
+      <span class="round-badge">Ronda <span id="round-num">1</span></span>
+
+      <div class="score-row">
+        <span class="score-num"><span id="score-ok">0</span>/<span id="score-total">0</span></span>
+        <span class="score-label">celdas correctas</span>
+      </div>
+
+      <div class="problem-box">
+        <strong>W</strong> = <span id="W-display"></span>
+        <table class="items-table" id="items-table">
+          <thead>
+            <tr><th>obj</th><th>peso</th><th>valor</th></tr>
+          </thead>
+          <tbody id="items-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="rec-box">
+        <span class="rec-label">Recurrencia activa</span>
+        <div id="rec-text" class="rec-formula">—</div>
+      </div>
+
+      <div class="progress-strip" id="progress-strip"></div>
+
+      <div class="feedback-box" id="feedback-box"></div>
+    </aside>
+
+    <!-- Panel derecho -->
+    <section class="table-panel">
+      <div class="table-scroll" id="dp-table-wrap"></div>
+
+      <div class="question-area" id="question-area" hidden>
+        <p class="question-text" id="question-text"></p>
+        <div class="choices" id="choices"></div>
+        <button class="next-btn" id="btn-next">Siguiente →</button>
+      </div>
+
+      <div id="done-banner" hidden>
+        <div class="done-banner">
+          <div class="done-title">¡Tabla completada!</div>
+          <div class="done-value">
+            Valor óptimo: V[<span id="done-n"></span>,<span id="done-w"></span>] = <strong id="done-val"></strong>
+          </div>
+          <button class="done-again" id="btn-done-again">Nueva ronda</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Configuración por dificultad ─────────────────────────────────── */
+  var DIFF_CONFIG = {
+    easy: {
+      sets: [
+        { items: [{w:6,v:8},{w:5,v:5},{w:5,v:5}],   wRange: [8, 11] },
+        { items: [{w:2,v:3},{w:3,v:5},{w:4,v:6}],    wRange: [5,  8] },
+        { items: [{w:3,v:4},{w:4,v:6},{w:5,v:8}],    wRange: [7, 10] }
+      ]
+    },
+    medium: {
+      sets: [
+        { items: [{w:1,v:1},{w:2,v:6},{w:5,v:18},{w:6,v:22}],  wRange: [8, 12] },
+        { items: [{w:2,v:3},{w:3,v:5},{w:4,v:8},{w:5,v:10}],   wRange: [9, 13] },
+        { items: [{w:1,v:2},{w:3,v:6},{w:4,v:9},{w:6,v:13}],   wRange: [8, 12] }
+      ]
+    },
+    hard: {
+      sets: [
+        { items: [{w:1,v:1},{w:2,v:6},{w:5,v:18},{w:6,v:22},{w:7,v:28}],  wRange: [10, 15] },
+        { items: [{w:2,v:3},{w:3,v:5},{w:4,v:8},{w:5,v:10},{w:6,v:15}],   wRange: [12, 16] },
+        { items: [{w:1,v:2},{w:2,v:5},{w:3,v:8},{w:5,v:12},{w:7,v:18}],   wRange: [11, 15] }
+      ]
+    }
+  };
+
+  /* ── Estado ────────────────────────────────────────────────────────── */
+  var currentDiff = 'easy';
+  var items = [];      // [{w, v}], 0-indexed
+  var W = 0;
+  var refTable = [];   // refTable[i][j], 1-indexed i
+  var fillOrder = [];
+  var fillPos = 0;
+  var scoreOk = 0;
+  var scoreTotal = 0;
+  var roundNum = 1;
+  var waitingNext = false;
+
+  /* ── Helpers ───────────────────────────────────────────────────────── */
+  function sub(n) {
+    var d = ['₀','₁','₂','₃','₄','₅','₆','₇','₈','₉'];
+    return String(n).split('').map(function(c){ return d[+c]||c; }).join('');
+  }
+
+  function shuffle(arr) {
+    var a = arr.slice();
+    for (var i = a.length-1; i > 0; i--) {
+      var j = Math.floor(Math.random()*(i+1)), t = a[i]; a[i]=a[j]; a[j]=t;
+    }
+    return a;
+  }
+
+  function randInt(min, max) { return min + Math.floor(Math.random()*(max-min+1)); }
+
+  /* ── Cálculo de la tabla de referencia ────────────────────────────── */
+  function computeTable() {
+    var N = items.length;
+    refTable = [];
+    for (var i = 0; i <= N; i++) refTable.push(new Array(W+1).fill(0));
+
+    for (var i = 1; i <= N; i++) {
+      var wi = items[i-1].w, vi = items[i-1].v;
+      refTable[i][0] = 0;
+      for (var j = 1; j <= W; j++) {
+        if (i === 1) {
+          refTable[i][j] = (wi > j) ? 0 : vi;
+        } else {
+          if (wi > j) {
+            refTable[i][j] = refTable[i-1][j];
+          } else {
+            var skip = refTable[i-1][j];
+            var take = vi + refTable[i-1][j-wi];
+            refTable[i][j] = (take > skip) ? take : skip;
+          }
+        }
+      }
+    }
+  }
+
+  /* ── Orden de relleno ─────────────────────────────────────────────── */
+  function buildFillOrder() {
+    fillOrder = [];
+    var N = items.length;
+    for (var i = 1; i <= N; i++)
+      for (var j = 1; j <= W; j++)
+        fillOrder.push({i:i, j:j});
+  }
+
+  /* ── Resalta la fila activa en la ecuación a trozos ──────────────── */
+  function highlightCase(i, j) {
+    var wi = items[i-1].w;
+    var caseId;
+    if (j === 0)                 caseId = 'rec-case-base';
+    else if (i === 1 && wi > j)  caseId = 'rec-case-zero';
+    else if (i === 1)            caseId = 'rec-case-row1';
+    else if (wi > j)             caseId = 'rec-case-skip';
+    else                         caseId = 'rec-case-max';
+
+    document.querySelectorAll('.rec-def-row').forEach(function(el) {
+      el.classList.toggle('is-active', el.id === caseId);
+    });
+  }
+
+  function clearCaseHighlight() {
+    document.querySelectorAll('.rec-def-row').forEach(function(el) {
+      el.classList.remove('is-active');
+    });
+  }
+
+  /* ── Fórmula sin valores (panel izquierdo) ───────────────────────── */
+  function getRecFormula(i, j) {
+    var wi = items[i-1].w, vi = items[i-1].v;
+    var si = sub(i);
+
+    if (i === 1) {
+      if (wi > j) return 'V[1,' + j + '] = 0&nbsp;&nbsp;(w' + si + '=' + wi + ' &gt; ' + j + ')';
+      return 'V[1,' + j + '] = v' + si + ' = ' + vi;
+    }
+    if (wi > j) {
+      return 'V[' + i + ',' + j + '] = V[' + (i-1) + ',' + j + ']'
+        + '&nbsp;&nbsp;(w' + si + '=' + wi + ' &gt; ' + j + ')';
+    }
+    return 'V[' + i + ',' + j + '] = max( V[' + (i-1) + ',' + j + '] ,&nbsp;'
+      + 'v' + si + ' + V[' + (i-1) + ',' + (j-wi) + '] )';
+  }
+
+  /* ── Fórmula expandida con resultado (feedback) ──────────────────── */
+  function getRecExpanded(i, j) {
+    var wi = items[i-1].w, vi = items[i-1].v;
+    var si = sub(i);
+
+    if (i === 1) {
+      if (wi > j) return 'V[1,' + j + '] = 0&nbsp;&nbsp;(w' + si + '=' + wi + ' &gt; ' + j + ')';
+      return 'V[1,' + j + '] = v' + si + ' = <strong>' + vi + '</strong>';
+    }
+    if (wi > j) {
+      return 'V[' + i + ',' + j + '] = V[' + (i-1) + ',' + j + '] = <strong>'
+        + refTable[i-1][j] + '</strong>&nbsp;&nbsp;(w' + si + '=' + wi + ' &gt; ' + j + ')';
+    }
+    var skipVal = refTable[i-1][j];
+    var takeVal = vi + refTable[i-1][j-wi];
+    return 'V[' + i + ',' + j + '] = max( V[' + (i-1) + ',' + j + '] , v' + si
+      + ' + V[' + (i-1) + ',' + (j-wi) + '] )'
+      + '<br>= max( ' + skipVal + ' , ' + vi + '+' + refTable[i-1][j-wi] + ' )'
+      + ' = max( ' + skipVal + ' , ' + takeVal + ' )'
+      + ' = <strong>' + refTable[i][j] + '</strong>';
+  }
+
+  /* ── Dependencias ─────────────────────────────────────────────────── */
+  function getDeps(i, j) {
+    var wi = items[i-1].w;
+    var deps = [];
+    if (i > 1) deps.push({i: i-1, j: j,    type: 'skip'});  // no coger → fila anterior
+    if (wi <= j) deps.push({i: i-1, j: j-wi, type: 'use'});  // coger    → fila anterior
+    return deps;
+  }
+
+  /* ── Genera 4 opciones ────────────────────────────────────────────── */
+  function getOptions(i, j) {
+    var correct = refTable[i][j];
+    var wi = items[i-1].w, vi = items[i-1].v;
+    var pool = [correct];
+
+    if (i > 1) pool.push(refTable[i-1][j]);
+    if (wi <= j) pool.push(vi + refTable[i-1][j-wi]);
+    pool.push(correct + 1);
+    if (correct > 0) pool.push(correct - 1);
+    pool.push(vi);
+
+    var seen = new Set([String(correct)]);
+    var distractors = [];
+    pool.forEach(function(v) {
+      var k = String(v);
+      if (v !== correct && !seen.has(k) && v >= 0) { seen.add(k); distractors.push(v); }
+    });
+    var extra = 2;
+    while (distractors.length < 3) {
+      var c = correct + extra, ck = String(c);
+      if (!seen.has(ck)) { seen.add(ck); distractors.push(c); }
+      extra++;
+    }
+    return shuffle([correct].concat(distractors.slice(0,3)));
+  }
+
+  /* ── Render tabla ─────────────────────────────────────────────────── */
+  function renderTable() {
+    var N = items.length;
+    var html = '<table class="table-dp"><thead><tr><th>i \\ j</th>';
+    for (var j = 0; j <= W; j++) html += '<th>' + j + '</th>';
+    html += '</tr></thead><tbody>';
+
+    for (var i = 1; i <= N; i++) {
+      html += '<tr><th style="font-size:0.78rem;white-space:nowrap">'
+        + 'obj' + sub(i) + '<br><span style="font-weight:400;color:#555">'
+        + 'w=' + items[i-1].w + ', v=' + items[i-1].v + '</span></th>';
+
+      html += '<td id="c-' + i + '-0" class="done">0</td>';
+
+      for (var j = 1; j <= W; j++) {
+        var cellIdx = (i-1)*W + (j-1);
+        var id = 'c-' + i + '-' + j;
+        if (cellIdx < fillPos) {
+          html += '<td id="' + id + '" class="done">' + refTable[i][j] + '</td>';
+        } else if (cellIdx === fillPos) {
+          html += '<td id="' + id + '" class="cell-ask">?</td>';
+        } else {
+          html += '<td id="' + id + '"></td>';
+        }
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    document.getElementById('dp-table-wrap').innerHTML = html;
+  }
+
+  /* ── Dependencias en DOM ──────────────────────────────────────────── */
+  function applyDeps(i, j) {
+    getDeps(i, j).forEach(function(dep) {
+      var el = document.getElementById('c-' + dep.i + '-' + dep.j);
+      if (el) el.classList.add('dep-' + dep.type);
+    });
+  }
+
+  function clearDeps() {
+    document.querySelectorAll('.dep-skip, .dep-use').forEach(function(el) {
+      el.classList.remove('dep-skip', 'dep-use');
+    });
+  }
+
+  /* ── Muestra celda activa ─────────────────────────────────────────── */
+  function showCell() {
+    if (fillPos >= fillOrder.length) { showDone(); return; }
+    var cell = fillOrder[fillPos];
+    var i = cell.i, j = cell.j;
+
+    document.getElementById('rec-text').innerHTML = getRecFormula(i, j);
+    highlightCase(i, j);
+    clearDeps();
+    applyDeps(i, j);
+
+    document.getElementById('progress-strip').textContent =
+      'Celda ' + (fillPos+1) + ' de ' + fillOrder.length;
+
+    var qa = document.getElementById('question-area');
+    qa.hidden = false;
+    document.getElementById('question-text').textContent =
+      '¿Cuál es el valor de V[' + i + ',' + j + ']?';
+
+    var opts = getOptions(i, j);
+    var correct = refTable[i][j];
+    var choicesEl = document.getElementById('choices');
+    choicesEl.innerHTML = '';
+    opts.forEach(function(v) {
+      var btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.textContent = String(v);
+      btn.addEventListener('click', function() { handleChoice(v, correct, i, j); });
+      choicesEl.appendChild(btn);
+    });
+
+    document.getElementById('btn-next').style.display = 'none';
+    waitingNext = false;
+    var fb = document.getElementById('feedback-box');
+    fb.style.display = 'none';
+    fb.className = 'feedback-box';
+  }
+
+  /* ── Maneja elección ─────────────────────────────────────────────── */
+  function handleChoice(chosen, correct, i, j) {
+    if (waitingNext) return;
+    var cellEl = document.getElementById('c-' + i + '-' + j);
+    var fb = document.getElementById('feedback-box');
+    var btns = document.querySelectorAll('#choices .choice-btn');
+
+    scoreTotal++;
+    document.getElementById('score-total').textContent = scoreTotal;
+
+    if (chosen === correct) {
+      scoreOk++;
+      document.getElementById('score-ok').textContent = scoreOk;
+
+      btns.forEach(function(b) {
+        if (Number(b.textContent) === correct) b.classList.add('is-correct');
+        b.disabled = true;
+      });
+
+      if (cellEl) {
+        cellEl.textContent = correct;
+        cellEl.className = 'done flash-ok-cell';
+      }
+
+      fb.className = 'feedback-box ok';
+      fb.innerHTML = '¡Correcto! &nbsp;<small>' + getRecExpanded(i, j) + '</small>';
+      fb.style.display = 'block';
+
+      fillPos++;
+      setTimeout(function() { clearDeps(); renderTable(); showCell(); }, 1000);
+
+    } else {
+      btns.forEach(function(b) {
+        if (Number(b.textContent) === chosen)   b.classList.add('is-wrong');
+        if (Number(b.textContent) === correct)  b.classList.add('is-correct');
+        b.disabled = true;
+      });
+
+      if (cellEl) {
+        cellEl.classList.add('flash-bad-cell');
+        setTimeout(function() { cellEl.classList.remove('flash-bad-cell'); }, 650);
+      }
+
+      fb.className = 'feedback-box bad';
+      fb.innerHTML = 'No exactamente. La respuesta correcta es <strong>' + correct + '</strong>.<br>'
+        + '<small>' + getRecExpanded(i, j) + '</small>';
+      fb.style.display = 'block';
+
+      waitingNext = true;
+      document.getElementById('btn-next').style.display = 'inline-block';
+    }
+  }
+
+  /* ── Avance tras error ────────────────────────────────────────────── */
+  function advanceAfterError() {
+    var cell = fillOrder[fillPos];
+    var cellEl = document.getElementById('c-' + cell.i + '-' + cell.j);
+    if (cellEl) { cellEl.textContent = refTable[cell.i][cell.j]; cellEl.className = 'done'; }
+    fillPos++;
+    clearDeps();
+    renderTable();
+    showCell();
+  }
+
+  /* ── Banner fin de ronda ──────────────────────────────────────────── */
+  function showDone() {
+    document.getElementById('question-area').hidden = true;
+    document.getElementById('rec-text').innerHTML = '—';
+    document.getElementById('progress-strip').textContent = '';
+    document.getElementById('feedback-box').style.display = 'none';
+    clearCaseHighlight();
+
+    var N = items.length;
+    document.getElementById('done-n').textContent = N;
+    document.getElementById('done-w').textContent = W;
+    document.getElementById('done-val').textContent = refTable[N][W];
+    document.getElementById('done-banner').hidden = false;
+  }
+
+  /* ── Render tabla de items en panel izquierdo ─────────────────────── */
+  function renderItemsTable() {
+    var tbody = document.getElementById('items-tbody');
+    tbody.innerHTML = '';
+    items.forEach(function(it, idx) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + (idx+1) + '</td><td>' + it.w + '</td><td>' + it.v + '</td>';
+      tbody.appendChild(tr);
+    });
+    document.getElementById('W-display').textContent = W;
+  }
+
+  /* ── Genera nueva ronda ───────────────────────────────────────────── */
+  function generate() {
+    var sets = DIFF_CONFIG[currentDiff].sets;
+    var s = sets[Math.floor(Math.random()*sets.length)];
+    items = s.items.slice();
+    W = randInt(s.wRange[0], s.wRange[1]);
+
+    computeTable();
+    buildFillOrder();
+    fillPos = 0;
+    waitingNext = false;
+
+    document.getElementById('done-banner').hidden = true;
+    document.getElementById('question-area').hidden = true;
+    document.getElementById('feedback-box').style.display = 'none';
+    document.getElementById('btn-next').style.display = 'none';
+    document.getElementById('round-num').textContent = roundNum;
+    document.getElementById('rec-text').innerHTML = '—';
+    document.getElementById('progress-strip').textContent = '';
+    clearCaseHighlight();
+
+    renderItemsTable();
+    renderTable();
+    showCell();
+  }
+
+  /* ── Eventos ──────────────────────────────────────────────────────── */
+  document.querySelectorAll('.diff-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      currentDiff = btn.dataset.diff;
+      document.querySelectorAll('.diff-btn').forEach(function(b) {
+        b.classList.toggle('is-active', b === btn);
+      });
+      scoreOk = 0; scoreTotal = 0; roundNum = 1;
+      document.getElementById('score-ok').textContent = '0';
+      document.getElementById('score-total').textContent = '0';
+      generate();
+    });
+  });
+
+  document.getElementById('btn-nueva').addEventListener('click', function() { roundNum++; generate(); });
+  document.getElementById('btn-next').addEventListener('click', advanceAfterError);
+  document.getElementById('btn-done-again').addEventListener('click', function() { roundNum++; generate(); });
+
+  /* ── Arranque ─────────────────────────────────────────────────────── */
+  generate();
+
+}());
+</script>
+
+</body>
+</html>

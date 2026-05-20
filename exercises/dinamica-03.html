@@ -1,0 +1,687 @@
+<!doctype html>
+<html lang="es" class="dinamica">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reconstrucción de la Solución DP | PRA</title>
+  <link rel="stylesheet" href="algoritmos.css">
+  <style>
+    /* ── Layout ───────────────────────────────────────────────────────── */
+    .controls-bar {
+      display: flex; align-items: center; gap: 0.75rem;
+      flex-wrap: wrap; margin-bottom: 1.25rem;
+    }
+    .type-btns { display: flex; gap: 0.4rem; }
+    .type-btn {
+      padding: 0.4rem 1rem; border-radius: 100px;
+      border: 2px solid var(--teal-lt); background: #fff;
+      font-family: var(--font-ui); font-size: 0.8rem; font-weight: 700;
+      cursor: pointer; color: var(--teal);
+      transition: background var(--transition), color var(--transition);
+    }
+    .type-btn.is-active,
+    .type-btn:hover { background: var(--teal); color: #fff; border-color: var(--teal); }
+
+    .nueva-btn {
+      margin-left: auto; padding: 0.45rem 1.1rem; border-radius: 100px;
+      border: none; background: var(--teal); color: #fff;
+      font-family: var(--font-ui); font-size: 0.82rem; font-weight: 700;
+      cursor: pointer; transition: background var(--transition);
+    }
+    .nueva-btn:hover { background: var(--teal-dark); }
+
+    .dp-layout {
+      display: grid; grid-template-columns: 280px 1fr;
+      gap: 1.25rem; align-items: start;
+    }
+    @media (max-width: 780px) { .dp-layout { grid-template-columns: 1fr; } }
+
+    /* panel izquierdo */
+    .score-row { display: flex; align-items: baseline; gap: 0.5rem; margin-bottom: 1rem; }
+    .score-num { font-size: 1.6rem; font-weight: 700; color: var(--teal); line-height: 1; }
+    .score-label { font-size: 0.78rem; color: #777; }
+
+    .problem-box {
+      background: var(--teal-bg); border-radius: 8px;
+      padding: 0.75rem 1rem; margin-bottom: 1rem;
+      font-size: 0.88rem; line-height: 1.7;
+    }
+    .problem-box strong { color: var(--teal-dark); }
+
+    .items-table {
+      width: 100%; border-collapse: collapse; font-size: 0.82rem; margin: 0.4rem 0 0.3rem;
+    }
+    .items-table th {
+      background: rgba(0,77,64,0.12); color: var(--teal-dark);
+      padding: 0.2rem 0.5rem; text-align: center; font-weight: 700;
+    }
+    .items-table td {
+      padding: 0.18rem 0.5rem; text-align: center;
+      border-top: 1px solid rgba(0,77,64,0.1);
+    }
+
+    /* caja de paso actual */
+    .step-box {
+      background: #fff; border: 1.5px solid var(--teal-lt);
+      border-radius: 8px; padding: 0.75rem 1rem;
+      font-size: 0.84rem; line-height: 1.6; color: #333;
+      margin-bottom: 1rem; min-height: 3.5rem;
+    }
+    .step-box .step-label {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--teal);
+      display: block; margin-bottom: 0.3rem;
+    }
+    .step-formula { font-family: monospace; font-size: 0.86rem; }
+
+    /* vector solución */
+    .sol-section { margin-bottom: 1rem; }
+    .sol-title {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--teal);
+      margin-bottom: 0.4rem; display: block;
+    }
+    .sol-vector { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: flex-end; }
+    .sol-cell { display: flex; flex-direction: column; align-items: center; gap: 0.15rem; }
+    .sol-val {
+      width: 2.1rem; height: 2.1rem;
+      border: 1.5px solid var(--teal-lt); border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.9rem; background: #fff;
+      transition: background 0.35s, color 0.35s, border-color 0.35s;
+    }
+    .sol-val.active { background: var(--teal-lt); color: var(--teal-dark); border-color: var(--teal); }
+    .sol-lbl { font-size: 0.7rem; color: #999; font-family: monospace; }
+
+    .feedback-box {
+      border-radius: 8px; padding: 0.75rem 1rem;
+      font-size: 0.84rem; line-height: 1.55; display: none;
+    }
+    .feedback-box.ok  { background: #f1fbf1; border: 1.5px solid #4caf50; color: #2e7d32; }
+    .feedback-box.bad { background: #fff5f5; border: 1.5px solid #e53935; color: #c62828; }
+
+    /* panel derecho */
+    .table-scroll { overflow-x: auto; margin-bottom: 1rem; }
+
+    .progress-strip { font-size: 0.78rem; color: #888; margin-bottom: 0.75rem; }
+
+    /* botones Sí / No */
+    .yn-row { display: flex; gap: 0.75rem; margin-top: 0.5rem; }
+    .yn-btn {
+      flex: 1; padding: 0.75rem 1rem; border-radius: var(--radius);
+      border: 2px solid; font-family: var(--font-ui);
+      font-size: 0.95rem; font-weight: 700; cursor: pointer;
+      transition: background var(--transition);
+    }
+    .yn-btn.yes-btn { border-color: #4caf50; color: #2e7d32; background: #f1fbf1; }
+    .yn-btn.no-btn  { border-color: #e53935; color: #c62828; background: #fff5f5; }
+    .yn-btn.yes-btn:hover { background: #c8e6c9; }
+    .yn-btn.no-btn:hover  { background: #ffcdd2; }
+    .yn-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .yn-btn.is-correct.yes-btn { background: #c8e6c9; border-color: #2e7d32; }
+    .yn-btn.is-correct.no-btn  { background: #ffcdd2; border-color: #c62828; }
+    .yn-btn.is-wrong   { opacity: 0.4; }
+
+    .next-btn {
+      margin-top: 0.75rem; padding: 0.5rem 1.2rem; border-radius: 100px;
+      border: none; background: var(--teal); color: #fff;
+      font-family: var(--font-ui); font-size: 0.85rem; font-weight: 700;
+      cursor: pointer; display: none;
+    }
+    .next-btn:hover { background: var(--teal-dark); }
+
+    .question-text {
+      font-size: 0.95rem; font-weight: 700; color: #222; margin-bottom: 0.3rem;
+    }
+    .check-text {
+      font-family: monospace; font-size: 0.86rem; color: #555; margin-bottom: 0.5rem;
+    }
+
+    .done-banner {
+      text-align: center; padding: 2.5rem 1rem;
+      background: #f1fbf1; border-radius: var(--radius);
+      border: 2px solid #c8e6c9; margin-top: 1rem;
+    }
+    .done-banner .done-title { font-size: 1.3rem; font-weight: 700; color: #2e7d32; margin-bottom: 0.5rem; }
+    .done-banner .done-value { font-size: 0.95rem; color: #333; margin-bottom: 0.4rem; }
+    .done-banner .done-value strong { color: var(--teal); font-family: monospace; }
+    .done-banner .done-again {
+      margin-top: 1rem; padding: 0.5rem 1.4rem; border-radius: 100px;
+      border: none; background: var(--teal); color: #fff;
+      font-family: var(--font-ui); font-size: 0.88rem; font-weight: 700; cursor: pointer;
+      display: inline-block;
+    }
+    .done-banner .done-again:hover { background: var(--teal-dark); }
+  </style>
+</head>
+<body>
+
+<header class="ex-header">
+  <a class="back-link" href="../index.html#dinamica">← Volver a P. Dinámica</a>
+  <h1 class="ex-title">Reconstrucción de la Solución — Deductiva</h1>
+  <p class="ex-desc">
+    La tabla está completamente rellena. Partiendo de la celda final, traza el camino hacia atrás
+    para descubrir qué monedas/objetos forman la solución óptima.
+    La celda <span style="color:#f9a825;font-weight:700">amarilla</span> es tu posición actual;
+    <span style="color:#1565c0;font-weight:700">azul</span> = no usar,
+    <span style="color:#2e7d32;font-weight:700">verde</span> = usar.
+  </p>
+</header>
+
+<main class="ex-main">
+
+  <div class="controls-bar">
+    <div class="type-btns">
+      <button class="type-btn is-active" data-type="coins">Cambio de Monedas</button>
+      <button class="type-btn" data-type="knapsack">Mochila 0/1</button>
+    </div>
+    <button class="nueva-btn" id="btn-nueva">Nueva ronda</button>
+  </div>
+
+  <div class="dp-layout">
+
+    <!-- Panel izquierdo -->
+    <aside class="q-panel">
+      <span class="round-badge">Ronda <span id="round-num">1</span></span>
+
+      <div class="score-row">
+        <span class="score-num"><span id="score-ok">0</span>/<span id="score-total">0</span></span>
+        <span class="score-label">pasos correctos</span>
+      </div>
+
+      <div class="problem-box" id="problem-box"></div>
+
+      <div class="step-box">
+        <span class="step-label">Paso actual</span>
+        <div id="step-text" class="step-formula">—</div>
+      </div>
+
+      <div class="sol-section">
+        <span class="sol-title">Solución x̂</span>
+        <div class="sol-vector" id="sol-vector"></div>
+      </div>
+
+      <div class="feedback-box" id="feedback-box"></div>
+    </aside>
+
+    <!-- Panel derecho -->
+    <section class="table-panel">
+      <div class="progress-strip" id="progress-strip"></div>
+      <div class="table-scroll" id="dp-table-wrap"></div>
+
+      <div id="question-area" hidden>
+        <p class="question-text" id="question-text"></p>
+        <p class="check-text" id="check-text"></p>
+        <div class="yn-row">
+          <button class="yn-btn yes-btn" id="btn-yes">Sí ✓</button>
+          <button class="yn-btn no-btn"  id="btn-no">No ✗</button>
+        </div>
+        <button class="next-btn" id="btn-next">Siguiente →</button>
+      </div>
+
+      <div id="done-banner" hidden>
+        <div class="done-banner">
+          <div class="done-title">¡Reconstrucción completada!</div>
+          <div class="done-value" id="done-value"></div>
+          <button class="done-again" id="btn-done-again">Nueva ronda</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── Conjuntos de datos ────────────────────────────────────────────── */
+  var COIN_SETS = [
+    { coins: [1,3,4], wRange: [5, 8]  },
+    { coins: [1,4,6], wRange: [6, 10] },
+    { coins: [1,3,7], wRange: [8, 12] }
+  ];
+
+  var KNAP_SETS = [
+    { items: [{w:6,v:8},{w:5,v:5},{w:5,v:5}],              wRange: [8, 11] },
+    { items: [{w:1,v:1},{w:2,v:6},{w:5,v:18},{w:6,v:22}],  wRange: [8, 12] },
+    { items: [{w:2,v:3},{w:3,v:5},{w:4,v:8}],              wRange: [6,  9] }
+  ];
+
+  /* ── Estado ────────────────────────────────────────────────────────── */
+  var currentType = 'coins';   // 'coins' | 'knapsack'
+  var coins = [], items = [], W = 0;
+  var refTable = [];
+  var steps = [];      // pasos de reconstrucción pre-calculados
+  var stepPos = 0;
+  var solX = [];       // vector solución en construcción
+  var scoreOk = 0, scoreTotal = 0, roundNum = 1;
+  var waitingNext = false;
+
+  /* ── Helpers ───────────────────────────────────────────────────────── */
+  function sub(n) {
+    var d = ['₀','₁','₂','₃','₄','₅','₆','₇','₈','₉'];
+    return String(n).split('').map(function(c){ return d[+c]||c; }).join('');
+  }
+  function randInt(a, b) { return a + Math.floor(Math.random()*(b-a+1)); }
+
+  /* ── Cálculo tabla cambio de monedas ──────────────────────────────── */
+  function computeCoinsTable() {
+    var N = coins.length;
+    refTable = [];
+    for (var i = 0; i <= N; i++) refTable.push(new Array(W+1).fill(0));
+    for (var i = 1; i <= N; i++) {
+      var wi = coins[i-1];
+      for (var j = 1; j <= W; j++) {
+        if (i === 1) {
+          refTable[i][j] = (wi > j) ? Infinity : 1 + refTable[1][j-wi];
+        } else {
+          refTable[i][j] = (wi > j) ? refTable[i-1][j]
+            : Math.min(refTable[i-1][j], 1 + refTable[i][j-wi]);
+        }
+      }
+    }
+  }
+
+  /* ── Cálculo tabla mochila ────────────────────────────────────────── */
+  function computeKnapTable() {
+    var N = items.length;
+    refTable = [];
+    for (var i = 0; i <= N; i++) refTable.push(new Array(W+1).fill(0));
+    for (var i = 1; i <= N; i++) {
+      var wi = items[i-1].w, vi = items[i-1].v;
+      for (var j = 1; j <= W; j++) {
+        if (i === 1) {
+          refTable[i][j] = (wi > j) ? 0 : vi;
+        } else {
+          refTable[i][j] = (wi > j) ? refTable[i-1][j]
+            : Math.max(refTable[i-1][j], vi + refTable[i-1][j-wi]);
+        }
+      }
+    }
+  }
+
+  /* ── Pre-computa los pasos de reconstrucción ──────────────────────── */
+  function computeSteps() {
+    steps = [];
+    var N = (currentType === 'coins') ? coins.length : items.length;
+    var i = N, j = W;
+
+    while (i >= 1 && j > 0) {
+      if (currentType === 'coins') {
+        var wi = coins[i-1];
+        var canFit = (wi <= j);
+        var decision = canFit && (refTable[i][j] === 1 + refTable[i][j-wi]) ? 'yes' : 'no';
+        var nextI = (decision === 'yes') ? i : i-1;
+        var nextJ = (decision === 'yes') ? j-wi : j;
+        steps.push({ i:i, j:j, wi:wi, canFit:canFit, decision:decision, nextI:nextI, nextJ:nextJ });
+        i = nextI; j = nextJ;
+      } else {
+        var wi = items[i-1].w, vi = items[i-1].v;
+        var canFit = (wi <= j);
+        var decision = canFit && (refTable[i][j] === vi + refTable[i-1][j-wi]) ? 'yes' : 'no';
+        var nextI = i-1;
+        var nextJ = (decision === 'yes') ? j-wi : j;
+        steps.push({ i:i, j:j, wi:wi, vi:vi, canFit:canFit, decision:decision, nextI:nextI, nextJ:nextJ });
+        i = nextI; j = nextJ;
+      }
+    }
+  }
+
+  /* ── Render tabla completamente rellena ───────────────────────────── */
+  function renderTable() {
+    var N = (currentType === 'coins') ? coins.length : items.length;
+    var html = '<table class="table-dp"><thead><tr><th>i \\ j</th>';
+    for (var j = 0; j <= W; j++) html += '<th>' + j + '</th>';
+    html += '</tr></thead><tbody>';
+
+    for (var i = 1; i <= N; i++) {
+      // cabecera de fila
+      if (currentType === 'coins') {
+        html += '<tr><th>w' + sub(i) + '=' + coins[i-1] + '</th>';
+      } else {
+        html += '<tr><th style="font-size:0.78rem;white-space:nowrap">obj' + sub(i)
+          + '<br><span style="font-weight:400;color:#555">w=' + items[i-1].w
+          + ', v=' + items[i-1].v + '</span></th>';
+      }
+
+      for (var j = 0; j <= W; j++) {
+        var v = refTable[i][j];
+        var id = 'c-' + i + '-' + j;
+        var cls = (v === Infinity) ? 'done cell-inf' : 'done';
+        html += '<td id="' + id + '" class="' + cls + '">'
+          + (v === Infinity ? '∞' : v) + '</td>';
+      }
+      html += '</tr>';
+    }
+    html += '</tbody></table>';
+    document.getElementById('dp-table-wrap').innerHTML = html;
+  }
+
+  /* ── Aplica resaltados de cursor y dependencias ──────────────────── */
+  function applyHighlights() {
+    // limpia todo
+    document.querySelectorAll('.table-dp td').forEach(function(el) {
+      el.classList.remove('cell-cursor','dep-skip','dep-use');
+    });
+
+    if (stepPos >= steps.length) return;
+
+    var s = steps[stepPos];
+    var curEl = document.getElementById('c-' + s.i + '-' + s.j);
+    if (curEl) curEl.classList.add('cell-cursor');
+
+    // dependencia "no usar" → fila anterior, misma columna (cuando i>1)
+    if (s.i > 1) {
+      var skipEl = document.getElementById('c-' + (s.i-1) + '-' + s.j);
+      if (skipEl) skipEl.classList.add('dep-skip');
+    }
+
+    // dependencia "usar" → según tipo de problema
+    if (s.canFit) {
+      if (currentType === 'coins') {
+        // misma fila, columna j-wi
+        var useEl = document.getElementById('c-' + s.i + '-' + (s.j - s.wi));
+        if (useEl) useEl.classList.add('dep-use');
+      } else {
+        // fila anterior, columna j-wi
+        var useEl = document.getElementById('c-' + (s.i-1) + '-' + (s.j - s.wi));
+        if (useEl) useEl.classList.add('dep-use');
+      }
+    }
+  }
+
+  /* ── Marca las celdas del camino ya recorrido ─────────────────────── */
+  function markPath() {
+    for (var k = 0; k < stepPos; k++) {
+      var s = steps[k];
+      if (s.decision === 'yes') {
+        var el = document.getElementById('c-' + s.i + '-' + s.j);
+        if (el) el.classList.add('cell-path-yes');
+      }
+    }
+  }
+
+  /* ── Actualiza el vector solución visual ──────────────────────────── */
+  function renderSolVector() {
+    var N = (currentType === 'coins') ? coins.length : items.length;
+    var html = '';
+    for (var k = 0; k < N; k++) {
+      var val = solX[k];
+      var cls = val > 0 ? 'sol-val active' : 'sol-val';
+      html += '<div class="sol-cell">'
+        + '<div class="' + cls + '" id="sol-' + k + '">' + val + '</div>'
+        + '<div class="sol-lbl">x' + sub(k+1) + '</div>'
+        + '</div>';
+    }
+    document.getElementById('sol-vector').innerHTML = html;
+  }
+
+  /* ── Texto del paso actual ────────────────────────────────────────── */
+  function getStepText(s) {
+    var si = sub(s.i);
+    if (currentType === 'coins') {
+      if (!s.canFit) {
+        return 'Posición C[' + s.i + ',' + s.j + '] — w' + si + '=' + s.wi + ' &gt; j=' + s.j + ' (no cabe)';
+      }
+      return 'Posición C[' + s.i + ',' + s.j + '] — ¿se usó w' + si + '=' + s.wi + '?';
+    } else {
+      if (!s.canFit) {
+        return 'Posición V[' + s.i + ',' + s.j + '] — w' + si + '=' + s.wi + ' &gt; j=' + s.j + ' (no cabe)';
+      }
+      return 'Posición V[' + s.i + ',' + s.j + '] — ¿se cogió obj' + si + ' (w=' + s.wi + ', v=' + s.vi + ')?';
+    }
+  }
+
+  /* ── Texto de la comprobación ─────────────────────────────────────── */
+  function getCheckText(s) {
+    if (!s.canFit) return '(la moneda/objeto no cabe, la respuesta es siempre No)';
+    var si = sub(s.i);
+    if (currentType === 'coins') {
+      return 'Comprueba: C[' + s.i + ',' + s.j + '] = 1 + C[' + s.i + ',' + (s.j-s.wi) + ']';
+    } else {
+      return 'Comprueba: V[' + s.i + ',' + s.j + '] = v' + si + ' + V[' + (s.i-1) + ',' + (s.j-s.wi) + ']';
+    }
+  }
+
+  /* ── Texto de feedback expandido ─────────────────────────────────── */
+  function getFeedbackText(s, correct) {
+    var si = sub(s.i);
+    var cellVal = refTable[s.i][s.j];
+
+    if (!s.canFit) {
+      var reason = (currentType === 'coins') ? 'w' + si + '=' + s.wi : 'w' + si + '=' + s.wi;
+      return reason + ' &gt; j=' + s.j + ', no cabe → decisión: <strong>No</strong>. Subimos a fila ' + (s.i-1) + '.';
+    }
+
+    if (currentType === 'coins') {
+      var useVal = refTable[s.i][s.j - s.wi];
+      var check = (useVal === Infinity) ? '∞' : String(1 + useVal);
+      if (s.decision === 'yes') {
+        return 'C[' + s.i + ',' + s.j + ']=' + cellVal + ' = 1 + C[' + s.i + ',' + (s.j-s.wi) + ']'
+          + ' = 1+' + (useVal === Infinity ? '∞' : useVal) + ' = ' + check
+          + ' ✓ &nbsp;→ se usó w' + si + '=' + s.wi + '. Actualizamos x' + si + ', j=' + s.j + '−' + s.wi + '=' + s.nextJ + '.';
+      } else {
+        var skipVal = (s.i > 1) ? refTable[s.i-1][s.j] : '—';
+        return 'C[' + s.i + ',' + s.j + ']=' + cellVal + ' ≠ 1 + C[' + s.i + ',' + (s.j-s.wi) + ']'
+          + ' = ' + check
+          + ' → la moneda w' + si + ' <strong>no</strong> se usó. Subimos a fila ' + (s.i-1) + '.';
+      }
+    } else {
+      var takeVal = s.vi + refTable[s.i-1][s.j-s.wi];
+      var skipVal = refTable[s.i-1][s.j];
+      if (s.decision === 'yes') {
+        return 'V[' + s.i + ',' + s.j + ']=' + cellVal + ' = v' + si + '+V[' + (s.i-1) + ',' + (s.j-s.wi) + ']'
+          + ' = ' + s.vi + '+' + refTable[s.i-1][s.j-s.wi] + ' = ' + takeVal
+          + ' ✓ &nbsp;→ se cogió obj' + si + '. x' + si + '=1, j=' + s.j + '−' + s.wi + '=' + s.nextJ + ', subimos a fila ' + s.nextI + '.';
+      } else {
+        return 'V[' + s.i + ',' + s.j + ']=' + cellVal + ' = V[' + (s.i-1) + ',' + s.j + ']'
+          + ' = ' + skipVal
+          + ' → obj' + si + ' <strong>no</strong> se cogió. Subimos a fila ' + s.nextI + '.';
+      }
+    }
+  }
+
+  /* ── Muestra el paso actual ───────────────────────────────────────── */
+  function showStep() {
+    if (stepPos >= steps.length) { showDone(); return; }
+
+    var s = steps[stepPos];
+    document.getElementById('step-text').innerHTML = getStepText(s);
+    document.getElementById('question-text').textContent =
+      currentType === 'coins'
+        ? '¿Se usó la moneda w' + (s.i) + '=' + s.wi + ' para llegar a esta celda?'
+        : '¿Se cogió el objeto ' + s.i + ' (w=' + s.wi + ', v=' + s.vi + ') para llegar a esta celda?';
+    document.getElementById('check-text').innerHTML = getCheckText(s);
+
+    applyHighlights();
+    markPath();
+
+    document.getElementById('progress-strip').textContent =
+      'Paso ' + (stepPos+1) + ' de ' + steps.length;
+
+    var qa = document.getElementById('question-area');
+    qa.hidden = false;
+
+    var btnYes = document.getElementById('btn-yes');
+    var btnNo  = document.getElementById('btn-no');
+    btnYes.disabled = false; btnYes.className = 'yn-btn yes-btn';
+    btnNo.disabled  = false; btnNo.className  = 'yn-btn no-btn';
+
+    document.getElementById('btn-next').style.display = 'none';
+    waitingNext = false;
+
+    var fb = document.getElementById('feedback-box');
+    fb.style.display = 'none'; fb.className = 'feedback-box';
+  }
+
+  /* ── Maneja respuesta ─────────────────────────────────────────────── */
+  function handleAnswer(chosen) {
+    if (waitingNext) return;
+    var s = steps[stepPos];
+    var correct = s.decision;
+    var fb = document.getElementById('feedback-box');
+
+    scoreTotal++;
+    document.getElementById('score-total').textContent = scoreTotal;
+
+    var btnYes = document.getElementById('btn-yes');
+    var btnNo  = document.getElementById('btn-no');
+    btnYes.disabled = true; btnNo.disabled = true;
+
+    if (chosen === correct) {
+      scoreOk++;
+      document.getElementById('score-ok').textContent = scoreOk;
+
+      // actualiza solX
+      if (correct === 'yes') {
+        var idx = s.i - 1;
+        if (currentType === 'coins') solX[idx]++;
+        else solX[idx] = 1;
+        renderSolVector();
+      }
+
+      if (chosen === 'yes') btnYes.classList.add('is-correct');
+      else                  btnNo.classList.add('is-correct');
+
+      fb.className = 'feedback-box ok';
+      fb.innerHTML = '¡Correcto! &nbsp;<small>' + getFeedbackText(s, correct) + '</small>';
+      fb.style.display = 'block';
+
+      stepPos++;
+      setTimeout(function() { renderTable(); markPath(); showStep(); }, 1000);
+
+    } else {
+      if (chosen === 'yes') btnYes.classList.add('is-wrong');
+      else                  btnNo.classList.add('is-wrong');
+      if (correct === 'yes') btnYes.classList.add('is-correct');
+      else                   btnNo.classList.add('is-correct');
+
+      fb.className = 'feedback-box bad';
+      fb.innerHTML = 'No exactamente. &nbsp;<small>' + getFeedbackText(s, correct) + '</small>';
+      fb.style.display = 'block';
+
+      waitingNext = true;
+      document.getElementById('btn-next').style.display = 'inline-block';
+    }
+  }
+
+  /* ── Avance tras error ────────────────────────────────────────────── */
+  function advanceAfterError() {
+    var s = steps[stepPos];
+    if (s.decision === 'yes') {
+      var idx = s.i - 1;
+      if (currentType === 'coins') solX[idx]++;
+      else solX[idx] = 1;
+      renderSolVector();
+    }
+    stepPos++;
+    renderTable();
+    markPath();
+    showStep();
+  }
+
+  /* ── Banner de fin ────────────────────────────────────────────────── */
+  function showDone() {
+    document.getElementById('question-area').hidden = true;
+    document.getElementById('step-text').innerHTML = '—';
+    document.getElementById('progress-strip').textContent = '';
+    document.getElementById('feedback-box').style.display = 'none';
+
+    // elimina cursor
+    document.querySelectorAll('.table-dp td').forEach(function(el) {
+      el.classList.remove('cell-cursor','dep-skip','dep-use');
+    });
+
+    var N = (currentType === 'coins') ? coins.length : items.length;
+    var optVal = refTable[N][W];
+
+    var solStr = 'x̂ = (' + solX.join(', ') + ')';
+    var valStr = currentType === 'coins'
+      ? 'mínimo de <strong>' + optVal + '</strong> moneda(s)'
+      : 'valor máximo de <strong>' + optVal + '</strong>';
+
+    document.getElementById('done-value').innerHTML =
+      solStr + '<br>' + valStr;
+    document.getElementById('done-banner').hidden = false;
+  }
+
+  /* ── Render panel izquierdo: enunciado del problema ──────────────── */
+  function renderProblemBox() {
+    var html = '';
+    if (currentType === 'coins') {
+      html = '<strong>w</strong> = [' + coins.join(', ') + ']<br>'
+           + '<strong>W</strong> = ' + W;
+    } else {
+      html = '<strong>W</strong> = ' + W
+           + '<table class="items-table"><thead><tr><th>obj</th><th>peso</th><th>valor</th></tr></thead><tbody>';
+      items.forEach(function(it, k) {
+        html += '<tr><td>' + (k+1) + '</td><td>' + it.w + '</td><td>' + it.v + '</td></tr>';
+      });
+      html += '</tbody></table>';
+    }
+    document.getElementById('problem-box').innerHTML = html;
+  }
+
+  /* ── Genera nueva ronda ───────────────────────────────────────────── */
+  function generate() {
+    if (currentType === 'coins') {
+      var s = COIN_SETS[Math.floor(Math.random()*COIN_SETS.length)];
+      coins = s.coins.slice();
+      W = randInt(s.wRange[0], s.wRange[1]);
+      computeCoinsTable();
+      solX = coins.map(function(){ return 0; });
+    } else {
+      var s = KNAP_SETS[Math.floor(Math.random()*KNAP_SETS.length)];
+      items = s.items.slice();
+      W = randInt(s.wRange[0], s.wRange[1]);
+      computeKnapTable();
+      solX = items.map(function(){ return 0; });
+    }
+
+    computeSteps();
+    stepPos = 0;
+    waitingNext = false;
+
+    document.getElementById('done-banner').hidden = true;
+    document.getElementById('question-area').hidden = true;
+    document.getElementById('feedback-box').style.display = 'none';
+    document.getElementById('btn-next').style.display = 'none';
+    document.getElementById('round-num').textContent = roundNum;
+    document.getElementById('step-text').innerHTML = '—';
+    document.getElementById('progress-strip').textContent = '';
+
+    renderProblemBox();
+    renderSolVector();
+    renderTable();
+    showStep();
+  }
+
+  /* ── Eventos ──────────────────────────────────────────────────────── */
+  document.querySelectorAll('.type-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      currentType = btn.dataset.type;
+      document.querySelectorAll('.type-btn').forEach(function(b) {
+        b.classList.toggle('is-active', b === btn);
+      });
+      scoreOk = 0; scoreTotal = 0; roundNum = 1;
+      document.getElementById('score-ok').textContent = '0';
+      document.getElementById('score-total').textContent = '0';
+      generate();
+    });
+  });
+
+  document.getElementById('btn-nueva').addEventListener('click', function() { roundNum++; generate(); });
+  document.getElementById('btn-yes').addEventListener('click', function() { handleAnswer('yes'); });
+  document.getElementById('btn-no').addEventListener('click',  function() { handleAnswer('no'); });
+  document.getElementById('btn-next').addEventListener('click', advanceAfterError);
+  document.getElementById('btn-done-again').addEventListener('click', function() { roundNum++; generate(); });
+
+  /* ── Arranque ─────────────────────────────────────────────────────── */
+  generate();
+
+}());
+</script>
+
+</body>
+</html>
