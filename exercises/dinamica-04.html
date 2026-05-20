@@ -1,0 +1,953 @@
+<!doctype html>
+<html lang="es" class="dinamica">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Deriva la Recurrencia | PRA</title>
+  <link rel="stylesheet" href="algoritmos.css">
+  <style>
+    /* ── Barra de selección de problema ──────────────────────────────── */
+    .prob-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .prob-btn {
+      padding: 0.45rem 1.1rem;
+      border-radius: 100px;
+      border: 2px solid var(--teal-lt);
+      background: #fff;
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--teal);
+      transition: background var(--transition), color var(--transition);
+    }
+    .prob-btn.is-active,
+    .prob-btn:hover { background: var(--teal); color: #fff; border-color: var(--teal); }
+
+    /* ── Layout dos columnas ──────────────────────────────────────────── */
+    .deriv-layout {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 1.25rem;
+      align-items: start;
+    }
+    @media (max-width: 860px) {
+      .deriv-layout { grid-template-columns: 1fr; }
+    }
+
+    /* ── Panel izquierdo: recurrencia viva ───────────────────────────── */
+    .rec-panel {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 1.25rem 1.4rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+    .rec-panel-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin-bottom: 0.75rem;
+    }
+    .rec-lhs {
+      font-family: monospace;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--teal-dark);
+      margin-bottom: 0.5rem;
+    }
+    .rec-cases {
+      border-left: 2.5px solid var(--teal);
+      padding-left: 0.85rem;
+    }
+    .rec-row {
+      display: flex;
+      align-items: baseline;
+      gap: 0.6rem;
+      padding: 0.28rem 0.5rem;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      margin-bottom: 0.08rem;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .rec-row-val {
+      font-family: monospace;
+      font-size: 0.78rem;
+      min-width: 6ch;
+      flex: 1;
+    }
+    .rec-row-cond {
+      font-size: 0.72rem;
+      color: #999;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* Estados de cada fila */
+    .rec-row.pending .rec-row-val { color: #ccc; letter-spacing: 0.08em; }
+    .rec-row.pending .rec-row-cond { color: #ccc; }
+
+    .rec-row.active {
+      background: #fff9c4;
+      border-color: #f9a825;
+    }
+    .rec-row.active .rec-row-val  { color: #7a4800; font-weight: 700; }
+    .rec-row.active .rec-row-cond { color: #7a4800; }
+
+    .rec-row.solved .rec-row-val  { color: var(--teal-dark); font-weight: 700; }
+    .rec-row.solved .rec-row-cond { color: #555; }
+
+    .rec-check { color: var(--teal); margin-left: 0.25rem; }
+
+    /* Marcador de aciertos */
+    .score-strip {
+      display: flex;
+      align-items: baseline;
+      gap: 0.4rem;
+      margin-top: 1.1rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid var(--teal-lt);
+    }
+    .score-num   { font-size: 1.35rem; font-weight: 700; color: var(--teal); line-height: 1; }
+    .score-label { font-size: 0.74rem; color: #999; }
+
+    /* ── Panel derecho: preguntas ─────────────────────────────────────── */
+    .q-panel {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+    .case-badge {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.85rem;
+      border-radius: 100px;
+      background: var(--teal-lt);
+      color: var(--teal-dark);
+      margin-bottom: 0.8rem;
+    }
+    .case-context {
+      font-size: 0.86rem;
+      color: #444;
+      line-height: 1.6;
+      margin-bottom: 1rem;
+      padding: 0.65rem 1rem;
+      background: var(--teal-bg);
+      border-radius: 8px;
+      border-left: 3px solid var(--teal);
+    }
+    .q-progress {
+      font-size: 0.74rem;
+      color: #bbb;
+      margin-bottom: 0.4rem;
+    }
+    .question-text {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #222;
+      margin-bottom: 0.8rem;
+      line-height: 1.5;
+    }
+    .choices { display: flex; flex-direction: column; }
+
+    .feedback-box {
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.85rem;
+      line-height: 1.55;
+      margin-top: 0.75rem;
+      display: none;
+    }
+    .feedback-box.ok  { background: #f1fbf1; border: 1.5px solid #4caf50; color: #2e7d32; }
+    .feedback-box.bad { background: #fff5f5; border: 1.5px solid #e53935; color: #c62828; }
+
+    .next-btn {
+      margin-top: 0.75rem;
+      padding: 0.5rem 1.2rem;
+      border-radius: 100px;
+      border: none;
+      background: var(--teal);
+      color: #fff;
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: none;
+    }
+    .next-btn:hover { background: var(--teal-dark); }
+
+    /* ── Banner de final ──────────────────────────────────────────────── */
+    .done-wrap { display: none; }
+    .done-banner-inner {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      background: #f1fbf1;
+      border-radius: var(--radius);
+      border: 2px solid #c8e6c9;
+    }
+    .done-title { font-size: 1.25rem; font-weight: 700; color: #2e7d32; margin-bottom: 0.5rem; }
+    .done-sub   { font-size: 0.9rem; color: #444; margin-bottom: 1.25rem; line-height: 1.55; }
+    .done-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+    .done-btn {
+      padding: 0.5rem 1.4rem;
+      border-radius: 100px;
+      border: 2px solid var(--teal);
+      background: var(--teal);
+      color: #fff;
+      font-family: var(--font-ui);
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition);
+    }
+    .done-btn.outline { background: #fff; color: var(--teal); }
+    .done-btn:hover,
+    .done-btn.outline:hover { background: var(--teal-dark); border-color: var(--teal-dark); color: #fff; }
+
+    /* ── Descripción del problema ─────────────────────────────────────── */
+    .prob-desc {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 1rem 1.4rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      border-left: 4px solid var(--teal);
+      font-size: 0.88rem;
+      line-height: 1.65;
+      color: #333;
+    }
+    .prob-desc strong { color: var(--teal-dark); }
+    .prob-desc .prob-desc-title {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--teal);
+      display: block;
+      margin-bottom: 0.35rem;
+    }
+  </style>
+</head>
+<body>
+
+<header class="ex-header">
+  <a class="back-link" href="../index.html#dinamica">← Volver a P. Dinámica</a>
+  <h1 class="ex-title">Deriva la Recurrencia</h1>
+  <p class="ex-desc">
+    Responde las preguntas sobre el <em>significado del problema</em> para construir,
+    paso a paso, la ecuación de recurrencia completa.
+  </p>
+</header>
+
+<main class="ex-main">
+
+  <div class="prob-bar">
+    <button class="prob-btn is-active" data-prob="coins">♟ Cambio de Monedas</button>
+    <button class="prob-btn" data-prob="knapsack">⊞ Mochila 0/1</button>
+    <button class="prob-btn" data-prob="escalera">△ Escalera</button>
+    <button class="prob-btn" data-prob="lcs">∩ LCS</button>
+  </div>
+
+  <div class="prob-desc" id="prob-desc"></div>
+
+  <div class="deriv-layout">
+
+    <!-- Panel izquierdo: recurrencia que se va construyendo -->
+    <aside class="rec-panel">
+      <div class="rec-panel-label">Recurrencia</div>
+      <div class="rec-lhs" id="rec-lhs">C[i, j] =</div>
+      <div class="rec-cases" id="rec-cases"></div>
+      <div class="score-strip">
+        <span class="score-num">
+          <span id="score-ok">0</span>/<span id="score-total">0</span>
+        </span>
+        <span class="score-label">preguntas acertadas a la primera</span>
+      </div>
+    </aside>
+
+    <!-- Panel derecho: preguntas -->
+    <section class="q-panel">
+
+      <div id="q-active">
+        <span class="case-badge" id="case-badge">Caso 1 de 5</span>
+        <div class="case-context" id="case-context"></div>
+        <div class="q-progress" id="q-progress"></div>
+        <p class="question-text" id="question-text"></p>
+        <div class="choices" id="choices"></div>
+        <div class="feedback-box" id="feedback-box"></div>
+        <button class="next-btn" id="btn-next">Siguiente →</button>
+      </div>
+
+      <div class="done-wrap" id="done-wrap">
+        <div class="done-banner-inner">
+          <div class="done-title">¡Recurrencia completada!</div>
+          <div class="done-sub" id="done-sub"></div>
+          <div class="done-actions">
+            <button class="done-btn outline" id="btn-repeat">Repetir</button>
+            <button class="done-btn" id="btn-other">Otro problema →</button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ─── Datos de los problemas ──────────────────────────────────────── */
+  var PROBLEMS = {
+
+    coins: {
+      title: 'Cambio de Monedas',
+      lhsLabel: 'C[i, j] =',
+      descHtml: '<span class="prob-desc-title">Problema</span>'
+        + 'Disponemos de <strong>n tipos de moneda</strong> con valores w<sub>1</sub>, w<sub>2</sub>, …, w<sub>n</sub> '
+        + '(cada tipo es <strong>ilimitado</strong>) y un <strong>importe objetivo W</strong>. '
+        + 'Queremos cubrir exactamente ese importe usando el <strong>mínimo número de monedas</strong>. '
+        + '<br>La tabla C[i,j] guarda cuántas monedas hacen falta para cubrir el importe j '
+        + 'usando solo los i primeros tipos.',
+      cases: [
+        {
+          condLabel: 'si j = 0',
+          pendingVal: '░░░',
+          resultHtml: '0',
+          contextHtml: 'Caso base: el importe a cubrir es exactamente cero.',
+          questions: [
+            {
+              text: '¿Cuántas monedas hacen falta para cubrir un importe de 0?',
+              options: ['0 monedas', '1 moneda', 'w<sub>i</sub> monedas', '∞'],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: cero importe, cero monedas. Este es el caso base de toda la tabla; actúa como punto de partida para el resto de la recurrencia.',
+              feedbackBad: 'Para cubrir exactamente 0 no hace falta ninguna moneda. La respuesta es 0 monedas, que es el caso base de la recurrencia.'
+            }
+          ]
+        },
+        {
+          condLabel: 'si i = 1 y w₁ > j',
+          pendingVal: '░░░',
+          resultHtml: '∞',
+          contextHtml: 'Solo existe la moneda de la fila 1 (valor w<sub>1</sub>) y su valor supera el importe j.',
+          questions: [
+            {
+              text: 'Si la única moneda disponible vale w<sub>1</sub> > j, ¿puedes cubrir exactamente el importe j?',
+              options: ['No, es imposible', 'Sí, usando fracciones de moneda', 'Sí, usando muchas monedas'],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: no se admiten fracciones, y con una sola moneda de valor w<sub>1</sub> > j es imposible cubrir exactamente j.',
+              feedbackBad: 'No se admiten fracciones de moneda. Con w<sub>1</sub> > j es imposible cubrir exactamente j usando esa moneda.'
+            },
+            {
+              text: '¿Qué símbolo usamos en la tabla para representar que un importe es imposible de cubrir?',
+              options: ['∞ (infinito)', '0', '−1', 'N/A'],
+              correctIdx: 0,
+              feedbackOk: 'Sí: ∞ expresa que no existe ninguna combinación de monedas que cubra ese importe exactamente.',
+              feedbackBad: 'Usamos ∞ (infinito) para indicar ausencia de solución. 0 significaría "necesito 0 monedas", que es distinto de "imposible".'
+            }
+          ]
+        },
+        {
+          condLabel: 'si i = 1 y w₁ ≤ j',
+          pendingVal: '░░░',
+          resultHtml: '1 + C[1, j − w<sub>1</sub>]',
+          contextHtml: 'Solo existe la moneda de la fila 1 y sí cabe (w<sub>1</sub> ≤ j). Construimos la fórmula paso a paso.',
+          questions: [
+            {
+              text: 'Al colocar una moneda de valor w<sub>1</sub>, ¿cuánto importe queda por cubrir?',
+              options: ['j − w<sub>1</sub>', 'j − 1', 'j (sin cambio)', 'w<sub>1</sub>'],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: el importe pendiente se reduce exactamente en w<sub>1</sub>, quedando j − w<sub>1</sub>. De ahí el "j − w<sub>1</sub>" en la fórmula.',
+              feedbackBad: 'La moneda vale w<sub>1</sub>, no 1. Al colocarla el importe se reduce en w<sub>1</sub>, quedando j − w<sub>1</sub>.'
+            },
+            {
+              text: 'Las monedas son ilimitadas. Tras colocar la moneda w<sub>1</sub>, ¿puedes volver a usarla para cubrir el resto?',
+              options: ['Sí — son ilimitadas, permanecemos en la fila i = 1', 'No — cada moneda se usa una vez, pasamos a la fila i − 1'],
+              correctIdx: 0,
+              feedbackOk: 'Exacto: las monedas son ilimitadas, así que la misma moneda puede usarse de nuevo. Permanecemos en la fila i = 1, no subimos a i − 1.',
+              feedbackBad: 'A diferencia de la mochila 0/1, las monedas son ilimitadas. Puedes reutilizarlas, así que el subproblema sigue en la misma fila i = 1.'
+            },
+            {
+              text: 'Al colocar esa moneda, ¿cuántas unidades sumas al contador de monedas?',
+              options: ['1', 'w<sub>1</sub>', '0'],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: cada moneda física que colocas suma 1 al contador, independientemente de su valor monetario. De ahí el "1 +" en la fórmula.',
+              feedbackBad: 'El contador cuenta monedas, no su valor. Cada moneda física colocada suma 1 al contador, de ahí el "1 +" en la fórmula.'
+            }
+          ]
+        },
+        {
+          condLabel: 'si wᵢ > j  (i > 1)',
+          pendingVal: '░░░',
+          resultHtml: 'C[i−1, j]',
+          contextHtml: 'Hay más de un tipo de moneda disponible, pero la moneda de la fila i (valor w<sub>i</sub>) no cabe porque w<sub>i</sub> > j.',
+          questions: [
+            {
+              text: 'Si la moneda i vale w<sub>i</sub> y w<sub>i</sub> > j, ¿puedes usarla para cubrir el importe j?',
+              options: ['No, es mayor que el importe', 'Sí, parcialmente', 'Sí, siempre'],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: la moneda tiene más valor que el importe entero; es imposible usarla sin superar j.',
+              feedbackBad: 'No se admiten fracciones. Si w<sub>i</sub> > j la moneda no puede usarse para cubrir exactamente j.'
+            },
+            {
+              text: 'Si la moneda i no puede usarse, ¿con qué tipos de moneda resuelves el subproblema?',
+              options: ['Los i−1 tipos anteriores (fila i−1)', 'Los i tipos incluyendo la moneda i', 'Solo la moneda i'],
+              correctIdx: 0,
+              feedbackOk: 'Exacto: al descartar la moneda i el conjunto de candidatos pasa de i tipos a i−1 tipos. Eso es lo que representa la fila i−1 en la tabla.',
+              feedbackBad: 'Al no poder usar la moneda i, el subproblema se resuelve con los i−1 tipos anteriores. Eso es C[i−1, j].'
+            }
+          ]
+        },
+        {
+          condLabel: 'si wᵢ ≤ j  (i > 1)',
+          pendingVal: '░░░',
+          resultHtml: 'min( C[i−1, j] ,&ensp;1 + C[i, j − w<sub>i</sub>] )',
+          contextHtml: 'Caso general: la moneda i cabe (w<sub>i</sub> ≤ j) y hay más tipos disponibles. Dos opciones excluyentes: no usarla o sí usarla.',
+          questions: [
+            {
+              text: 'Opción A — no usar la moneda i. ¿Qué subproblema queda?',
+              options: [
+                'Cubrir j con los i−1 tipos anteriores → C[i−1, j]',
+                'Cubrir j con los i tipos incluyendo la i → C[i, j]',
+                'Cubrir j − w<sub>i</sub> con los i−1 anteriores → C[i−1, j − w<sub>i</sub>]'
+              ],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: si descartas la moneda i, el conjunto pasa de i tipos a i−1 tipos y el importe no varía → C[i−1, j].',
+              feedbackBad: 'Al no usar la moneda i el importe j no cambia, pero el conjunto de candidatos se reduce de i a i−1 tipos. Eso es C[i−1, j].'
+            },
+            {
+              text: 'Opción B — sí usar la moneda i (valor w<sub>i</sub>). ¿Cuánto importe queda por cubrir?',
+              options: ['j − w<sub>i</sub>', 'j − 1', 'j (sin cambio)', 'w<sub>i</sub>'],
+              correctIdx: 0,
+              feedbackOk: 'Sí: al colocar la moneda de valor w<sub>i</sub> el importe pendiente se reduce en w<sub>i</sub>, quedando j − w<sub>i</sub>.',
+              feedbackBad: 'La moneda vale w<sub>i</sub>. Al colocarla el importe restante es j − w<sub>i</sub>, no j − 1 ni otro valor.'
+            },
+            {
+              text: 'Tras usar la moneda i, ¿puedes volver a colocarla? (las monedas son ilimitadas)',
+              options: ['Sí — permanecemos en la fila i', 'No — pasamos a la fila i−1'],
+              correctIdx: 0,
+              feedbackOk: 'Exacto: monedas ilimitadas → la misma moneda puede volver a elegirse → permanecemos en la fila i. Compara esto con la mochila 0/1.',
+              feedbackBad: 'A diferencia de la mochila 0/1, las monedas son ilimitadas. Por eso el subproblema continúa en la fila i, no baja a i−1.'
+            },
+            {
+              text: 'Al colocar la moneda i, ¿cuántas unidades sumas al contador?',
+              options: ['1', 'w<sub>i</sub>', '0'],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: una moneda física = 1 unidad en el contador, sin importar su valor. De ahí el "1 +" en la opción "usar".',
+              feedbackBad: 'Se cuentan monedas, no su valor monetario. Cada moneda colocada suma 1 al contador, de ahí el "1 +".'
+            },
+            {
+              text: 'Tienes dos opciones: no usar → C[i−1, j] y sí usar → 1 + C[i, j − w<sub>i</sub>]. Quieres el menor número de monedas. ¿Cómo combinas?',
+              options: ['min( no usar ,  usar )', 'max( no usar ,  usar )', 'no usar + usar'],
+              correctIdx: 0,
+              feedbackOk: '¡Perfecto! El objetivo es minimizar el número de monedas, así que tomamos el mínimo de las dos alternativas.',
+              feedbackBad: 'El objetivo es el mínimo número de monedas, no el máximo ni la suma. Usamos min( C[i−1,j],  1 + C[i, j−w<sub>i</sub>] ).'
+            }
+          ]
+        }
+      ]
+    },
+
+    knapsack: {
+      title: 'Mochila 0/1',
+      lhsLabel: 'V[i, j] =',
+      descHtml: '<span class="prob-desc-title">Problema</span>'
+        + 'Tenemos <strong>n objetos</strong>, cada uno con un peso w<sub>i</sub> y un valor v<sub>i</sub>, '
+        + 'y una mochila de <strong>capacidad W</strong>. Cada objeto puede cogerse <strong>como máximo una vez</strong> (0 o 1). '
+        + 'Queremos <strong>maximizar el valor total</strong> sin superar la capacidad. '
+        + '<br>La tabla V[i,j] guarda el máximo valor alcanzable con los i primeros objetos y una capacidad de j.',
+      cases: [
+        {
+          condLabel: 'si j = 0',
+          pendingVal: '░░░',
+          resultHtml: '0',
+          contextHtml: 'Caso base: la capacidad disponible de la mochila es cero.',
+          questions: [
+            {
+              text: 'Si la mochila tiene capacidad 0, ¿qué valor máximo puedes acumular?',
+              options: ['0', 'v<sub>i</sub>', '∞'],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: sin espacio disponible no puede entrar ningún objeto entero, así que el valor acumulado es 0.',
+              feedbackBad: 'Con capacidad 0 no cabe ningún objeto (en la mochila 0/1 todo es entero). El valor acumulado es 0.'
+            }
+          ]
+        },
+        {
+          condLabel: 'si i = 1 y w₁ > j',
+          pendingVal: '░░░',
+          resultHtml: '0',
+          contextHtml: 'Solo existe el objeto 1 y su peso supera la capacidad disponible j.',
+          questions: [
+            {
+              text: 'El objeto 1 pesa w<sub>1</sub> > j. ¿Puede meterse en la mochila de capacidad j?',
+              options: ['No, no cabe (w<sub>1</sub> > j)', 'Sí, siempre cabe algún fragmento'],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: en la mochila 0/1 el objeto se incluye entero o no se incluye. Si pesa más que j, es imposible incluirlo.',
+              feedbackBad: 'En la mochila 0/1 no se admiten fracciones. Si w<sub>1</sub> > j el objeto no puede incluirse.'
+            },
+            {
+              text: 'Si no puede entrar ningún objeto, ¿cuál es el valor total acumulado?',
+              options: ['0', 'v<sub>1</sub>', '−1'],
+              correctIdx: 0,
+              feedbackOk: 'Exacto: la mochila queda vacía y el valor acumulado es 0.',
+              feedbackBad: 'Si no metes ningún objeto el valor acumulado es 0. v<sub>1</sub> sería el valor si el objeto sí cupiese.'
+            }
+          ]
+        },
+        {
+          condLabel: 'si i = 1 y w₁ ≤ j',
+          pendingVal: '░░░',
+          resultHtml: 'v<sub>1</sub>',
+          contextHtml: 'Solo existe el objeto 1 y sí cabe (w<sub>1</sub> ≤ j). La mochila es 0/1.',
+          questions: [
+            {
+              text: 'Es la mochila 0/1: cada objeto se incluye entero o no se incluye. ¿Cuántas veces puedes meter el objeto 1?',
+              options: ['Exactamente 1 vez', 'Tantas como quepan', '0 veces'],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: la condición 0/1 impide repetir el objeto. Solo puede incluirse una vez como máximo.',
+              feedbackBad: 'El "0/1" del nombre indica que cada objeto se usa a lo sumo una vez. No puede repetirse.'
+            },
+            {
+              text: 'Al meter el objeto 1, ¿cuánto valor aporta a la mochila?',
+              options: ['v<sub>1</sub> (su valor)', 'w<sub>1</sub> (su peso)', '1'],
+              correctIdx: 0,
+              feedbackOk: '¡Exacto! El objeto 1 aporta su valor v<sub>1</sub>. La tabla V almacena valor acumulado, no peso.',
+              feedbackBad: 'La tabla V registra el valor total, no el peso. El objeto 1 aporta su valor v<sub>1</sub>, no su peso w<sub>1</sub>.'
+            }
+          ]
+        },
+        {
+          condLabel: 'si wᵢ > j  (i > 1)',
+          pendingVal: '░░░',
+          resultHtml: 'V[i−1, j]',
+          contextHtml: 'Hay más de un objeto disponible, pero el objeto i (peso w<sub>i</sub>) no cabe porque w<sub>i</sub> > j.',
+          questions: [
+            {
+              text: 'El objeto i pesa w<sub>i</sub> > j. ¿Puede incluirse en la mochila de capacidad j?',
+              options: ['No, no cabe', 'Sí, si su valor lo justifica'],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: el objeto pesa más que la capacidad disponible. Es imposible incluirlo, sea cual sea su valor.',
+              feedbackBad: 'En la mochila 0/1 el objeto entra entero o no entra. Si w<sub>i</sub> > j no puede incluirse.'
+            },
+            {
+              text: 'Si el objeto i no puede incluirse, ¿con qué objetos resuelves el subproblema?',
+              options: ['Los i−1 objetos anteriores (fila i−1)', 'Los i objetos incluyendo el objeto i'],
+              correctIdx: 0,
+              feedbackOk: 'Exacto: al descartar el objeto i el conjunto se reduce de i objetos a i−1 objetos. Eso es V[i−1, j].',
+              feedbackBad: 'Al no poder incluir el objeto i, el subproblema usa solo los i−1 objetos anteriores. Por eso miramos la fila i−1.'
+            }
+          ]
+        },
+        {
+          condLabel: 'si wᵢ ≤ j  (i > 1)',
+          pendingVal: '░░░',
+          resultHtml: 'max( V[i−1, j] ,&ensp;v<sub>i</sub> + V[i−1, j − w<sub>i</sub>] )',
+          contextHtml: 'Caso general: el objeto i cabe (w<sub>i</sub> ≤ j) y hay más objetos disponibles. Dos opciones: no incluirlo o sí incluirlo.',
+          questions: [
+            {
+              text: 'Opción A — no incluir el objeto i. ¿Qué subproblema queda?',
+              options: [
+                'Los i−1 objetos anteriores, capacidad j → V[i−1, j]',
+                'Los i objetos incluyendo el i, capacidad j → V[i, j]',
+                'Los i−1 objetos, capacidad j − w<sub>i</sub> → V[i−1, j − w<sub>i</sub>]'
+              ],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: si no incluyes el objeto i, el conjunto pasa de i a i−1 objetos y la capacidad j no varía → V[i−1, j].',
+              feedbackBad: 'Al no incluir el objeto i el conjunto se reduce de i a i−1 objetos y la capacidad j permanece inalterada. Eso es V[i−1, j].'
+            },
+            {
+              text: 'Opción B — sí incluir el objeto i (peso w<sub>i</sub>). ¿Cuánta capacidad queda en la mochila?',
+              options: ['j − w<sub>i</sub>', 'j − v<sub>i</sub>', 'j (sin cambio)', 'w<sub>i</sub>'],
+              correctIdx: 0,
+              feedbackOk: 'Sí: el objeto ocupa w<sub>i</sub> unidades de capacidad (no v<sub>i</sub>). La capacidad restante es j − w<sub>i</sub>.',
+              feedbackBad: 'El objeto ocupa espacio según su <em>peso</em> w<sub>i</sub>, no según su valor v<sub>i</sub>. La capacidad restante es j − w<sub>i</sub>.'
+            },
+            {
+              text: 'Es la mochila 0/1. Tras incluir el objeto i, ¿puedes volver a incluirlo?',
+              options: ['No — cada objeto solo una vez, pasamos a la fila i−1', 'Sí — se puede repetir, permanecemos en la fila i'],
+              correctIdx: 0,
+              feedbackOk: '¡Clave! La restricción 0/1 impide repetir el objeto. El subproblema baja a la fila i−1. Compara con el cambio de monedas, donde se reutilizan.',
+              feedbackBad: 'Aquí está la diferencia fundamental con el cambio de monedas: en la mochila 0/1 cada objeto se usa a lo sumo una vez. Tras incluirlo, pasamos a la fila i−1.'
+            },
+            {
+              text: 'Al incluir el objeto i, ¿cuánto valor aporta?',
+              options: ['v<sub>i</sub> (su valor)', 'w<sub>i</sub> (su peso)', '1'],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: el objeto aporta su valor v<sub>i</sub> al total acumulado. De ahí el "v<sub>i</sub> +" en la fórmula.',
+              feedbackBad: 'La tabla V acumula valor, no peso. El objeto aporta su valor v<sub>i</sub>, no su peso w<sub>i</sub>.'
+            },
+            {
+              text: 'Tienes dos opciones: no incluir → V[i−1, j] y sí incluir → v<sub>i</sub> + V[i−1, j − w<sub>i</sub>]. ¿Cómo eliges la mejor?',
+              options: ['max( no incluir ,  incluir )', 'min( no incluir ,  incluir )', 'no incluir + incluir'],
+              correctIdx: 0,
+              feedbackOk: '¡Perfecto! El objetivo es maximizar el valor en la mochila, así que tomamos el máximo de las dos alternativas.',
+              feedbackBad: 'El objetivo de la mochila es maximizar el valor total. Usamos max( V[i−1,j],  v<sub>i</sub> + V[i−1, j−w<sub>i</sub>] ).'
+            }
+          ]
+        }
+      ]
+    },
+
+    escalera: {
+      title: 'Subida de Escalera',
+      lhsLabel: 'E[j] =',
+      descHtml: '<span class="prob-desc-title">Problema</span>'
+        + 'Tenemos una escalera de <strong>n peldaños</strong>. En cada movimiento podemos subir '
+        + '<strong>1 o 2 peldaños</strong>. ¿De cuántas <strong>maneras distintas</strong> podemos llegar al peldaño n? '
+        + '<br>La tabla E[j] guarda el número de formas de llegar al peldaño j. '
+        + 'A diferencia de los problemas anteriores, aquí <strong>contamos caminos</strong>, no optimizamos un coste.',
+      cases: [
+        {
+          condLabel: 'si j = 0',
+          pendingVal: '░░░',
+          resultHtml: '1',
+          contextHtml: 'Caso base: el peldaño de salida. ¿De cuántas formas puedes "estar" en él antes de dar ningún paso?',
+          questions: [
+            {
+              text: '¿De cuántas maneras puedes estar en el peldaño 0 sin haber dado ningún paso?',
+              options: ['1 manera (no moverse)', '0 maneras', '2 maneras', '∞'],
+              correctIdx: 0,
+              feedbackOk: 'Exacto: hay 1 forma de estar en el origen — no moverse. Este 1 es el caso base que hace arrancar la recurrencia.',
+              feedbackBad: 'Hay exactamente 1 forma de estar en el peldaño 0: no moverse. Sin este caso base la recurrencia no tiene de dónde partir.'
+            }
+          ]
+        },
+        {
+          condLabel: 'si j = 1',
+          pendingVal: '░░░',
+          resultHtml: '1',
+          contextHtml: 'Desde el peldaño 0, solo hay un movimiento posible para llegar al peldaño 1.',
+          questions: [
+            {
+              text: '¿De cuántas maneras distintas puedes llegar al peldaño 1 desde el peldaño 0?',
+              options: ['1 manera (un paso de tamaño 1)', '2 maneras', '0 maneras', 'E[0] + E[−1]'],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: la única forma es dar 1 paso de tamaño 1. El peldaño −1 no existe, así que no hay segunda opción.',
+              feedbackBad: 'No puedes llegar en 2 pasos porque el peldaño −1 no existe. La única forma es 1 paso directo. E[1] = 1.'
+            }
+          ]
+        },
+        {
+          condLabel: 'si j ≥ 2',
+          pendingVal: '░░░',
+          resultHtml: 'E[j−1] + E[j−2]',
+          contextHtml: 'Puedes subir 1 o 2 peldaños por movimiento. Razona desde dónde puedes haber llegado al peldaño j.',
+          questions: [
+            {
+              text: 'Si das un paso de tamaño 1 y llegas al peldaño j, ¿desde qué peldaño venías?',
+              options: ['Del peldaño j−1', 'Del peldaño j−2', 'Del peldaño j+1', 'Del peldaño 0'],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: si das 1 paso y llegas a j, necesariamente venías del peldaño j−1.',
+              feedbackBad: 'Si das exactamente 1 paso y llegas a j, venías del peldaño j−1 (j−1+1 = j).'
+            },
+            {
+              text: 'Si das un salto de tamaño 2 y llegas al peldaño j, ¿desde qué peldaño venías?',
+              options: ['Del peldaño j−2', 'Del peldaño j−1', 'Del peldaño j+2', 'Del peldaño 1'],
+              correctIdx: 0,
+              feedbackOk: 'Exacto: si das un salto de 2 pasos y llegas a j, venías del peldaño j−2.',
+              feedbackBad: 'Si das exactamente 2 pasos y llegas a j, venías del peldaño j−2 (j−2+2 = j).'
+            },
+            {
+              text: 'Los caminos que llegan desde j−1 y los que llegan desde j−2 son completamente distintos (disjuntos). ¿Cómo obtienes el total de formas de llegar a j?',
+              options: ['Sumando E[j−1] + E[j−2]', 'max(E[j−1], E[j−2])', 'min(E[j−1], E[j−2])', 'E[j−1] × E[j−2]'],
+              correctIdx: 0,
+              feedbackOk: '¡Perfecto! Caminos disjuntos → regla de la adición. Aquí contamos caminos, no optimizamos: la respuesta es la suma.',
+              feedbackBad: 'Los caminos no se solapan, así que el total se obtiene sumando (regla de la adición). No es min ni max porque no optimizamos: contamos.'
+            }
+          ]
+        }
+      ]
+    },
+
+    lcs: {
+      title: 'Subsecuencia Común Más Larga',
+      lhsLabel: 'L[i, j] =',
+      descHtml: '<span class="prob-desc-title">Problema</span>'
+        + 'Dadas dos secuencias <strong>X</strong> e <strong>Y</strong> (p.ej. cadenas de texto o listas), '
+        + 'una <em>subsecuencia</em> es cualquier subconjunto de elementos que mantiene el orden relativo '
+        + 'pero no tiene que ser contiguo. Queremos la <strong>longitud de la subsecuencia común más larga</strong> (LCS). '
+        + '<br>Ejemplo: X = ABCBDAB, Y = BDCAB → LCS = BCAB (longitud 4). '
+        + '<br>La tabla L[i,j] guarda la longitud de la LCS de los primeros i elementos de X y los primeros j de Y.',
+      cases: [
+        {
+          condLabel: 'si i = 0 o j = 0',
+          pendingVal: '░░░',
+          resultHtml: '0',
+          contextHtml: 'Caso base: al menos una de las dos secuencias está vacía.',
+          questions: [
+            {
+              text: 'Si una de las dos secuencias tiene longitud 0 (está vacía), ¿qué longitud tiene su subsecuencia común con cualquier otra?',
+              options: ['0 — no hay elementos que comparar', '1', '∞', 'La longitud de la otra secuencia'],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: sin elementos que comparar no puede haber subsecuencia común. L[i,0] = L[0,j] = 0.',
+              feedbackBad: 'Una secuencia vacía no contiene ningún elemento, así que la subsecuencia común tiene longitud 0.'
+            }
+          ]
+        },
+        {
+          condLabel: 'si X[i] = Y[j]',
+          pendingVal: '░░░',
+          resultHtml: '1 + L[i−1, j−1]',
+          contextHtml: 'Los elementos i-ésimo de X y j-ésimo de Y son iguales: X[i] = Y[j].',
+          questions: [
+            {
+              text: 'Si X[i] = Y[j], ¿puede ese elemento formar parte de la subsecuencia común?',
+              options: [
+                'Sí — es un elemento común, siempre conviene incluirlo',
+                'No — coincidencia no garantiza que sea óptimo',
+                'Solo si el elemento anterior también coincide'
+              ],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: cuando dos elementos coinciden siempre conviene incluirlos en la LCS — añadir un elemento común nunca la acorta.',
+              feedbackBad: 'Cuando X[i]=Y[j] siempre conviene incluir ese elemento: nunca acorta la LCS y puede alargarla.'
+            },
+            {
+              text: 'Al emparejar X[i] con Y[j] (ambos quedan "consumidos"), ¿a qué subproblema te reduces?',
+              options: [
+                'LCS de X[1..i−1] e Y[1..j−1] → L[i−1, j−1]',
+                'LCS de X[1..i] e Y[1..j−1] → L[i, j−1]',
+                'LCS de X[1..i−1] e Y[1..j] → L[i−1, j]'
+              ],
+              correctIdx: 0,
+              feedbackOk: 'Exacto: al emparejar X[i] con Y[j] ambos índices retroceden uno. Los dos elementos quedan consumidos → L[i−1, j−1].',
+              feedbackBad: 'Al emparejar X[i] con Y[j] consumimos ambos a la vez: los dos índices retroceden → L[i−1, j−1], no solo uno de ellos.'
+            },
+            {
+              text: '¿Cuánto aumenta la longitud de la LCS al incluir este elemento común?',
+              options: ['1', '0', 'i', 'j'],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: cada elemento común añadido aumenta la longitud en 1. De ahí el "1 +" en la fórmula.',
+              feedbackBad: 'Cada elemento común añadido a la subsecuencia alarga la LCS en exactamente 1. De ahí "1 + L[i−1,j−1]".'
+            }
+          ]
+        },
+        {
+          condLabel: 'si X[i] ≠ Y[j]',
+          pendingVal: '░░░',
+          resultHtml: 'max( L[i−1, j] ,&ensp;L[i, j−1] )',
+          contextHtml: 'Los elementos i-ésimo de X y j-ésimo de Y son distintos: X[i] ≠ Y[j]. No pueden emparejarse.',
+          questions: [
+            {
+              text: 'Si X[i] ≠ Y[j], ¿puedes emparejar esos dos elementos en la subsecuencia común?',
+              options: [
+                'No — deben ser iguales para emparejarse',
+                'Sí — aunque distintos pueden alinearse',
+                'Solo si son adyacentes en las secuencias'
+              ],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: "común" exige igualdad. Si X[i] ≠ Y[j] al menos uno de los dos debe saltarse.',
+              feedbackBad: 'La subsecuencia "común" requiere igualdad de elementos. Si son distintos no pueden emparejarse; al menos uno debe saltarse.'
+            },
+            {
+              text: 'Si no pueden emparejarse, ¿cuáles son las dos únicas opciones razonables?',
+              options: [
+                'Ignorar X[i] → L[i−1, j]  o  ignorar Y[j] → L[i, j−1]',
+                'Ignorar ambos a la vez → L[i−1, j−1]',
+                'No ignorar ninguno y avanzar igualmente'
+              ],
+              correctIdx: 0,
+              feedbackOk: 'Exacto: ignorar X[i] deja L[i−1,j]; ignorar Y[j] deja L[i,j−1]. Ignorar ambos nunca es óptimo.',
+              feedbackBad: 'Las dos opciones útiles son: ignorar X[i] (→ L[i−1,j]) o ignorar Y[j] (→ L[i,j−1]). Ignorar los dos a la vez nunca mejora el resultado.'
+            },
+            {
+              text: 'Buscas la subsecuencia común MÁS LARGA. ¿Cómo combinas las dos opciones?',
+              options: [
+                'max( L[i−1, j] ,  L[i, j−1] )',
+                'min( L[i−1, j] ,  L[i, j−1] )',
+                'L[i−1, j] + L[i, j−1]'
+              ],
+              correctIdx: 0,
+              feedbackOk: '¡Perfecto! El objetivo es la MÁS LARGA → tomamos el máximo de las dos alternativas.',
+              feedbackBad: 'El objetivo es MÁS LARGA → máximo. Usamos max( L[i−1,j], L[i,j−1] ).'
+            }
+          ]
+        }
+      ]
+    }
+  };
+
+  /* ─── Estado ──────────────────────────────────────────────────────── */
+  var currentProbKey = 'coins';
+  var caseIdx = 0;
+  var qIdx    = 0;
+  var scoreOk    = 0;
+  var scoreTotal = 0;
+  var waitingNext = false;
+
+  /* ─── Renderiza el panel izquierdo ───────────────────────────────── */
+  function renderRecPanel() {
+    var prob = PROBLEMS[currentProbKey];
+    document.getElementById('rec-lhs').textContent = prob.lhsLabel;
+    var html = '';
+    prob.cases.forEach(function (c, idx) {
+      var state = idx < caseIdx ? 'solved' : (idx === caseIdx ? 'active' : 'pending');
+      var valHtml = (state === 'solved')
+        ? (c.resultHtml + ' <span class="rec-check">✓</span>')
+        : c.pendingVal;
+      html += '<div class="rec-row ' + state + '">'
+        + '<span class="rec-row-val">' + valHtml + '</span>'
+        + '<span class="rec-row-cond">' + c.condLabel + '</span>'
+        + '</div>';
+    });
+    document.getElementById('rec-cases').innerHTML = html;
+  }
+
+  /* ─── Renderiza la pregunta actual ───────────────────────────────── */
+  function renderQuestion() {
+    var prob = PROBLEMS[currentProbKey];
+    var c    = prob.cases[caseIdx];
+    var q    = c.questions[qIdx];
+
+    document.getElementById('case-badge').textContent =
+      'Caso ' + (caseIdx + 1) + ' de ' + prob.cases.length;
+    document.getElementById('case-context').innerHTML = c.contextHtml;
+    document.getElementById('q-progress').textContent =
+      'Pregunta ' + (qIdx + 1) + ' de ' + c.questions.length;
+    document.getElementById('question-text').innerHTML = q.text;
+
+    var choicesEl = document.getElementById('choices');
+    choicesEl.innerHTML = '';
+    q.options.forEach(function (opt, idx) {
+      var btn = document.createElement('button');
+      btn.className = 'choice-btn';
+      btn.innerHTML = opt;
+      btn.addEventListener('click', (function (i) {
+        return function () { handleChoice(i); };
+      }(idx)));
+      choicesEl.appendChild(btn);
+    });
+
+    var fb = document.getElementById('feedback-box');
+    fb.style.display = 'none';
+    fb.className = 'feedback-box';
+    document.getElementById('btn-next').style.display = 'none';
+    waitingNext = false;
+  }
+
+  /* ─── Maneja la elección del alumno ─────────────────────────────── */
+  function handleChoice(idx) {
+    if (waitingNext) return;
+    var q    = PROBLEMS[currentProbKey].cases[caseIdx].questions[qIdx];
+    var btns = document.querySelectorAll('#choices .choice-btn');
+    var fb   = document.getElementById('feedback-box');
+
+    scoreTotal++;
+    document.getElementById('score-total').textContent = scoreTotal;
+    btns.forEach(function (b) { b.disabled = true; });
+
+    if (idx === q.correctIdx) {
+      scoreOk++;
+      document.getElementById('score-ok').textContent = scoreOk;
+      btns[idx].classList.add('is-correct');
+      fb.className = 'feedback-box ok';
+      fb.innerHTML = q.feedbackOk;
+      fb.style.display = 'block';
+    } else {
+      btns[idx].classList.add('is-wrong');
+      btns[q.correctIdx].classList.add('is-correct');
+      fb.className = 'feedback-box bad';
+      fb.innerHTML = q.feedbackBad;
+      fb.style.display = 'block';
+    }
+    waitingNext = true;
+    document.getElementById('btn-next').style.display = 'inline-block';
+  }
+
+  /* ─── Avanza a la siguiente pregunta o cierra el caso ─────────────── */
+  function advanceQ() {
+    var c = PROBLEMS[currentProbKey].cases[caseIdx];
+    qIdx++;
+    if (qIdx < c.questions.length) {
+      renderQuestion();
+    } else {
+      lockCase();
+    }
+  }
+
+  /* ─── Cierra el caso actual y pasa al siguiente ───────────────────── */
+  function lockCase() {
+    caseIdx++;
+    if (caseIdx >= PROBLEMS[currentProbKey].cases.length) {
+      renderRecPanel();
+      showDone();
+    } else {
+      qIdx = 0;
+      renderRecPanel();
+      renderQuestion();
+    }
+  }
+
+  /* ─── Banner de fin ───────────────────────────────────────────────── */
+  function showDone() {
+    document.getElementById('q-active').style.display = 'none';
+    var total = PROBLEMS[currentProbKey].cases.reduce(function (acc, c) {
+      return acc + c.questions.length;
+    }, 0);
+    document.getElementById('done-sub').innerHTML =
+      'Has derivado la recurrencia completa de <strong>'
+      + PROBLEMS[currentProbKey].title + '</strong>.<br>'
+      + scoreOk + ' de ' + total + ' preguntas correctas a la primera.';
+    document.getElementById('done-wrap').style.display = 'block';
+  }
+
+  /* ─── Arranca un problema ─────────────────────────────────────────── */
+  function startProblem(probKey) {
+    currentProbKey = probKey;
+    caseIdx = 0;
+    qIdx    = 0;
+    scoreOk    = 0;
+    scoreTotal = 0;
+    waitingNext = false;
+    document.getElementById('score-ok').textContent    = '0';
+    document.getElementById('score-total').textContent = '0';
+    document.getElementById('q-active').style.display  = 'block';
+    document.getElementById('done-wrap').style.display = 'none';
+    document.getElementById('prob-desc').innerHTML = PROBLEMS[probKey].descHtml;
+    renderRecPanel();
+    renderQuestion();
+  }
+
+  /* ─── Eventos ─────────────────────────────────────────────────────── */
+  document.querySelectorAll('.prob-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.prob-btn').forEach(function (b) {
+        b.classList.toggle('is-active', b === btn);
+      });
+      startProblem(btn.dataset.prob);
+    });
+  });
+
+  document.getElementById('btn-next').addEventListener('click', advanceQ);
+
+  document.getElementById('btn-repeat').addEventListener('click', function () {
+    startProblem(currentProbKey);
+  });
+
+  var PROB_ORDER = ['coins', 'knapsack', 'escalera', 'lcs'];
+
+  document.getElementById('btn-other').addEventListener('click', function () {
+    var idx   = PROB_ORDER.indexOf(currentProbKey);
+    var other = PROB_ORDER[(idx + 1) % PROB_ORDER.length];
+    document.querySelectorAll('.prob-btn').forEach(function (b) {
+      b.classList.toggle('is-active', b.dataset.prob === other);
+    });
+    startProblem(other);
+  });
+
+  /* ─── Arranque ────────────────────────────────────────────────────── */
+  startProblem('coins');
+
+}());
+</script>
+
+</body>
+</html>
