@@ -147,10 +147,42 @@
     btn.addEventListener('click', function (e) {
       e.preventDefault();
       var done = card.classList.toggle('is-done');
-      if (done) { localStorage.setItem(key, '1'); } else { localStorage.removeItem(key); }
+      if (done) {
+        localStorage.setItem(key, '1');
+        spawnParticles(btn);
+        btn.classList.add('is-popping');
+        btn.addEventListener('animationend', function () {
+          btn.classList.remove('is-popping');
+        }, { once: true });
+      } else {
+        localStorage.removeItem(key);
+      }
       btn.setAttribute('aria-pressed', String(done));
       btn.setAttribute('aria-label', done ? 'Desmarcar como completado' : 'Marcar como completado');
     });
   });
+
+  // ─── Particle burst helper ───────────────────────────────────────────────────
+  var PARTICLE_COLORS = ['#f9a825', '#e53935', '#43a047', '#1e88e5', '#8e24aa', '#00acc1'];
+
+  function spawnParticles(origin) {
+    var rect  = origin.getBoundingClientRect();
+    var cx    = rect.left + rect.width  / 2;
+    var cy    = rect.top  + rect.height / 2;
+    var count = 12;
+    for (var i = 0; i < count; i++) {
+      var angle = (i / count) * 2 * Math.PI;
+      var dist  = 45 + Math.random() * 25;
+      var p = document.createElement('span');
+      p.className = 'card-particle';
+      p.style.left       = cx + 'px';
+      p.style.top        = cy + 'px';
+      p.style.background = PARTICLE_COLORS[i % PARTICLE_COLORS.length];
+      p.style.setProperty('--dx', (Math.cos(angle) * dist) + 'px');
+      p.style.setProperty('--dy', (Math.sin(angle) * dist) + 'px');
+      document.body.appendChild(p);
+      p.addEventListener('animationend', function () { this.remove(); });
+    }
+  }
 
 })();

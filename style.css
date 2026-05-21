@@ -289,6 +289,33 @@ body {
   background: #f8fef8;
 }
 
+/* ── Card completion: particle burst & button pop ───────────── */
+.card-particle {
+  position: fixed;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  animation: particle-fly 0.65s ease-out forwards;
+}
+
+@keyframes particle-fly {
+  0%   { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0); opacity: 0; }
+}
+
+.card-done-btn.is-popping {
+  animation: btn-pop 0.35s ease-out;
+}
+
+@keyframes btn-pop {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.45); }
+  70%  { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
 /* ─── Coming-soon cards ─────────────────────────────────────────────────────── */
 
 .exercise-card.is-coming-soon {
