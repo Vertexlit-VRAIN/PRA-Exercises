@@ -3,6 +3,8 @@
    PRA · Universitat Politècnica de València
    ═══════════════════════════════════════════════════════════════ */
 
+@import './base.css';
+
 /* ── Design tokens ───────────────────────────────────────────── */
 :root {
   --green:      #1b5e20;
@@ -15,11 +17,6 @@
   --bad:        #c62828;
   --terminal:   #001a0a;
 }
-
-/* ── Reset & base ────────────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-[hidden] { display: none !important; }
-html { font-size: 18px; }
 
 body {
   font-family: 'Space Grotesk', system-ui, sans-serif;

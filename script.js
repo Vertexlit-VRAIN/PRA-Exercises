@@ -147,7 +147,7 @@
     btn.addEventListener('click', function (e) {
       e.preventDefault();
       var done = card.classList.toggle('is-done');
-      localStorage.setItem(key, done ? '1' : '0');
+      if (done) { localStorage.setItem(key, '1'); } else { localStorage.removeItem(key); }
       btn.setAttribute('aria-pressed', String(done));
       btn.setAttribute('aria-label', done ? 'Desmarcar como completado' : 'Marcar como completado');
     });

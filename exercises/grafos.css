@@ -3,6 +3,8 @@
    Each exercise links this file and keeps only its unique rules inline.
    ─────────────────────────────────────────────────────────────────────────── */
 
+@import './base.css';
+
 /* ─── Design tokens ─────────────────────────────────────────────────────────── */
 
 :root {
@@ -15,11 +17,6 @@
   --ok:          #2e7d32;
   --bad:         #c62828;
 }
-
-/* ─── Reset & Base ──────────────────────────────────────────────────────────── */
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { font-size: 18px; }
 
 body {
   font-family: 'Space Grotesk', system-ui, sans-serif;

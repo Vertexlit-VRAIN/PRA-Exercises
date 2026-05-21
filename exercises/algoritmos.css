@@ -1,6 +1,8 @@
 /* ─── algoritmos.css — Voraces & Programación Dinámica ──────────────────────── */
 /* Linked from exercises/voraces-NN.html and exercises/dinamica-NN.html          */
 
+@import './base.css';
+
 /* ─── Design tokens ─────────────────────────────────────────────────────────── */
 
 :root {
@@ -21,14 +23,6 @@
   --radius:       12px;
   --transition:   0.25s ease;
 }
-
-/* ─── Base reset ─────────────────────────────────────────────────────────────── */
-
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-[hidden] { display: none !important; }
-
-html { font-size: 18px; scroll-behavior: smooth; }
 
 body {
   font-family: var(--font-ui);
