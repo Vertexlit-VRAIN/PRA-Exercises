@@ -21,7 +21,6 @@
   --hash-accent:    #1b5e20;
   --hash-bg:        #f7fcf8;
   --arboles-accent: #b35c00;
-  --arboles-dk:     #ffd600;
   --arboles-bg:     #fdfdf5;
   --grafos-accent:  #1a237e;
   --grafos-bg:      #f4f5fb;
@@ -728,7 +727,7 @@ body {
   font-size: 1rem;
   line-height: 2.6;
   letter-spacing: 0.25em;
-  color: #1b5e20;
+  color: var(--hash-accent);
   opacity: 0.18;
   top: 0; left: 0; right: 0;
   animation: hash-fall 32s linear infinite;

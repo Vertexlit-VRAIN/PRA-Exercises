@@ -32,22 +32,26 @@
     }
   }
 
-  tabs.forEach(function (tab, index) {
-    tab.addEventListener('click', function () {
-      var targetId = tab.getAttribute('aria-controls');
-      activateTab(targetId);
-      history.replaceState(null, '', '#' + targetId);
-    });
+  function wireTabGroup(tabEls, onActivate) {
+    tabEls.forEach(function (tab, index) {
+      tab.addEventListener('click', function () {
+        var targetId = tab.getAttribute('aria-controls');
+        onActivate(targetId);
+        history.replaceState(null, '', '#' + targetId);
+      });
 
-    tab.addEventListener('keydown', function (e) {
-      var dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-      if (!dir) return;
-      e.preventDefault();
-      var next = (index + dir + tabs.length) % tabs.length;
-      tabs[next].focus();
-      tabs[next].click();
+      tab.addEventListener('keydown', function (e) {
+        var dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
+        if (!dir) return;
+        e.preventDefault();
+        var next = (index + dir + tabEls.length) % tabEls.length;
+        tabEls[next].focus();
+        tabEls[next].click();
+      });
     });
-  });
+  }
+
+  wireTabGroup(Array.prototype.slice.call(tabs), activateTab);
 
   burger.addEventListener('click', function () {
     var isOpen = nav.classList.toggle('nav-open');
@@ -88,22 +92,7 @@
       });
     }
 
-    subTabs.forEach(function (tab, index) {
-      tab.addEventListener('click', function () {
-        var targetId = tab.getAttribute('aria-controls');
-        activateSubTab(targetId);
-        history.replaceState(null, '', '#' + targetId);
-      });
-
-      tab.addEventListener('keydown', function (e) {
-        var dir = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-        if (!dir) return;
-        e.preventDefault();
-        var next = (index + dir + subTabs.length) % subTabs.length;
-        subTabs[next].focus();
-        subTabs[next].click();
-      });
-    });
+    wireTabGroup(subTabs, activateSubTab);
 
     // Use targetSubId if it belongs to this panel, otherwise activate the first sub-tab
     var inThisPanel = targetSubId &&
@@ -133,18 +122,16 @@
       card.parentNode.querySelectorAll('.exercise-card')
     );
     var delay = siblings.indexOf(card) * STAGGER_MS;
-    card.dataset.staggerDelay    = delay;
-    card.style.transitionDelay   = delay + 'ms';
+    card.dataset.staggerDelay  = delay;
+    card.style.transitionDelay = delay + 'ms';
     cardObserver.observe(card);
-  });
 
-  // ─── Card completion (localStorage) ─────────────────────────────────────────
-  document.querySelectorAll('.exercise-card').forEach(function (card) {
+    // ─── Card completion (localStorage) ───────────────────────────────────────
     var link = card.querySelector('a.card-link[href]');
     if (!link) return; // skip coming-soon cards
 
-    var key  = 'pra-done:' + link.getAttribute('href');
-    var btn  = document.createElement('button');
+    var key = 'pra-done:' + link.getAttribute('href');
+    var btn = document.createElement('button');
     btn.className = 'card-done-btn';
     btn.setAttribute('aria-pressed', 'false');
     btn.setAttribute('aria-label',   'Marcar como completado');
