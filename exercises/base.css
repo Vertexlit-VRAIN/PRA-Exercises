@@ -1,4 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Fredoka+One&family=Special+Elite&display=swap');
+
 /* ── Shared reset for all exercise pages ─────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 [hidden] { display: none !important; }
 html { font-size: 18px; scroll-behavior: smooth; }
+
+/* ── Shared cartoon tokens ───────────────────────────────────── */
+:root {
+  --font-display: 'Bangers', impact, sans-serif;
+  --ink:          #1a1a1a;
+  --paper:        #faf8f3;
+  --paper-mid:    #e8e4dc;
+}

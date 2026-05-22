@@ -1,6 +1,5 @@
 /* ─── Árboles — Shared Exercise Stylesheet ──────────────────────────────────
-   All styles common to arboles-01 through arboles-04.
-   Each exercise links this file and keeps only its unique rules.
+   All styles common to arboles-01 through arboles-07.
    ─────────────────────────────────────────────────────────────────────────── */
 
 @import './base.css';
@@ -11,16 +10,17 @@
   --amber:      #b35c00;
   --amber-dark: #7c3f00;
   --amber-lt:   #ffe0b2;
-  --bg:         #f5f0eb;
   --panel:      #fff;
   --text:       #3e2000;
   --ok:         #2e7d32;
   --bad:        #c62828;
+  --font-ui:    'Fredoka One', system-ui, sans-serif;
+  --font-mono:  'Special Elite', 'Courier New', monospace;
 }
 
 body {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
-  background-color: var(--bg);
+  font-family: var(--font-ui);
+  background-color: var(--paper);
   color: var(--text);
   min-height: 100vh;
   display: flex;
@@ -30,9 +30,9 @@ body {
 /* ─── Exercise Header ───────────────────────────────────────────────────────── */
 
 .ex-header {
-  background: linear-gradient(135deg, #fff3e0, #fdf8f0);
+  background: var(--paper);
   border-top: 3px solid var(--amber);
-  border-bottom: 1px solid rgba(179, 92, 0, 0.15);
+  border-bottom: 2px solid var(--paper-mid);
   padding: 1rem 1.5rem 1.1rem;
   display: flex;
   flex-direction: column;
@@ -40,19 +40,23 @@ body {
 }
 
 .back-link {
+  font-family: var(--font-ui);
   color: var(--amber);
   text-decoration: none;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 400;
   transition: opacity 0.15s;
 }
 .back-link:hover { opacity: 0.7; }
 
 .ex-title {
-  font-size: clamp(0.88rem, 2vw, 1.1rem);
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 3vw, 1.6rem);
+  font-weight: 400;
   color: var(--amber);
-  line-height: 1.5;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.12);
 }
 
 .ex-desc {
@@ -83,16 +87,17 @@ body {
 .table-panel,
 .q-panel {
   background: var(--panel);
-  border: 1px solid rgba(179, 92, 0, 0.3);
-  border-radius: 8px;
+  border: 2px solid var(--amber);
+  border-radius: 12px;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  box-shadow: 0 2px 12px rgba(179, 92, 0, 0.07);
+  box-shadow: 4px 4px 0 rgba(179, 92, 0, 0.28);
 }
 
 .panel-label {
+  font-family: var(--font-ui);
   font-size: 0.85rem;
   color: #9e6a2a;
   letter-spacing: 0.08em;
@@ -102,8 +107,8 @@ body {
 #tree-svg {
   width: 100%;
   border-radius: 8px;
-  background: #f5f0eb;
-  border: 1px solid rgba(179, 92, 0, 0.1);
+  background: var(--paper);
+  border: 1px solid rgba(179, 92, 0, 0.15);
 }
 
 /* ─── Text ──────────────────────────────────────────────────────────────────── */
@@ -120,46 +125,48 @@ body {
 
 .btn {
   padding: 0.6rem 1.2rem;
-  border: none;
+  border: 2px solid var(--ink);
   border-radius: 8px;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
-  transition: opacity 0.15s, transform 0.1s;
+  box-shadow: 2px 2px 0 var(--ink);
+  transition: box-shadow 0.1s ease, transform 0.1s ease, opacity 0.15s;
 }
-.btn:hover  { opacity: 0.85; transform: translateY(-1px); }
-.btn:active { transform: translateY(0); }
+.btn:hover  { box-shadow: 3px 3px 0 var(--ink); transform: translateY(-2px) translateX(-1px); }
+.btn:active { transform: translateY(0); box-shadow: 1px 1px 0 var(--ink); }
 
 .btn-primary { background: var(--amber); color: #fff; }
 .btn-outline {
-  background: rgba(179, 92, 0, 0.08);
+  background: rgba(179, 92, 0, 0.06);
   color: var(--amber-dark);
-  border: 1.5px solid rgba(179, 92, 0, 0.3);
+  border: 2px solid var(--amber);
+  box-shadow: 2px 2px 0 rgba(179,92,0,0.3);
 }
 .btn-sm { padding: 0.45rem 0.9rem; font-size: 0.82rem; }
 
 /* ─── Feedback ──────────────────────────────────────────────────────────────── */
 
-.feedback { font-size: 0.9rem; font-weight: 700; min-height: 1.4em; }
+.feedback { font-size: 0.9rem; font-weight: 400; min-height: 1.4em; }
 .feedback.ok  { color: var(--ok); }
 .feedback.bad { color: var(--bad); }
 
 /* ─── Score bar ─────────────────────────────────────────────────────────────── */
 
 .score-bar {
-  border-top: 2px solid rgba(179, 92, 0, 0.15);
-  background: rgba(245, 240, 235, 0.97);
+  border-top: 2px solid rgba(179, 92, 0, 0.2);
+  background: var(--paper);
   padding: 0.7rem 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--amber-dark);
 }
-.score-num { font-size: 1.4rem; color: var(--amber); font-weight: 700; }
+.score-num { font-family: var(--font-display); font-size: 1.6rem; color: var(--amber); font-weight: 400; }
 
 /* ─── Chips ─────────────────────────────────────────────────────────────────── */
 
@@ -171,7 +178,7 @@ body {
   gap: 0.4rem;
   min-height: 2.4rem;
   padding: 0.5rem 0.6rem;
-  border: 1.5px dashed rgba(179, 92, 0, 0.3);
+  border: 2px dashed rgba(179, 92, 0, 0.35);
   border-radius: 8px;
   background: rgba(179, 92, 0, 0.03);
   transition: border-color 0.12s, background 0.12s;
@@ -187,7 +194,7 @@ body {
   border: 2px solid transparent;
   border-radius: 20px;
   padding: 0.18rem 0.65rem;
-  font-weight: 700;
+  font-weight: 400;
   font-size: 0.9rem;
   cursor: grab;
   user-select: none;
@@ -200,8 +207,8 @@ body {
 .chip.chip-ok   { background: #e8f5e9; color: var(--ok);  border-color: var(--ok);  cursor: default; }
 .chip.chip-bad  { background: #ffebee; color: var(--bad); border-color: var(--bad); animation: shake 0.4s ease-in-out; }
 
-.null-marker { color: #9e7352; font-weight: 700; font-size: 0.85rem; }
-.ll-arrow    { color: var(--amber); font-weight: 700; font-size: 0.85rem; }
+.null-marker { color: #9e7352; font-weight: 400; font-size: 0.85rem; }
+.ll-arrow    { color: var(--amber); font-weight: 400; font-size: 0.85rem; }
 
 @keyframes shake {
   0%, 100% { transform: translateX(0);    }
@@ -210,11 +217,11 @@ body {
 }
 
 @keyframes flash-ok {
-  0%, 100% { box-shadow: 0 2px 12px rgba(179, 92, 0, 0.07); }
+  0%, 100% { box-shadow: 4px 4px 0 rgba(179, 92, 0, 0.28); }
   35%       { box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.4), 0 4px 28px rgba(46, 125, 50, 0.25); }
 }
 @keyframes flash-bad {
-  0%, 100% { box-shadow: 0 2px 12px rgba(179, 92, 0, 0.07); }
+  0%, 100% { box-shadow: 4px 4px 0 rgba(179, 92, 0, 0.28); }
   35%       { box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.35), 0 4px 28px rgba(198, 40, 40, 0.2); }
 }
 .panel-flash-ok  { animation: flash-ok  0.65s ease; }
@@ -227,27 +234,27 @@ body {
 .mode-tab {
   flex: 1;
   padding: 0.4rem 0.6rem;
-  border: 1.5px solid rgba(179, 92, 0, 0.25);
+  border: 2px solid rgba(179, 92, 0, 0.3);
   border-radius: 8px;
   background: rgba(179, 92, 0, 0.05);
   color: var(--amber-dark);
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.1s;
 }
-.mode-tab.active             { background: var(--amber); border-color: var(--amber); color: #fff; }
+.mode-tab.active             { background: var(--amber); border-color: var(--amber); color: #fff; box-shadow: 2px 2px 0 var(--ink); }
 .mode-tab:hover:not(.active) { background: var(--amber-lt); border-color: var(--amber); }
 
 /* ─── Root info badge ───────────────────────────────────────────────────────── */
 
 .root-info {
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--amber-dark);
-  background: rgba(179, 92, 0, 0.08);
-  border: 1.5px solid rgba(179, 92, 0, 0.2);
+  background: rgba(179, 92, 0, 0.06);
+  border: 2px solid rgba(179, 92, 0, 0.25);
   border-radius: 6px;
   padding: 0.4rem 0.75rem;
 }
@@ -259,7 +266,7 @@ body {
   display: inline-block;
   background: var(--amber);
   color: #fff;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 0.75rem;
   padding: 0.3rem 0.65rem;
   border-radius: 4px;
@@ -269,7 +276,7 @@ body {
 
 .q-text {
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1.55;
 }
 
@@ -281,22 +288,23 @@ body {
 
 .choice-btn {
   padding: 0.65rem 0.5rem;
-  border: 2px solid rgba(179, 92, 0, 0.25);
+  border: 2px solid rgba(179, 92, 0, 0.3);
   border-radius: 8px;
   background: #fff;
   color: var(--text);
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s, transform 0.1s;
+  transition: background 0.12s, border-color 0.12s, transform 0.1s, box-shadow 0.1s;
   text-align: center;
   word-break: break-word;
 }
 .choice-btn:hover:not(:disabled) {
-  background: rgba(179, 92, 0, 0.08);
+  background: rgba(179, 92, 0, 0.06);
   border-color: var(--amber);
-  transform: translateY(-2px);
+  transform: translateY(-2px) translateX(-1px);
+  box-shadow: 2px 2px 0 rgba(179,92,0,0.3);
 }
 .choice-btn:disabled { cursor: default; }
 .choice-btn.ok  { background: #e8f5e9; border-color: var(--ok);  color: var(--ok);  }

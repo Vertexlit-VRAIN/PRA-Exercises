@@ -1,6 +1,5 @@
 /* ─── Grafos — Shared Exercise Stylesheet ────────────────────────────────────
    All styles common to grafos-01 and beyond.
-   Each exercise links this file and keeps only its unique rules inline.
    ─────────────────────────────────────────────────────────────────────────── */
 
 @import './base.css';
@@ -11,16 +10,17 @@
   --indigo:      #1a237e;
   --indigo-dark: #0d1757;
   --indigo-lt:   #c5cae9;
-  --bg:          #f5f0eb;
   --panel:       #fff;
   --text:        #1a237e;
   --ok:          #2e7d32;
   --bad:         #c62828;
+  --font-ui:     'Fredoka One', system-ui, sans-serif;
+  --font-mono:   'Special Elite', 'Courier New', monospace;
 }
 
 body {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
-  background-color: var(--bg);
+  font-family: var(--font-ui);
+  background-color: var(--paper);
   color: var(--text);
   min-height: 100vh;
   display: flex;
@@ -30,9 +30,9 @@ body {
 /* ─── Exercise Header ───────────────────────────────────────────────────────── */
 
 .ex-header {
-  background: linear-gradient(135deg, #e8eaf6, #f0f2ff);
+  background: var(--paper);
   border-top: 3px solid var(--indigo);
-  border-bottom: 1px solid rgba(26, 35, 126, 0.15);
+  border-bottom: 2px solid var(--paper-mid);
   padding: 1rem 1.5rem 1.1rem;
   display: flex;
   flex-direction: column;
@@ -40,19 +40,23 @@ body {
 }
 
 .back-link {
+  font-family: var(--font-ui);
   color: var(--indigo);
   text-decoration: none;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 400;
   transition: opacity 0.15s;
 }
 .back-link:hover { opacity: 0.7; }
 
 .ex-title {
-  font-size: clamp(0.88rem, 2vw, 1.1rem);
-  font-weight: 700;
+  font-family: var(--font-display);
+  font-size: clamp(1.1rem, 3vw, 1.6rem);
+  font-weight: 400;
   color: var(--indigo);
-  line-height: 1.5;
+  line-height: 1.3;
+  letter-spacing: 0.04em;
+  text-shadow: 2px 2px 0 rgba(0,0,0,0.12);
 }
 
 .ex-desc {
@@ -81,16 +85,17 @@ body {
 .graph-panel,
 .q-panel {
   background: var(--panel);
-  border: 1px solid rgba(26, 35, 126, 0.2);
-  border-radius: 8px;
+  border: 2px solid var(--indigo);
+  border-radius: 12px;
   padding: 1.25rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  box-shadow: 0 2px 12px rgba(26, 35, 126, 0.07);
+  box-shadow: 4px 4px 0 rgba(26, 35, 126, 0.28);
 }
 
 .panel-label {
+  font-family: var(--font-ui);
   font-size: 0.85rem;
   color: #5c6bc0;
   letter-spacing: 0.08em;
@@ -100,53 +105,55 @@ body {
 .graph-svg {
   width: 100%;
   border-radius: 8px;
-  background: #f5f0eb;
-  border: 1px solid rgba(26, 35, 126, 0.1);
+  background: var(--paper);
+  border: 1px solid rgba(26, 35, 126, 0.12);
 }
 
 /* ─── Buttons ───────────────────────────────────────────────────────────────── */
 
 .btn {
   padding: 0.6rem 1.2rem;
-  border: none;
+  border: 2px solid var(--ink);
   border-radius: 8px;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
-  transition: opacity 0.15s, transform 0.1s;
+  box-shadow: 2px 2px 0 var(--ink);
+  transition: box-shadow 0.1s ease, transform 0.1s ease, opacity 0.15s;
 }
-.btn:hover  { opacity: 0.85; transform: translateY(-1px); }
-.btn:active { transform: translateY(0); }
+.btn:hover  { box-shadow: 3px 3px 0 var(--ink); transform: translateY(-2px) translateX(-1px); }
+.btn:active { transform: translateY(0); box-shadow: 1px 1px 0 var(--ink); }
 
 .btn-primary { background: var(--indigo); color: #fff; }
 .btn-outline {
-  background: rgba(26, 35, 126, 0.07);
+  background: rgba(26, 35, 126, 0.05);
   color: var(--indigo-dark);
-  border: 1.5px solid rgba(26, 35, 126, 0.25);
+  border: 2px solid var(--indigo);
+  box-shadow: 2px 2px 0 rgba(26,35,126,0.25);
 }
 
 /* ─── Feedback ──────────────────────────────────────────────────────────────── */
 
-.feedback { font-size: 0.9rem; font-weight: 700; min-height: 1.4em; }
+.feedback { font-size: 0.9rem; font-weight: 400; min-height: 1.4em; }
 .feedback.ok  { color: var(--ok); }
 .feedback.bad { color: var(--bad); }
 
 /* ─── Score bar ─────────────────────────────────────────────────────────────── */
 
 .score-bar {
-  border-top: 2px solid rgba(26, 35, 126, 0.15);
-  background: rgba(245, 240, 235, 0.97);
+  border-top: 2px solid rgba(26, 35, 126, 0.2);
+  background: var(--paper);
   padding: 0.7rem 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
   font-size: 0.88rem;
-  font-weight: 700;
+  font-weight: 400;
   color: var(--indigo-dark);
 }
-.score-num { font-size: 1.4rem; color: var(--indigo); font-weight: 700; }
+.score-num { font-family: var(--font-display); font-size: 1.6rem; color: var(--indigo); font-weight: 400; }
 
 /* ─── Quiz / MCQ components ─────────────────────────────────────────────────── */
 
@@ -154,7 +161,7 @@ body {
   display: inline-block;
   background: var(--indigo);
   color: #fff;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 0.65rem;
   padding: 0.3rem 0.65rem;
   border-radius: 4px;
@@ -164,7 +171,7 @@ body {
 
 .q-text {
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1.55;
 }
 
@@ -176,22 +183,23 @@ body {
 
 .choice-btn {
   padding: 0.65rem 0.5rem;
-  border: 2px solid rgba(26, 35, 126, 0.2);
+  border: 2px solid rgba(26, 35, 126, 0.25);
   border-radius: 8px;
   background: #fff;
   color: var(--text);
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-ui);
   font-size: 0.95rem;
-  font-weight: 700;
+  font-weight: 400;
   cursor: pointer;
-  transition: background 0.12s, border-color 0.12s, transform 0.1s;
+  transition: background 0.12s, border-color 0.12s, transform 0.1s, box-shadow 0.1s;
   text-align: center;
   word-break: break-word;
 }
 .choice-btn:hover:not(:disabled) {
-  background: rgba(26, 35, 126, 0.07);
+  background: rgba(26, 35, 126, 0.05);
   border-color: var(--indigo);
-  transform: translateY(-2px);
+  transform: translateY(-2px) translateX(-1px);
+  box-shadow: 2px 2px 0 rgba(26,35,126,0.25);
 }
 .choice-btn:disabled { cursor: default; }
 .choice-btn.ok  { background: #e8f5e9; border-color: var(--ok);  color: var(--ok);  }
@@ -200,11 +208,11 @@ body {
 /* ─── Flash animations ──────────────────────────────────────────────────────── */
 
 @keyframes flash-ok {
-  0%, 100% { box-shadow: 0 2px 12px rgba(26, 35, 126, 0.07); }
+  0%, 100% { box-shadow: 4px 4px 0 rgba(26, 35, 126, 0.28); }
   35%       { box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.4), 0 4px 28px rgba(46, 125, 50, 0.25); }
 }
 @keyframes flash-bad {
-  0%, 100% { box-shadow: 0 2px 12px rgba(26, 35, 126, 0.07); }
+  0%, 100% { box-shadow: 4px 4px 0 rgba(26, 35, 126, 0.28); }
   35%       { box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.35), 0 4px 28px rgba(198, 40, 40, 0.2); }
 }
 .panel-flash-ok  { animation: flash-ok  0.65s ease; }
@@ -212,10 +220,8 @@ body {
 
 /* ─── Trace exercise styles (grafos-06+) ───────────────────────────────────── */
 
-/* Sticky q-panel and wider padding for trace exercises */
 .q-panel { position: sticky; top: 1.25rem; padding: 1.5rem; }
 
-/* State display container — shared by DFS and BFS exercises */
 .dfs-state,
 .bfs-state {
   display: flex; flex-direction: column; gap: 0.55rem;
@@ -225,26 +231,24 @@ body {
 
 .state-row   { display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap; }
 .state-label {
-  font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 0.62rem; font-weight: 700;
+  font-family: var(--font-ui); font-size: 0.62rem; font-weight: 400;
   color: var(--indigo); text-transform: uppercase; letter-spacing: 0.1em;
   white-space: nowrap; min-width: 4rem;
 }
 .state-chips { display: flex; gap: 0.22rem; flex-wrap: wrap; align-items: center; }
 
 .chip-closed {
-  font-family: 'Space Grotesk', sans-serif; font-size: 0.78rem; font-weight: 700;
+  font-family: var(--font-ui); font-size: 0.78rem; font-weight: 400;
   padding: 0.12rem 0.45rem; border-radius: 4px;
   background: #e8f5e9; color: #1b5e20; border: 1.5px solid #43a047;
 }
-.chip-empty { font-family: 'Space Grotesk', sans-serif; font-size: 0.78rem; color: #9e9e9e; }
+.chip-empty { font-family: var(--font-ui); font-size: 0.78rem; color: #9e9e9e; }
 
-/* Step counter */
 .step-counter {
-  font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 0.68rem; font-weight: 700;
+  font-family: var(--font-ui); font-size: 0.68rem; font-weight: 400;
   color: #5c6bc0; text-align: right; letter-spacing: 0.04em;
 }
 
-/* Graph legend */
 .graph-legend {
   display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;
   padding: 0.55rem 0.8rem;
@@ -260,7 +264,6 @@ body {
 .legend-line.ll-tree   { background: #1a237e; }
 .legend-text           { font-size: 0.7rem; color: #283593; }
 
-/* Adjacency list display */
 .adj-list {
   display: flex; flex-direction: column; gap: 0.18rem;
   background: rgba(26,35,126,0.04); border-radius: 6px;
@@ -269,26 +272,26 @@ body {
 .adj-row {
   display: flex; align-items: center; gap: 0.22rem; flex-wrap: wrap;
   padding: 0.18rem 0.3rem; border-radius: 4px;
-  font-size: 0.8rem; font-family: 'Space Grotesk', sans-serif;
+  font-size: 0.8rem; font-family: var(--font-mono);
 }
-.adj-key    { font-weight: 700; color: var(--indigo); min-width: 1.1rem; text-align: right; }
+.adj-key    { font-weight: 400; color: var(--indigo); min-width: 1.1rem; text-align: right; }
 .adj-colon  { color: #5c6bc0; margin-right: 0.05rem; }
 .adj-sep    { color: #aab; font-size: 0.68rem; }
 .adj-chip   {
-  padding: 0.07rem 0.36rem; border-radius: 3px; font-weight: 700; font-size: 0.77rem;
+  padding: 0.07rem 0.36rem; border-radius: 3px; font-weight: 400; font-size: 0.77rem;
   background: #e8eaf6; color: var(--indigo); border: 1.5px solid #c5cae9;
 }
 .adj-empty  { color: #9e9e9e; font-style: italic; font-size: 0.75rem; }
 
-/* Done banner */
 .done-banner {
   text-align: center; padding: 1.2rem;
   background: rgba(67,160,71,0.09); border-radius: 8px;
   border: 2px solid #43a047;
 }
 .done-title {
-  font-family: 'Space Grotesk', system-ui, sans-serif; font-size: 0.95rem;
-  font-weight: 700; color: var(--ok); margin-bottom: 0.4rem;
+  font-family: var(--font-display); font-size: 1.1rem;
+  font-weight: 400; color: var(--ok); margin-bottom: 0.4rem;
+  letter-spacing: 0.04em;
 }
 .done-order { font-size: 0.82rem; color: #283593; margin: 0; }
 
