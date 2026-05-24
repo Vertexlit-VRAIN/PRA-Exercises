@@ -8,7 +8,44 @@ html { font-size: 18px; scroll-behavior: smooth; }
 /* ── Shared cartoon tokens ───────────────────────────────────── */
 :root {
   --font-display: 'Bangers', impact, sans-serif;
+  --font-mono:    'Special Elite', 'Courier New', monospace;
   --ink:          #1a1a1a;
   --paper:        #faf8f3;
   --paper-mid:    #e8e4dc;
+}
+
+/* ── Push content clear of film strips ───────────────────────── */
+body { padding-left: 28px; padding-right: 28px; }
+
+/* ── Film strip side decorations ─────────────────────────────── */
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 28px;
+  z-index: 200;
+  background-color: var(--ink);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 6px,
+    var(--paper-mid) 6px,
+    var(--paper-mid) 20px,
+    transparent 20px,
+    transparent 30px
+  );
+  background-size: 14px 30px;
+  background-position: center;
+  background-repeat: repeat-y;
+  pointer-events: none;
+}
+
+body::before { left: 0; }
+body::after  { right: 0; }
+
+@media (max-width: 767px) {
+  body::before,
+  body::after { display: none; }
 }

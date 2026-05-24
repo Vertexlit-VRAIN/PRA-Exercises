@@ -52,6 +52,35 @@ body {
   flex-direction: column;
 }
 
+/* ─── Film strip side decorations ───────────────────────────────────────────── */
+
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 28px;
+  z-index: 200;
+  background-color: var(--ink);
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 6px,
+    var(--paper-mid) 6px,
+    var(--paper-mid) 20px,
+    transparent 20px,
+    transparent 30px
+  );
+  background-size: 14px 30px;
+  background-position: center;
+  background-repeat: repeat-y;
+  pointer-events: none;
+}
+
+body::before { left: 0; }
+body::after  { right: 0; }
+
 /* ─── Site Header ───────────────────────────────────────────────────────────── */
 
 .site-header {
@@ -105,6 +134,16 @@ body {
   position: relative;
 }
 
+.feature-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.38em;
+  text-transform: uppercase;
+  color: rgba(250, 248, 243, 0.4);
+  margin-bottom: 1.2rem;
+  position: relative;
+}
+
 /* ─── Navigation Bar ────────────────────────────────────────────────────────── */
 
 .main-nav {
@@ -134,7 +173,7 @@ body {
   padding: 0.45rem 1.4rem;
   height: auto;
   border: 2px solid var(--ink);
-  border-radius: 50px;
+  border-radius: 6px;
   background: var(--paper);
   color: var(--ink-light);
   font-family: var(--font-ui);
@@ -251,7 +290,7 @@ body {
 
 .exercise-card {
   position: relative;
-  border-radius: 20px;
+  border-radius: 6px;
   padding: 1.875rem;
   background: #fff;
   display: flex;
@@ -389,22 +428,24 @@ body {
 
 .card-link {
   margin-top: auto;
-  font-family: var(--font-ui);
-  font-weight: 400;
-  font-size: 0.82rem;
-  text-decoration: none;
-  letter-spacing: 0.08em;
+  display: block;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  color: var(--ink);
-  transition: gap 0.2s;
+  text-decoration: none;
+  padding: 0.65rem 1rem;
+  background: var(--ink);
+  color: var(--paper);
+  border: 2px solid var(--ink);
+  transition: background 0.15s, color 0.15s;
 }
 
 .card-link:hover {
-  gap: 0.6rem;
-  text-decoration: underline;
+  background: transparent;
+  color: var(--ink);
+  text-decoration: none;
 }
 
 /* ─── Section title strip ───────────────────────────────────────────────────── */
@@ -422,6 +463,16 @@ body {
   color: var(--paper);
   text-shadow: 3px 3px 0 rgba(0,0,0,0.4);
   letter-spacing: 0.07em;
+}
+
+.act-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.35em;
+  text-transform: uppercase;
+  color: rgba(250, 248, 243, 0.42);
+  margin-bottom: 0.5rem;
 }
 
 /* ─── Tab panel & sub-panel backgrounds ─────────────────────────────────────── */
@@ -458,7 +509,7 @@ body {
 .theme-arboles .card-link,
 .theme-grafos .card-link,
 .theme-voraces .card-link,
-.theme-dinamica .card-link { color: var(--ink); }
+.theme-dinamica .card-link { color: var(--paper); }
 
 /* ─── Sub-navigation ────────────────────────────────────────────────────────── */
 
@@ -526,6 +577,9 @@ body {
 /* ─── Responsive ────────────────────────────────────────────────────────────── */
 
 @media (max-width: 767px) {
+  body::before,
+  body::after { display: none; }
+
   .hamburger { display: flex; }
 
   .main-nav {
@@ -555,7 +609,7 @@ body {
 
   .nav-tab {
     width: 100%;
-    border-radius: 12px;
+    border-radius: 6px;
     height: auto;
     padding: 0.85rem 1.25rem;
     font-size: 0.75rem;
