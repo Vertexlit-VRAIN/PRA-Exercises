@@ -140,7 +140,7 @@ body {
 
 /* ── Instruction & feedback ──────────────────────────────────── */
 .instr-text {
-  font-size: 0.88rem;
+  font-size: 0.95rem;
   color: #2a5c24;
   line-height: 1.65;
   background: rgba(0,130,40,0.05);
@@ -148,9 +148,25 @@ body {
   padding: 0.6rem 0.8rem;
   border-radius: 0 4px 4px 0;
 }
-.feedback { font-size: 0.85rem; font-weight: 400; min-height: 1.4em; line-height: 1.55; }
-.feedback.ok  { color: var(--ok); }
-.feedback.bad { color: var(--bad); }
+.feedback {
+  font-size: 1.05rem;
+  font-weight: 500;
+  min-height: 2.4em;
+  line-height: 1.6;
+  padding: 0.65rem 0.9rem;
+  border-radius: 6px;
+  border-left: 4px solid transparent;
+}
+.feedback.ok  {
+  color: var(--ok);
+  background: rgba(0,130,40,0.07);
+  border-left-color: var(--ok);
+}
+.feedback.bad {
+  color: var(--bad);
+  background: rgba(198,40,40,0.06);
+  border-left-color: var(--bad);
+}
 
 /* ── Round result ────────────────────────────────────────────── */
 .round-result {

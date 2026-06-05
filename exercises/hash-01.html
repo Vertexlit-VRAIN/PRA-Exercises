@@ -31,6 +31,30 @@
     }
     .ht-val.empty { color: rgba(0,130,40,0.22); font-size: 0.9rem; }
     .ht-val .placed { animation: pop-in 0.35s ease-out; }
+
+    /* ── Siguiente button ───────────────────────────────────── */
+    .btn-secondary {
+      background: transparent;
+      color: var(--green);
+      border-color: var(--green);
+      font-size: 1rem;
+    }
+
+    /* ── Formula reference box ───────────────────────────────── */
+    .formula-ref {
+      background: rgba(0,130,40,0.05);
+      border: 1.5px solid rgba(0,130,40,0.25);
+      border-radius: 10px;
+      padding: 0.75rem 1.1rem;
+      font-family: 'Share Tech Mono', monospace;
+      margin-bottom: 0.5rem;
+    }
+    .fr-row { display: flex; align-items: baseline; gap: 0.4rem; line-height: 1.9; }
+    .fr-row sub { font-size: 0.7em; }
+    .fr-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+                color: rgba(0,130,40,0.6); margin-bottom: 0.2rem; }
+    .fr-main { font-size: 1rem; color: var(--text); }
+    .fr-col  { font-size: 0.88rem; color: rgba(0,100,30,0.75); }
   </style>
 </head>
 <body>
@@ -53,6 +77,16 @@
       <span class="key-formula" id="key-formula">h(k) = k mod m</span>
     </div>
 
+    <div class="formula-ref" aria-label="Fórmulas de la ronda">
+      <p class="fr-label">Funciones de dispersión</p>
+      <div class="fr-row fr-main">
+        <span>h<sub>0</sub>(k) = k mod <strong id="fr-m">m</strong></span>
+      </div>
+      <div class="fr-row fr-col">
+        <span>colisión → h<sub>i</sub>(k) = (h(k)+i) mod <strong id="fr-m2">m</strong></span>
+      </div>
+    </div>
+
     <div class="progress-dots" id="progress-dots" aria-label="Progreso de la ronda"></div>
 
     <p class="instr-text" id="instr-text">
@@ -60,6 +94,8 @@
     </p>
 
     <p class="feedback" id="feedback" aria-live="polite"></p>
+
+    <button class="btn btn-secondary" id="btn-next-key" hidden>Siguiente →</button>
 
     <div class="round-result" id="round-result">
       <p class="result-line" id="result-line-1"></p>
@@ -108,6 +144,7 @@
   var $res1     = document.getElementById('result-line-1');
   var $res2     = document.getElementById('result-line-2');
   var $btn      = document.getElementById('btn-next');
+  var $btnKey   = document.getElementById('btn-next-key');
   var $mLabel   = document.getElementById('m-label');
   var $table    = document.getElementById('hash-table');
   var $scoreOk  = document.getElementById('score-ok');
@@ -115,6 +152,8 @@
 
   /* ── Util ───────────────────────────────────────────────── */
   function rand(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+  var SUBS = ['₀','₁','₂','₃','₄','₅','₆','₇','₈','₉'];
+  function sub(i) { return i < 10 ? SUBS[i] : String(i); }
 
   /* Returns the first free slot for key using linear probing. */
   function targetSlot(table, m, key) {
@@ -124,6 +163,18 @@
       s = (s + 1) % m;
     }
     return -1;
+  }
+
+  /* Builds a feedback HTML string using hᵢ(k) notation, one line per probe step. */
+  function buildProbeMsg(key, m, path) {
+    var h = key % m;
+    return path.map(function (slot, i) {
+      var isFree = (i === path.length - 1);
+      var formula = i === 0
+        ? 'h₀(' + key + ')=' + key + ' mod ' + m + '=' + slot
+        : '→ h' + sub(i) + '(' + key + ')=(' + h + '+' + i + ') mod ' + m + '=' + slot;
+      return formula + (isFree ? ' <strong>(libre)</strong>' : ' (ocupada)');
+    }).join('<br>');
   }
 
   /* Returns the probing path: [h(k), h(k)+1, ..., free_slot]. */
@@ -141,7 +192,7 @@
   function generateRound() {
     var mOpts = [5, 7, 8, 9, 11];
     var m     = mOpts[rand(0, mOpts.length - 1)];
-    var count = 5 + rand(0, 1);
+    var count = Math.min(5 + rand(0, 1), m);
     var keys  = buildKeys(m, count);
     return { m: m, keys: keys, table: new Array(m).fill(null), keyIdx: 0, roundOk: 0 };
   }
@@ -207,6 +258,7 @@
     var k = round.keys[round.keyIdx];
     $keyVal.textContent  = k;
     $formula.textContent = 'h(k) = k mod ' + round.m;
+    $btnKey.hidden = true;
     renderDots();
     clearFeedback();
   }
@@ -222,11 +274,11 @@
   }
 
   /* ── Feedback helpers ───────────────────────────────────── */
-  function setFb(text, type) {
-    $fb.textContent = text;
-    $fb.className   = 'feedback' + (type ? ' ' + type : '');
+  function setFb(html, type) {
+    $fb.innerHTML = html;
+    $fb.className = 'feedback' + (type ? ' ' + type : '');
   }
-  function clearFeedback() { $fb.textContent = ''; $fb.className = 'feedback'; }
+  function clearFeedback() { $fb.innerHTML = ''; $fb.className = 'feedback'; }
 
   function flashRow(i, type) {
     var row = $table.querySelector('[data-idx="' + i + '"]');
@@ -269,15 +321,8 @@
       }
 
       /* Build feedback message */
-      var h    = key % round.m;
       var path = probePath(snapshotTable, round.m, key);
-      var msg;
-      if (correct === h) {
-        msg = '✓  h(' + key + ') = ' + key + ' mod ' + round.m + ' = ' + h + ' — celda libre.';
-      } else {
-        var occupied = path.slice(0, -1);
-        msg = '✓  Colisión en ' + occupied.join(' → ') + '. Sondeo: celda ' + correct + ' libre.';
-      }
+      var msg  = '✓  ' + buildProbeMsg(key, round.m, path);
       setFb(msg, 'ok');
 
       /* Update global score */
@@ -285,40 +330,21 @@
       $scoreAll.textContent = gTotal;
 
       round.keyIdx++;
-      if (round.keyIdx >= round.keys.length) {
-        setTimeout(showRoundEnd, 900);
-      } else {
-        setTimeout(function () { renderKey(); }, 900);
-      }
+      $btnKey.hidden = false;
 
     } else {
       /* ─── Wrong ─── */
       attempts++;
       flashRow(clicked, 'bad');
 
-      var h2    = key % round.m;
       var path2 = probePath(round.table, round.m, key);
-      var dest  = path2[path2.length - 1];
+      var hint  = buildProbeMsg(key, round.m, path2);
       var msg2;
 
       if (round.table[clicked] !== null) {
-        /* Clicked an occupied cell */
-        msg2 = 'Celda ' + clicked + ' ya contiene ' + round.table[clicked] + '. ';
-        if (dest === h2) {
-          msg2 += 'h(' + key + ') = ' + h2 + ' está libre — la clave va allí.';
-        } else {
-          msg2 += 'h(' + key + ') = ' + h2 + ', ocupada. Sondeo: ' +
-                  path2.slice(0, -1).join(' → ') + ' → celda ' + dest + ' libre.';
-        }
+        msg2 = 'Celda ' + clicked + ' ya contiene ' + round.table[clicked] + '. Camino correcto:<br>' + hint;
       } else {
-        /* Clicked the wrong free cell */
-        msg2 = 'h(' + key + ') = ' + key + ' mod ' + round.m + ' = ' + h2 + '. ';
-        if (dest === h2) {
-          msg2 += 'La celda ' + h2 + ' está libre — la clave va allí directamente.';
-        } else {
-          msg2 += 'Colisión en ' + path2.slice(0, -1).join(' → ') +
-                  '. Sondeo: la clave va a la celda ' + dest + '.';
-        }
+        msg2 = 'Celda incorrecta. Camino correcto:<br>' + hint;
       }
       setFb(msg2, 'bad');
     }
@@ -338,6 +364,16 @@
     $btn.hidden = false;
   }
 
+  /* ── Next key (manual advance) ─────────────────────────── */
+  $btnKey.addEventListener('click', function () {
+    $btnKey.hidden = true;
+    if (round.keyIdx >= round.keys.length) {
+      showRoundEnd();
+    } else {
+      renderKey();
+    }
+  });
+
   /* ── New round ──────────────────────────────────────────── */
   $btn.addEventListener('click', function () {
     $btn.hidden = true;
@@ -351,6 +387,8 @@
     attempts = 0;
     $badge.textContent   = 'Ronda ' + roundNum;
     $mLabel.textContent  = 'Tabla hash  ·  m = ' + round.m;
+    document.getElementById('fr-m').textContent  = round.m;
+    document.getElementById('fr-m2').textContent = round.m;
     $instr.textContent   = 'Clica la celda donde debe insertarse la clave.';
     renderTable();
     renderKey();
