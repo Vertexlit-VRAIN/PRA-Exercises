@@ -248,9 +248,9 @@
 
   /* ── Round generation ───────────────────────────────────── */
   function generateRound() {
-    var mOpts = [5, 7, 8, 9, 11];
+    var mOpts = [5, 7];
     var m     = mOpts[rand(0, mOpts.length - 1)];
-    var count = Math.min(5 + rand(0, 1), m);
+    var count = m + rand(2, 3);  /* α ≈ 1.4–1.6 → cadenas visibles garantizadas */
     var keys  = buildKeys(m, count);
     var chains = [];
     for (var i = 0; i < m; i++) chains.push([]);
