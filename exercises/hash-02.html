@@ -173,9 +173,11 @@
   var $scoreAll   = document.getElementById('score-total');
 
   /* ── Manual advance ────────────────────────────────────── */
-  var nextAction = null;
+  var nextAction   = null;
+  var waitingNext  = false;   /* blocks table clicks while Siguiente is pending */
   $btnKey.addEventListener('click', function () {
-    $btnKey.hidden = true;
+    $btnKey.hidden  = true;
+    waitingNext     = false;
     if (nextAction) { nextAction(); nextAction = null; }
   });
 
@@ -361,7 +363,7 @@
 
   /* ── Phase 1: click a table row ─────────────────────────── */
   $table.addEventListener('click', function (e) {
-    if (round.phase !== 1 || round.keyIdx >= round.keys.length) return;
+    if (round.phase !== 1 || round.keyIdx >= round.keys.length || waitingNext) return;
     var row = e.target.closest('.ht-row');
     if (!row) return;
 
@@ -396,7 +398,8 @@
       $scoreAll.textContent = gTotal;
 
       round.keyIdx++;
-      nextAction = round.keyIdx >= round.keys.length ? toPhase2 : renderKey;
+      nextAction  = round.keyIdx >= round.keys.length ? toPhase2 : renderKey;
+      waitingNext = true;
       $btnKey.hidden = false;
     } else {
       attempts++;
