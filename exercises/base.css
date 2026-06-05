@@ -7,8 +7,8 @@ html { font-size: 18px; scroll-behavior: smooth; }
 :root {
   --font-display: 'Space Grotesk', system-ui, sans-serif;
   --font-mono:    'Share Tech Mono', 'Courier New', monospace;
-  --ink:          #111827;
-  --paper:        #ffffff;
+  --ink:          #374151;
+  --paper:        #f9fafb;
   --paper-mid:    #e5e7eb;
 }
 
