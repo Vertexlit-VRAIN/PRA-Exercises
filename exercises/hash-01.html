@@ -281,7 +281,7 @@
 
   /* ── Click handler ──────────────────────────────────────── */
   $table.addEventListener('click', function (e) {
-    if (round.keyIdx >= round.keys.length) return;
+    if (round.keyIdx >= round.keys.length || waitingNext) return;
 
     var row = e.target.closest('.ht-row');
     if (!row) return;
@@ -322,6 +322,7 @@
       $scoreAll.textContent = gTotal;
 
       round.keyIdx++;
+      waitingNext    = true;
       $btnKey.hidden = false;
 
     } else {
@@ -356,9 +357,11 @@
     $btn.hidden = false;
   }
 
-  /* ── Next key (manual advance) ─────────────────────────── */
+  /* ── Manual advance ────────────────────────────────────── */
+  var waitingNext = false;
   $btnKey.addEventListener('click', function () {
     $btnKey.hidden = true;
+    waitingNext    = false;
     if (round.keyIdx >= round.keys.length) {
       showRoundEnd();
     } else {
