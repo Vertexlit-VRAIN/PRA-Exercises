@@ -109,6 +109,8 @@
 
     <p class="feedback" id="feedback" aria-live="polite"></p>
 
+    <button class="btn btn-secondary" id="btn-next-key" hidden>Siguiente →</button>
+
     <div class="round-result" id="round-result">
       <p class="result-line" id="result-line-1"></p>
       <p class="result-line" id="result-line-2"></p>
@@ -164,10 +166,18 @@
   var $res1       = document.getElementById('result-line-1');
   var $res2       = document.getElementById('result-line-2');
   var $btn        = document.getElementById('btn-next');
+  var $btnKey     = document.getElementById('btn-next-key');
   var $mLabel     = document.getElementById('m-label');
   var $table      = document.getElementById('hash-table');
   var $scoreOk    = document.getElementById('score-ok');
   var $scoreAll   = document.getElementById('score-total');
+
+  /* ── Manual advance ────────────────────────────────────── */
+  var nextAction = null;
+  $btnKey.addEventListener('click', function () {
+    $btnKey.hidden = true;
+    if (nextAction) { nextAction(); nextAction = null; }
+  });
 
   /* ── Util ───────────────────────────────────────────────── */
   function rand(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
@@ -240,7 +250,7 @@
   function generateRound() {
     var mOpts = [5, 7, 8, 9, 11];
     var m     = mOpts[rand(0, mOpts.length - 1)];
-    var count = 5 + rand(0, 1);
+    var count = Math.min(5 + rand(0, 1), m);
     var keys  = buildKeys(m, count);
     var chains = [];
     for (var i = 0; i < m; i++) chains.push([]);
@@ -302,6 +312,7 @@
     var k = round.keys[round.keyIdx];
     $keyVal.textContent = k;
     $keyFml.textContent = 'h(k) = k mod ' + round.m;
+    $btnKey.hidden = true;
     renderDots(round.keys.length, round.keyIdx, false);
     clearFb();
   }
@@ -310,6 +321,7 @@
     var s = round.searches[round.searchIdx];
     $srchVal.textContent = s.key;
     $srchFml.textContent = 'h(' + s.key + ') = ' + s.key + ' mod ' + round.m + ' = ' + (s.key % round.m);
+    $btnKey.hidden = true;
     renderDots(round.searches.length, round.searchIdx, true);
     renderAnswerBtns();
     clearFb();
@@ -384,11 +396,8 @@
       $scoreAll.textContent = gTotal;
 
       round.keyIdx++;
-      if (round.keyIdx >= round.keys.length) {
-        setTimeout(toPhase2, 1000);
-      } else {
-        setTimeout(renderKey, 800);
-      }
+      nextAction = round.keyIdx >= round.keys.length ? toPhase2 : renderKey;
+      $btnKey.hidden = false;
     } else {
       attempts++;
       flashRow(clicked, 'bad');
@@ -451,9 +460,9 @@
 
         round.searchIdx++;
         if (round.searchIdx >= round.searches.length) {
-          setTimeout(showRoundEnd, 1000);
+          nextAction = showRoundEnd;
         } else {
-          setTimeout(function () {
+          nextAction = function () {
             clearHighlights();
             attempts = 0;
             allBtns.forEach(function (b) {
@@ -461,8 +470,9 @@
               b.classList.remove('a-correct');
             });
             renderSearch();
-          }, 1000);
+          };
         }
+        $btnKey.hidden = false;
       });
     } else {
       attempts++;

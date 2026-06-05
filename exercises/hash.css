@@ -197,7 +197,8 @@ body {
 }
 .btn:hover  { box-shadow: 3px 3px 0 var(--ink); transform: translateY(-2px) translateX(-1px); }
 .btn:active { transform: translateY(0); box-shadow: 1px 1px 0 var(--ink); }
-.btn-primary { background: var(--green); color: #fff; }
+.btn-primary   { background: var(--green); color: #fff; }
+.btn-secondary { background: transparent; color: var(--green); border-color: var(--green); font-size: 1rem; }
 
 /* ── Table card ──────────────────────────────────────────────── */
 .table-card {
