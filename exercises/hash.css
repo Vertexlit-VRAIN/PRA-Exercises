@@ -7,16 +7,14 @@
 
 /* ── Design tokens ───────────────────────────────────────────── */
 :root {
-  --green:      #1b5e20;
+  --green:      #2e7d32;
   --green-lt:   #4caf50;
-  --green-glow: #00cc44;
+  --green-glow: #43a047;
   --panel:      #fff;
-  --text:       #0d1f0d;
+  --text:       #111827;
   --ok:         #2e7d32;
   --bad:        #c62828;
-  --terminal:   #001a0a;
-  --font-ui:    'Fredoka One', system-ui, sans-serif;
-  --font-mono:  'Special Elite', 'Courier New', monospace;
+  --font-ui:    system-ui, sans-serif;
 }
 
 body {
@@ -31,8 +29,7 @@ body {
 /* ── Exercise header ─────────────────────────────────────────── */
 .ex-header {
   background: var(--paper);
-  border-top: 3px solid var(--green);
-  border-bottom: 2px solid var(--paper-mid);
+  border-bottom: 1px solid var(--paper-mid);
   padding: 1rem 1.5rem 1.1rem;
   display: flex;
   flex-direction: column;
@@ -49,16 +46,15 @@ body {
 .back-link:hover { opacity: 0.7; }
 .ex-title {
   font-family: var(--font-display);
-  font-size: clamp(1.1rem, 3vw, 1.6rem);
-  font-weight: 400;
-  color: var(--green);
+  font-size: clamp(1.1rem, 3vw, 1.5rem);
+  font-weight: 700;
+  color: var(--ink);
   line-height: 1.3;
-  letter-spacing: 0.04em;
-  text-shadow: 2px 2px 0 rgba(0,0,0,0.12);
 }
 .ex-desc {
-  font-size: 0.82rem;
-  color: #555;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: #6b7280;
   line-height: 1.5;
   max-width: 64ch;
 }
@@ -82,10 +78,10 @@ body {
 .round-badge {
   font-family: var(--font-ui);
   font-size: 0.72rem;
-  color: var(--green-glow);
-  letter-spacing: 0.08em;
-  background: rgba(0,204,68,0.07);
-  border: 2px solid rgba(0,204,68,0.3);
+  color: var(--green);
+  letter-spacing: 0.06em;
+  background: rgba(0,130,40,0.06);
+  border: 1px solid rgba(0,130,40,0.2);
   border-radius: 4px;
   padding: 0.25rem 0.65rem;
   align-self: flex-start;
@@ -94,33 +90,32 @@ body {
 /* ── Key card ────────────────────────────────────────────────── */
 .key-card {
   background: var(--panel);
-  border: 2px solid var(--green);
-  border-radius: 12px;
+  border: 1.5px solid var(--paper-mid);
+  border-radius: 8px;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.4rem;
-  box-shadow: 4px 4px 0 rgba(27, 94, 32, 0.3);
 }
 .key-label {
   font-family: var(--font-ui);
   font-size: 0.68rem;
-  color: #4a7a42;
-  letter-spacing: 0.12em;
+  color: #6b7280;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 .key-value {
   font-family: var(--font-display);
   font-size: 3.5rem;
+  font-weight: 700;
   line-height: 1;
   color: var(--green);
-  letter-spacing: 0.05em;
 }
 .key-formula {
   font-family: var(--font-mono);
   font-size: 0.88rem;
-  color: #3a7a34;
+  color: #6b7280;
   margin-top: 0.1rem;
   text-align: center;
 }
@@ -136,7 +131,7 @@ body {
   transition: background 0.2s, border-color 0.2s;
 }
 .dot.done    { background: var(--green-lt); border-color: var(--green-lt); }
-.dot.current { border-color: var(--green-glow); background: rgba(0,204,68,0.15); }
+.dot.current { border-color: var(--green); background: rgba(0,130,40,0.12); }
 
 /* ── Instruction & feedback ──────────────────────────────────── */
 .instr-text {
@@ -171,8 +166,8 @@ body {
 /* ── Round result ────────────────────────────────────────────── */
 .round-result {
   display: none;
-  background: rgba(0,204,68,0.06);
-  border: 2px solid rgba(0,204,68,0.25);
+  background: rgba(0,130,40,0.04);
+  border: 1px solid rgba(0,130,40,0.15);
   border-radius: 8px;
   padding: 1rem 1.25rem;
   flex-direction: column;
@@ -180,42 +175,44 @@ body {
 }
 .round-result.visible { display: flex; }
 .result-line { font-family: var(--font-ui); font-size: 0.85rem; color: var(--green); }
-.result-line strong { color: var(--green-glow); font-size: 1.05rem; }
+.result-line strong { color: var(--green); font-size: 1.05rem; }
 
 /* ── Button ──────────────────────────────────────────────────── */
 .btn {
-  padding: 0.6rem 1.25rem;
-  border: 2px solid var(--ink);
-  border-radius: 8px;
+  padding: 0.55rem 1.25rem;
+  border: 1.5px solid var(--paper-mid);
+  border-radius: 6px;
   font-family: var(--font-ui);
-  font-size: 0.88rem;
-  font-weight: 400;
+  font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
-  transition: box-shadow 0.1s ease, transform 0.1s ease, opacity 0.15s;
+  transition: background 0.12s ease, border-color 0.12s ease;
   align-self: flex-start;
-  box-shadow: 2px 2px 0 var(--ink);
+  background: #fff;
+  color: var(--ink);
 }
-.btn:hover  { box-shadow: 3px 3px 0 var(--ink); transform: translateY(-2px) translateX(-1px); }
-.btn:active { transform: translateY(0); box-shadow: 1px 1px 0 var(--ink); }
-.btn-primary   { background: var(--green); color: #fff; }
-.btn-secondary { background: transparent; color: var(--green); border-color: var(--green); font-size: 1rem; }
+.btn:hover  { background: #f3f4f6; border-color: #d1d5db; }
+.btn:active { background: #e5e7eb; }
+.btn-primary   { background: var(--green); color: #fff; border-color: var(--green); }
+.btn-primary:hover  { background: #256427; border-color: #256427; }
+.btn-secondary { background: #fff; color: var(--green); border-color: var(--green); font-size: 1rem; }
+.btn-secondary:hover { background: rgba(0,130,40,0.05); }
 
 /* ── Table card ──────────────────────────────────────────────── */
 .table-card {
   background: var(--panel);
-  border: 2px solid var(--green);
-  border-radius: 12px;
+  border: 1.5px solid var(--paper-mid);
+  border-radius: 8px;
   padding: 1rem 1.1rem 1.1rem;
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
-  box-shadow: 4px 4px 0 rgba(27, 94, 32, 0.3);
 }
 .panel-label {
   font-family: var(--font-ui);
   font-size: 0.72rem;
-  color: #4a7a42;
-  letter-spacing: 0.08em;
+  color: #6b7280;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
 }
 .hash-table { display: flex; flex-direction: column; gap: 0.3rem; }
@@ -250,7 +247,7 @@ body {
 
 /* ── Score footer ────────────────────────────────────────────── */
 .score-bar {
-  border-top: 2px solid rgba(0,130,40,0.2);
+  border-top: 1px solid var(--paper-mid);
   background: var(--paper);
   padding: 0.65rem 1.5rem;
   display: flex;
@@ -259,9 +256,9 @@ body {
   gap: 0.4rem;
   font-size: 0.88rem;
   font-weight: 400;
-  color: var(--green);
+  color: var(--ink);
 }
-.score-num { font-family: var(--font-display); font-size: 1.6rem; font-weight: 400; color: var(--green-glow); }
+.score-num { font-family: var(--font-display); font-size: 1.6rem; font-weight: 700; color: var(--green); }
 
 /* ── Animations ──────────────────────────────────────────────── */
 @keyframes flash-ok {
