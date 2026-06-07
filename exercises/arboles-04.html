@@ -409,7 +409,7 @@
 
     var hint = document.createElement('p');
     hint.className = 'instr-text';
-    hint.innerHTML = 'Nodos etiquetados 1..' + n + '. La <strong>raíz</strong> tiene borde ámbar grueso.';
+    hint.innerHTML = 'Nodos etiquetados 1..' + n + '.<br>La <strong>raíz</strong> tiene borde ámbar grueso.';
     left.appendChild(hint);
 
     renderTreeSVG('tree-svg', []);
@@ -491,7 +491,7 @@
 
     var instr2 = document.createElement('p');
     instr2.className = 'instr-text';
-    instr2.innerHTML = 'Fila superior: índice del nodo. Fila inferior: índice de su padre. <strong class="amber-text">Celda ámbar</strong> = la raíz apunta a sí misma.';
+    instr2.innerHTML = 'Fila superior: índice del nodo.<br>Fila inferior: índice de su padre.<br><strong class="amber-text">Celda ámbar</strong> = la raíz apunta a sí misma.';
     left.appendChild(instr2);
 
     renderParentArrayDisplay(left, true);
@@ -726,7 +726,7 @@
     var fb = document.getElementById('m2-feedback');
     if (String(chosen) === String(correct)) {
       scoreOk++;
-      fb.textContent = '¡Correcto! 🍌';
+      fb.textContent = '✓ ¡Correcto!';
       fb.className = 'feedback ok';
     } else {
       fb.textContent = 'Incorrecto — la respuesta es ' + correct + '.';
