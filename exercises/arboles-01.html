@@ -64,7 +64,7 @@
   <section class="tree-panel" aria-label="Árbol">
     <p class="panel-label">Árbol generado</p>
     <svg id="tree-svg" viewBox="0 0 560 280" role="img" aria-label="Árbol aleatorio"></svg>
-    <button class="btn btn-outline" id="btn-new-tree">🌴 Nuevo árbol</button>
+    <button class="btn btn-outline" id="btn-new-tree">△ Nuevo árbol</button>
   </section>
 
   <section class="q-panel" aria-label="Pregunta">
@@ -123,6 +123,20 @@
 
   function leaves(nodes) {
     return nodes.filter(function (n) { return n.children.length === 0; });
+  }
+
+  function branchingFactor(nodes) {
+    var internal = nodes.filter(function (n) { return n.children.length > 0; });
+    var degrees  = internal.map(function (n) { return n.children.length; });
+    var sum      = degrees.reduce(function (a, b) { return a + b; }, 0);
+    var count    = internal.length;
+    return {
+      value:    Math.round((sum / count) * 100) / 100,
+      sum:      sum,
+      count:    count,
+      degrees:  degrees,
+      internal: internal.map(function (n) { return n.id; })
+    };
   }
 
   function lca(nodes, a, b) {
@@ -208,8 +222,9 @@
   }
 
   /* ── SVG render ───────────────────────────────────────────── */
-  function renderTree(nodes, hl) {
-    hl = hl || [];
+  function renderTree(nodes, hl, hlEdges) {
+    hl      = hl || [];
+    hlEdges = hlEdges !== false;
     var svg  = document.getElementById('tree-svg');
     svg.innerHTML = '';
     var hSet = new Set(hl);
@@ -217,7 +232,7 @@
     nodes.forEach(function (nd) {
       if (nd.parent === null) return;
       var par      = nodes[nd.parent];
-      var isHLedge = hSet.has(nd.id) && hSet.has(nd.parent);
+      var isHLedge = hlEdges && hSet.has(nd.id) && hSet.has(nd.parent);
       var line     = document.createElementNS(NS, 'line');
       line.setAttribute('x1', par.x); line.setAttribute('y1', par.y);
       line.setAttribute('x2', nd.x);  line.setAttribute('y2', nd.y);
@@ -273,8 +288,31 @@
     return Array.from(pool).sort(function (a, b) { return a - b; });
   }
 
+  function makeDecimalOptions(correct, sum, count, totalNodes) {
+    var round2 = function (v) { return Math.round(v * 100) / 100; };
+    var pool   = new Set([correct]);
+
+    var cands = [round2(sum / totalNodes), round2(sum / (count + 1))];
+    if (count > 1) cands.push(round2(sum / (count - 1)));
+    cands = cands.filter(function (v) { return v > 0 && v !== correct; });
+
+    for (var i = cands.length - 1; i > 0; i--) {
+      var j = rand(0, i);
+      var tmp = cands[i]; cands[i] = cands[j]; cands[j] = tmp;
+    }
+    cands.forEach(function (c) { if (pool.size < 4) pool.add(c); });
+
+    var off = 0.1;
+    while (pool.size < 4) {
+      var v = round2(correct + off);
+      if (v > 0 && !pool.has(v)) pool.add(v);
+      off += 0.1;
+    }
+    return Array.from(pool).sort(function (a, b) { return a - b; });
+  }
+
   /* ── Question generation ──────────────────────────────────── */
-  var TYPES = ['height', 'depth', 'leaves', 'degree', 'distance'];
+  var TYPES = ['height', 'depth', 'leaves', 'degree', 'distance', 'branching'];
 
   function generateQuestion(nodes) {
     var type = TYPES[rand(0, TYPES.length - 1)];
@@ -345,6 +383,21 @@
           opts:    makeOptions(d, 1, Math.max(d + 3, h + 2))
         };
       }
+
+      case 'branching': {
+        var bf = branchingFactor(nodes);
+        return {
+          concept: 'Ramificación',
+          text:    '¿Cuál es el <b>factor de ramificación medio</b> del árbol?',
+          def:     'Promedio de hijos por nodo, contando solo los nodos que tienen hijos: (' +
+                   bf.degrees.join('+') + ') / ' + bf.count + ' ≈ ' + bf.value.toFixed(2) + '.',
+          correct: bf.value,
+          decimal: true,
+          hl:      bf.internal,
+          hlEdges: false,
+          opts:    makeDecimalOptions(bf.value, bf.sum, bf.count, nodes.length)
+        };
+      }
     }
   }
 
@@ -359,7 +412,7 @@
     q.opts.forEach(function (opt) {
       var btn = document.createElement('button');
       btn.className   = 'choice-btn';
-      btn.textContent = opt;
+      btn.textContent = q.decimal ? opt.toFixed(2) : opt;
       btn.addEventListener('click', function () { handleAnswer(opt, q.correct); });
       choicesEl.appendChild(btn);
     });
@@ -391,7 +444,7 @@
     var fb = document.getElementById('feedback');
     if (chosen === correct) {
       scoreOk++;
-      fb.textContent = '¡Correcto! 🍌';
+      fb.textContent = '✓ ¡Correcto!';
       fb.className   = 'feedback ok';
     } else {
       fb.textContent = 'Incorrecto — la respuesta es ' + correct + '.';
@@ -419,7 +472,7 @@
     tree     = generateTree();
     computeLayout(tree);
     currentQ = generateQuestion(tree);
-    renderTree(tree, currentQ.hl);
+    renderTree(tree, currentQ.hl, currentQ.hlEdges);
     renderQuestion(currentQ);
   });
 
@@ -427,7 +480,7 @@
     tree     = generateTree();
     computeLayout(tree);
     currentQ = generateQuestion(tree);
-    renderTree(tree, currentQ.hl);
+    renderTree(tree, currentQ.hl, currentQ.hlEdges);
     renderQuestion(currentQ);
   });
 
@@ -435,7 +488,7 @@
   tree     = generateTree();
   computeLayout(tree);
   currentQ = generateQuestion(tree);
-  renderTree(tree, currentQ.hl);
+  renderTree(tree, currentQ.hl, currentQ.hlEdges);
   renderQuestion(currentQ);
 
 }());

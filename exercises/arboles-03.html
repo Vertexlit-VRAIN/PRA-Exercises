@@ -493,7 +493,7 @@
     var fb = document.getElementById('feedback-1');
     var total = positions.length;
     fb.textContent = correct === total
-      ? '¡Perfecto! La tabla está completa. 🌴'
+      ? '✓ ¡Perfecto! La tabla está completa.'
       : correct + '/' + total + ' filas correctas.';
     fb.className = 'feedback ' + (correct === total ? 'ok' : 'bad');
   }
@@ -704,7 +704,7 @@
     var fb = document.getElementById('feedback-2');
     var total = positions.length;
     fb.textContent = correct === total
-      ? '¡Perfecto! Todos los nodos en su posición. 🌴'
+      ? '✓ ¡Perfecto! Todos los nodos en su posición.'
       : correct + '/' + total + ' posiciones correctas.';
     fb.className = 'feedback ' + (correct === total ? 'ok' : 'bad');
   }

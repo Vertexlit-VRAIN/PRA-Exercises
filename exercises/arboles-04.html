@@ -469,7 +469,7 @@
     updateScore();
     var fb = document.getElementById('feedback-m1');
     fb.textContent = correct === n
-      ? '¡Perfecto! Todos los punteros correctos. 🌴'
+      ? '✓ ¡Perfecto! Todos los punteros correctos.'
       : correct + '/' + n + ' celdas correctas.';
     fb.className = 'feedback ' + (correct === n ? 'ok' : 'bad');
   }

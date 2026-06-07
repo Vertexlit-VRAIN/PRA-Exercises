@@ -89,7 +89,7 @@
       <p class="panel-label">Nodos — arrástralos a su fila</p>
       <div class="chips-container" id="chips-container" role="list" aria-label="Nodos disponibles"></div>
     </div>
-    <button class="btn btn-outline" id="btn-new-tree">🌴 Nuevo árbol</button>
+    <button class="btn btn-outline" id="btn-new-tree">△ Nuevo árbol</button>
   </section>
 
   <section class="array-panel" aria-label="Array Lista de Hijos">
@@ -325,7 +325,7 @@
       }
     });
     var fb = document.getElementById('feedback');
-    fb.textContent = correct === N ? '¡Perfecto! Representación correcta. 🌴' : correct + '/' + N + ' filas correctas.';
+    fb.textContent = correct === N ? '✓ ¡Perfecto! Representación correcta.' : correct + '/' + N + ' filas correctas.';
     fb.className   = 'feedback ' + (correct === N ? 'ok' : 'bad');
     document.getElementById('score-ok').textContent    = correct;
     document.getElementById('score-total').textContent = N;
