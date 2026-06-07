@@ -32,6 +32,12 @@
     }
     .array-row.row-ok  { border-left-color: var(--ok);  background: rgba(46,125,50,0.05); }
     .array-row.row-bad { border-left-color: var(--bad); background: rgba(198,40,40,0.05); }
+    .array-row.row-linked { background: rgba(179,92,0,0.07); border-left-color: var(--amber); }
+
+    /* Tree node ↔ array row cross-highlight */
+    .tree-node circle { cursor: pointer; transition: fill 0.15s, stroke 0.15s, stroke-width 0.15s; }
+    .tree-node:focus  { outline: none; }
+    .tree-node.node-linked circle { fill: var(--amber-lt); stroke: var(--amber); stroke-width: 3.5; }
 
     .row-index {
       min-width: 3rem;
@@ -43,11 +49,14 @@
     }
     .index-num { font-weight: 700; font-size: 1rem; color: var(--amber); line-height: 1; }
     .root-badge {
-      font-family: 'Press Start 2P', monospace;
-      font-size: 0.38rem;
+      font-family: var(--font-ui);
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
       background: var(--amber);
       color: #fff;
-      padding: 0.15rem 0.35rem;
+      padding: 0.15rem 0.4rem;
       border-radius: 3px;
       white-space: nowrap;
       line-height: 1.5;
@@ -197,6 +206,11 @@
     });
     nodes.forEach(function(nd) {
       var g = document.createElementNS(NS, 'g');
+      g.setAttribute('class', 'tree-node');
+      g.setAttribute('data-node-id', nd.id);
+      g.setAttribute('tabindex', '0');
+      g.setAttribute('role', 'button');
+      g.setAttribute('aria-label', 'Nodo ' + nd.label);
       var c = document.createElementNS(NS, 'circle');
       c.setAttribute('cx', nd.x); c.setAttribute('cy', nd.y); c.setAttribute('r', R);
       c.setAttribute('fill', '#fff8e1'); c.setAttribute('stroke', '#9a6830'); c.setAttribute('stroke-width', '2.5');
@@ -244,6 +258,7 @@
       var row = document.createElement('div');
       row.className = 'array-row';
       row.id = 'row-' + node.id;
+      row.setAttribute('tabindex', '0');
 
       var idx = document.createElement('div');
       idx.className = 'row-index';
@@ -334,6 +349,32 @@
   function clearValidation() {
     var fb = document.getElementById('feedback');
     fb.textContent = ''; fb.className = 'feedback';
+  }
+
+  /* ── Cross-highlight tree ↔ array (attached once, delegation) */
+  function initCrossHighlight() {
+    function link(id, on) {
+      var node = document.querySelector('#tree-svg [data-node-id="' + id + '"]');
+      var row  = document.getElementById('row-' + id);
+      if (node) node.classList.toggle('node-linked', on);
+      if (row)  row.classList.toggle('row-linked', on);
+    }
+    function targetId(t) {
+      return t.classList.contains('tree-node') ? t.dataset.nodeId : t.id.replace('row-', '');
+    }
+
+    ['mouseover', 'focusin'].forEach(function (type) {
+      document.body.addEventListener(type, function (e) {
+        var t = e.target.closest('.tree-node, .array-row');
+        if (t) link(targetId(t), true);
+      });
+    });
+    ['mouseout', 'focusout'].forEach(function (type) {
+      document.body.addEventListener(type, function (e) {
+        var t = e.target.closest('.tree-node, .array-row');
+        if (t) link(targetId(t), false);
+      });
+    });
   }
 
   /* ── Drag & drop (attached once, event delegation) ────────── */
@@ -427,6 +468,7 @@
   renderPool();
   renderArray();
   initDragDrop();
+  initCrossHighlight();
 
 }());
 </script>
