@@ -272,8 +272,10 @@
     rt.setAttribute('x', root.x);
     rt.setAttribute('y', root.y - R - 8);
     rt.setAttribute('text-anchor', 'middle');
-    rt.setAttribute('font-size', '8');
-    rt.setAttribute('font-family', 'Press Start 2P, monospace');
+    rt.setAttribute('font-size', '12');
+    rt.setAttribute('font-family', 'Space Grotesk, sans-serif');
+    rt.setAttribute('font-weight', '700');
+    rt.setAttribute('letter-spacing', '0.05em');
     rt.setAttribute('fill', '#b35c00');
     rt.textContent = 'raíz';
     svg.appendChild(rt);
@@ -410,12 +412,22 @@
     btnCheck.textContent = 'Comprobar';
     btnCheck.addEventListener('click', checkMode1);
 
+    var btnReset = document.createElement('button');
+    btnReset.className = 'btn btn-outline btn-sm';
+    btnReset.textContent = 'Reiniciar';
+    btnReset.addEventListener('click', function() {
+      initSelValues();
+      clearFeedback1();
+      renderCurrentMode();
+    });
+
     var btnNew = document.createElement('button');
     btnNew.className = 'btn btn-outline btn-sm';
     btnNew.textContent = 'Nuevo árbol';
     btnNew.addEventListener('click', newTree);
 
     actionRow.appendChild(btnCheck);
+    actionRow.appendChild(btnReset);
     actionRow.appendChild(btnNew);
     right.appendChild(actionRow);
 
@@ -707,6 +719,11 @@
       ? '✓ ¡Perfecto! Todos los nodos en su posición.'
       : correct + '/' + total + ' posiciones correctas.';
     fb.className = 'feedback ' + (correct === total ? 'ok' : 'bad');
+  }
+
+  function clearFeedback1() {
+    var fb = document.getElementById('feedback-1');
+    if (fb) { fb.textContent = ''; fb.className = 'feedback'; }
   }
 
   function clearFeedback2() {

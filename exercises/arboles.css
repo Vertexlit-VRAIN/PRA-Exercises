@@ -250,15 +250,17 @@ body {
 /* ─── Root info badge ───────────────────────────────────────────────────────── */
 
 .root-info {
-  font-size: 0.82rem;
-  font-weight: 400;
+  font-size: 1rem;
+  font-weight: 700;
   color: var(--amber-dark);
-  background: rgba(179, 92, 0, 0.06);
-  border: 2px solid rgba(179, 92, 0, 0.25);
+  background: var(--amber-lt);
+  border: none;
+  border-left: 5px solid var(--amber);
   border-radius: 6px;
-  padding: 0.4rem 0.75rem;
+  padding: 0.6rem 1rem;
+  box-shadow: 2px 2px 0 rgba(179, 92, 0, 0.15);
 }
-.root-info strong { color: var(--amber); }
+.root-info strong { color: var(--amber); font-size: 1.15em; }
 
 /* ─── Quiz / MCQ components ─────────────────────────────────────────────────── */
 
