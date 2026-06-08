@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>05 · Inserta en el ABB — Árboles · PRA</title>
+  <title>05 · Recorridos: Pre, In y Post — Árboles · PRA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
@@ -11,64 +11,61 @@
   <style>
     .q-panel { position: sticky; top: 1.25rem; }
 
-    .key-card {
-      background: rgba(179,92,0,0.06);
-      border: 1px solid rgba(179,92,0,0.2);
-      border-radius: 8px;
-      padding: 1.1rem 1.25rem;
+    .legend { display: flex; flex-wrap: wrap; gap: 0.9rem; align-items: center; font-size: 0.78rem; color: #7a4f1a; margin-top: 0.6rem; }
+    .legend-item   { display: flex; align-items: center; gap: 0.4rem; }
+    .legend-swatch { display: inline-block; width: 0.85rem; height: 0.85rem; border: 2px solid #9a6830; }
+    .legend-swatch.op  { background: #ffe0b2; transform: rotate(45deg); }
+    .legend-swatch.num { background: #fff8e1; border-radius: 50%; }
+
+    .result-label {
+      font-size: 0.74rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #9e6a2a;
+    }
+
+    .token-display {
       display: flex;
-      flex-direction: column;
+      flex-wrap: wrap;
       align-items: center;
       gap: 0.35rem;
-    }
-    .key-label {
-      font-size: 0.72rem;
-      color: #9e6a2a;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-    .key-value {
-      font-size: 3rem;
+      font-family: 'Space Grotesk', monospace;
+      font-size: 1.05rem;
       font-weight: 700;
-      line-height: 1;
-      color: var(--amber);
-      text-shadow: 0 0 20px rgba(179,92,0,0.25);
-    }
-
-    .progress-dots { display: flex; gap: 0.45rem; justify-content: center; }
-    .dot {
-      width: 0.7rem; height: 0.7rem;
-      border-radius: 50%;
-      border: 2px solid rgba(179,92,0,0.25);
-      background: transparent;
-      transition: background 0.2s, border-color 0.2s;
-    }
-    .dot.done    { background: var(--amber); border-color: var(--amber); }
-    .dot.current { border-color: var(--amber); background: rgba(179,92,0,0.15); }
-
-    .path-trace {
-      font-size: 0.76rem;
-      color: #9e6a2a;
+      padding: 0.7rem 0.9rem;
       background: rgba(179,92,0,0.05);
-      border-left: 3px solid var(--amber);
-      padding: 0.5rem 0.7rem;
-      border-radius: 0 4px 4px 0;
-      line-height: 1.65;
-      min-height: 2.6rem;
-    }
-
-    .round-result {
-      display: none;
-      background: rgba(179,92,0,0.06);
       border: 1px solid rgba(179,92,0,0.2);
       border-radius: 8px;
-      padding: 1rem 1.25rem;
-      flex-direction: column;
-      gap: 0.3rem;
+      min-height: 2.6rem;
     }
-    .round-result.visible { display: flex; }
-    .result-line { font-size: 0.85rem; color: var(--amber-dark); }
-    .result-line strong { color: var(--amber); }
+    .token-fixed    { color: #9a6830; }
+    .token-pending  { color: rgba(179,92,0,0.32); }
+    .token-revealed { color: var(--amber-dark); }
+
+    .eval-log {
+      display: flex;
+      flex-direction: column;
+      gap: 0.32rem;
+      font-size: 0.82rem;
+      background: rgba(179,92,0,0.05);
+      border-left: 3px solid var(--amber);
+      border-radius: 0 4px 4px 0;
+      padding: 0.55rem 0.8rem;
+      min-height: 2.4rem;
+    }
+    .eval-log[hidden] { display: none; }
+    .eval-line          { margin: 0; color: var(--amber-dark); }
+    .eval-line.eval-hint{ color: #9e6a2a; font-style: italic; }
+    .eval-line strong   { color: var(--amber); }
+
+    .trace-counter {
+      font-size: 0.78rem;
+      color: #9e6a2a;
+      background: rgba(179,92,0,0.05);
+      border-left: 3px solid rgba(179,92,0,0.3);
+      padding: 0.45rem 0.7rem;
+      border-radius: 0 4px 4px 0;
+    }
 
     @media (max-width: 700px) { .q-panel { position: static; } }
   </style>
@@ -77,43 +74,43 @@
 
 <header class="ex-header">
   <a class="back-link" href="../index.html#arboles">← Árboles</a>
-  <h1 class="ex-title">05 — Inserta en el ABB</h1>
-  <p class="ex-desc">Haz clic en el hueco correcto del árbol para insertar cada clave según la propiedad del ABB.</p>
+  <h1 class="ex-title">05 — Recorridos: Pre, In y Post</h1>
+  <p class="ex-desc">Recorre un árbol de expresión aritmética en preorden, inorden y postorden. Comprueba cómo cada orden de visita produce un resultado distinto: notación prefija, infija o la evaluación paso a paso de la expresión.</p>
 </header>
 
 <main class="ex-main">
 
-  <section class="tree-panel" aria-label="Árbol binario de búsqueda">
-    <p class="panel-label">ABB — haz clic en un hueco (+)</p>
-    <svg id="tree-svg" viewBox="0 0 560 320" role="img" aria-label="Árbol binario de búsqueda"></svg>
+  <section class="tree-panel" aria-label="Árbol de expresión aritmética">
+    <p class="panel-label" id="panel-label">—</p>
+    <svg id="tree-svg" viewBox="0 0 560 320" role="img" aria-label="Árbol de expresión aritmética"></svg>
+    <div class="legend" aria-hidden="true">
+      <span class="legend-item"><span class="legend-swatch op"></span> Operador</span>
+      <span class="legend-item"><span class="legend-swatch num"></span> Operando</span>
+    </div>
   </section>
 
-  <section class="q-panel" aria-label="Clave e instrucciones">
-    <div class="round-badge" id="round-badge">Ronda 1</div>
+  <section class="q-panel" aria-label="Recorrido y resultado">
+    <div class="mode-tabs" id="mode-tabs" role="tablist"></div>
 
-    <div class="key-card">
-      <span class="key-label">Clave a insertar</span>
-      <span class="key-value" id="key-value">—</span>
-    </div>
+    <span class="q-concept" id="q-concept">—</span>
+    <p class="instr-text" id="mode-instr"></p>
 
-    <div class="progress-dots" id="progress-dots" aria-label="Progreso"></div>
+    <p class="result-label" id="result-label"></p>
+    <div class="token-display" id="token-display" aria-live="polite"></div>
 
-    <p class="path-trace" id="path-trace">Clica el hueco (+) donde debe ir la clave.</p>
+    <p class="result-label" id="eval-label" hidden>Cálculo paso a paso — evaluación bottom-up:</p>
+    <div class="eval-log" id="eval-log" hidden aria-live="polite"></div>
 
+    <p class="trace-counter" id="trace-counter" aria-live="polite"></p>
     <p class="feedback" id="feedback" aria-live="polite"></p>
 
-    <div class="round-result" id="round-result">
-      <p class="result-line" id="res1"></p>
-      <p class="result-line" id="res2"></p>
-    </div>
-
-    <button class="btn btn-primary" id="btn-next" hidden>Nueva ronda →</button>
+    <button class="btn btn-outline btn-sm" id="btn-new-tree">Nuevo árbol →</button>
   </section>
 
 </main>
 
 <footer class="score-bar" aria-label="Puntuación global">
-  Correctas a la primera: <span class="score-num" id="score-ok">0</span>
+  Recorridos correctos: <span class="score-num" id="score-ok">0</span>
   / <span id="score-total">0</span>
 </footer>
 
@@ -122,35 +119,73 @@
   'use strict';
 
   /* ── Constants ──────────────────────────────────────────────── */
-  var SVG_W  = 560;
-  var SVG_H  = 320;
-  var R      = 19;
-  var LEVEL_H = 62;
-  var PAD    = 28;
-  var NS     = 'http://www.w3.org/2000/svg';
+  var SVG_W   = 560;
+  var SVG_H   = 320;
+  var R       = 19;
+  var LEVEL_H = 66;
+  var PAD     = 36;
+  var NS      = 'http://www.w3.org/2000/svg';
+  var OPS     = ['+', '−', '×', '÷'];
+
+  /* ── Mode metadata ──────────────────────────────────────────── */
+  var MODE_INFO = {
+    pre: {
+      tabLabel: 'Preorden → Prefija',
+      concept:  'PREORDEN',
+      order:    'raíz → izquierda → derecha',
+      instr:    'El <b>preorden</b> visita primero la <b>raíz</b> y después sus subárboles: nombra la operación <b>antes</b> de conocer sus operandos — como si le dictaras la receta a alguien que todavía no sabe los números («multiplica esto: primero…, segundo…»). Anotando los nodos en ese orden obtienes la <b>notación prefija</b>, la que usan internamente Lisp y muchas calculadoras — y no necesita paréntesis para ser inequívoca.',
+      result:   'Notación prefija'
+    },
+    in: {
+      tabLabel: 'Inorden → Infija',
+      concept:  'INORDEN',
+      order:    'izquierda → raíz → derecha',
+      instr:    'El <b>inorden</b> visita primero el subárbol izquierdo, después la <b>raíz</b> y por último el derecho. Anotando los nodos en este orden — con un paréntesis al entrar y salir de cada operador — obtienes la <b>notación infija</b>: la forma habitual en que escribimos las expresiones.',
+      result:   'Notación infija'
+    },
+    post: {
+      tabLabel: 'Postorden → Postfija',
+      concept:  'POSTORDEN',
+      order:    'izquierda → derecha → raíz',
+      instr:    'El <b>postorden</b> visita los dos subárboles antes que la <b>raíz</b>: cuando llegas a un operador ya conoces el valor de sus dos operandos, así que puedes <b>calcularlo en el acto</b>. Por eso este recorrido te deja <b>evaluar la expresión de abajo hacia arriba</b>, operación a operación — y, de propina, el orden en que anotas los nodos coincide con la <b>notación postfija (RPN)</b> que usan algunas calculadoras científicas.',
+      result:   'Notación postfija'
+    }
+  };
+  var MODE_ORDER = ['pre', 'in', 'post'];
+
+  /* short rule reminders for wrong-click feedback — describe the RULE, never
+     point at a specific node (labels repeat in an expression tree, e.g.
+     several "+" or several "8", so naming/marking one would just hand over
+     the answer and remove the challenge of reasoning about the structure) */
+  var RULE_HINT = {
+    pre:  'en preorden visitas la raíz, luego TODO el subárbol izquierdo y solo al final el derecho.',
+    in:   'en inorden visitas TODO el subárbol izquierdo, luego la raíz y por último TODO el subárbol derecho.',
+    post: 'en postorden visitas el subárbol izquierdo, luego el derecho, y la raíz al final — el operador llega cuando ya conoces el valor de sus dos operandos.'
+  };
 
   /* ── State ──────────────────────────────────────────────────── */
   var nodes      = [];
-  var insertKeys = [];
-  var keyIdx     = 0;
-  var roundNum   = 0;
-  var roundOk    = 0;
+  var activeMode = 'pre';
+  var currentQ   = null;   // { trace, tokens, evalLog }
+  var traceIdx   = 0;
+  var answered   = false;
+  var hadWrong   = false;
   var gOk        = 0;
   var gTotal     = 0;
-  var attempts   = 0;
-  var locked     = false;
 
   /* ── DOM ────────────────────────────────────────────────────── */
   var $svg     = document.getElementById('tree-svg');
-  var $badge   = document.getElementById('round-badge');
-  var $keyVal  = document.getElementById('key-value');
-  var $dots    = document.getElementById('progress-dots');
-  var $trace   = document.getElementById('path-trace');
+  var $panelLb = document.getElementById('panel-label');
+  var $tabs    = document.getElementById('mode-tabs');
+  var $concept = document.getElementById('q-concept');
+  var $instr   = document.getElementById('mode-instr');
+  var $resLbl  = document.getElementById('result-label');
+  var $tokens  = document.getElementById('token-display');
+  var $evalLbl = document.getElementById('eval-label');
+  var $evalLog = document.getElementById('eval-log');
+  var $counter = document.getElementById('trace-counter');
   var $fb      = document.getElementById('feedback');
-  var $result  = document.getElementById('round-result');
-  var $res1    = document.getElementById('res1');
-  var $res2    = document.getElementById('res2');
-  var $btn     = document.getElementById('btn-next');
+  var $btnNew  = document.getElementById('btn-new-tree');
   var $scoreOk = document.getElementById('score-ok');
   var $scoreAll= document.getElementById('score-total');
 
@@ -160,48 +195,60 @@
     for (var i = arr.length - 1; i > 0; i--) {
       var j = rand(0, i); var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
     }
+    return arr;
   }
 
-  /* ── BST operations ─────────────────────────────────────────── */
-  function bstInsert(key) {
-    var node = { key: key, left: null, right: null, parent: null };
-    if (nodes.length === 0) { nodes.push(node); return; }
-    var idx = 0;
-    while (true) {
-      if (key < nodes[idx].key) {
-        if (nodes[idx].left === null) {
-          node.parent = idx; nodes[idx].left = nodes.length; nodes.push(node); return;
-        }
-        idx = nodes[idx].left;
-      } else {
-        if (nodes[idx].right === null) {
-          node.parent = idx; nodes[idx].right = nodes.length; nodes.push(node); return;
-        }
-        idx = nodes[idx].right;
+  /* ── Expression-tree generation ─────────────────────────────── */
+  function applyOp(op, a, b) {
+    if (op === '+') return a + b;
+    if (op === '−') return a - b;
+    if (op === '×') return a * b;
+    return a / b; // '÷' — only chosen when it divides evenly (see pickOperatorSafe)
+  }
+
+  function pickOperatorSafe(a, b) {
+    var cand = shuffle(OPS.slice());
+    for (var i = 0; i < cand.length; i++) {
+      var op = cand[i];
+      if (op === '÷' && !(b !== 0 && a % b === 0)) continue;
+      return op;
+    }
+    return '+';
+  }
+
+  function buildExpr(opsLeft) {
+    if (opsLeft === 0) {
+      var v = rand(1, 9);
+      return { type: 'num', label: String(v), value: v };
+    }
+    var leftOps  = rand(0, opsLeft - 1);
+    var rightOps = opsLeft - 1 - leftOps;
+    var left  = buildExpr(leftOps);
+    var right = buildExpr(rightOps);
+    var op = pickOperatorSafe(left.value, right.value);
+    return { type: 'op', label: op, left: left, right: right, value: applyOp(op, left.value, right.value) };
+  }
+
+  function flatten(tree) {
+    var arr = [];
+    function walk(node, parentIdx) {
+      var idx = arr.length;
+      arr.push({
+        id: idx, type: node.type, label: node.label, value: node.value,
+        left: null, right: null, parent: parentIdx,
+        x0: 0, x1: 0, x: 0, y: 0, depth: 0
+      });
+      if (node.type === 'op') {
+        arr[idx].left  = walk(node.left,  idx);
+        arr[idx].right = walk(node.right, idx);
       }
+      return idx;
     }
+    walk(tree, null);
+    return arr;
   }
 
-  function insertPath(key) {
-    var path = [], idx = 0;
-    while (idx !== null) {
-      var dir = key < nodes[idx].key ? 'left' : 'right';
-      path.push({ nodeIdx: idx, dir: dir });
-      if (nodes[idx][dir] === null) return path;
-      idx = nodes[idx][dir];
-    }
-    return path;
-  }
-
-  function pathFeedback(key) {
-    var path = insertPath(key);
-    return path.map(function (s) {
-      var nd = nodes[s.nodeIdx];
-      return key + (key < nd.key ? ' < ' : ' > ') + nd.key + ' → ' + (s.dir === 'left' ? 'izq.' : 'der.');
-    }).join('  ·  ');
-  }
-
-  /* ── Layout ─────────────────────────────────────────────────── */
+  /* ── Layout (same recursive weighting used by the other ABB exercises) ── */
   function subtreeLeaves(idx) {
     if (idx === null) return 1;
     return subtreeLeaves(nodes[idx].left) + subtreeLeaves(nodes[idx].right);
@@ -222,32 +269,54 @@
     assign(0, PAD, SVG_W - PAD, 0);
   }
 
-  function ghostPos(parentIdx, side) {
-    var nd = nodes[parentIdx];
-    return {
-      x: side === 'left' ? (nd.x0 + nd.x) / 2 : (nd.x + nd.x1) / 2,
-      y: nd.y + LEVEL_H
-    };
+  /* ── Traversals ─────────────────────────────────────────────── */
+  function preorder(i, out)  { if (i === null) return; out.push(i); preorder(nodes[i].left, out);  preorder(nodes[i].right, out); }
+  function inorder(i, out)   { if (i === null) return; inorder(nodes[i].left, out);   out.push(i); inorder(nodes[i].right, out); }
+  function postorder(i, out) { if (i === null) return; postorder(nodes[i].left, out); postorder(nodes[i].right, out); out.push(i); }
+
+  /* ── Tokens: precompute the "result string" as a sequence of reveal-able pieces ── */
+  function tokensFromTrace(trace) {
+    return trace.map(function (i) { return { text: nodes[i].label, nodeIdx: i }; });
   }
 
-  /* ── SVG render ─────────────────────────────────────────────── */
+  function infixTokens(i) {
+    var nd = nodes[i];
+    if (nd.type === 'num') return [{ text: nd.label, nodeIdx: i }];
+    var toks = [{ text: '(', nodeIdx: null }];
+    toks = toks.concat(infixTokens(nd.left));
+    toks.push({ text: nd.label, nodeIdx: i });
+    toks = toks.concat(infixTokens(nd.right));
+    toks.push({ text: ')', nodeIdx: null });
+    return toks;
+  }
+
+  function tokensToString(tokens) {
+    var s = '';
+    for (var i = 0; i < tokens.length; i++) {
+      var txt = tokens[i].text;
+      if (i === 0 || txt === ')' || tokens[i - 1].text === '(') s += txt;
+      else s += ' ' + txt;
+    }
+    return s;
+  }
+
+  /* ── Mk helper + SVG render ─────────────────────────────────── */
   function mk(tag) { return document.createElementNS(NS, tag); }
 
-  function renderTree(hlSet) {
+  function renderTree(visitedSet) {
     $svg.innerHTML = '';
 
-    /* update viewBox height to fit tree */
     var maxD = 0;
     nodes.forEach(function (nd) { if (nd.depth > maxD) maxD = nd.depth; });
     var svgH = Math.max(SVG_H, (maxD + 2) * LEVEL_H + 20);
     $svg.setAttribute('viewBox', '0 0 ' + SVG_W + ' ' + svgH);
 
-    /* real edges */
+    /* edges */
     nodes.forEach(function (nd, i) {
       ['left', 'right'].forEach(function (s) {
         var ci = nd[s]; if (ci === null) return;
         var ch = nodes[ci];
-        var hl = hlSet && hlSet.has(i) && hlSet.has(ci);
+        var hl = visitedSet.has(i) && visitedSet.has(ci);
         var ln = mk('line');
         ln.setAttribute('x1', nd.x); ln.setAttribute('y1', nd.y);
         ln.setAttribute('x2', ch.x); ln.setAttribute('y2', ch.y);
@@ -257,188 +326,235 @@
       });
     });
 
-    /* ghost edges + ghost circles */
+    /* nodes — diamonds for operators, circles for operands */
     nodes.forEach(function (nd, i) {
-      ['left', 'right'].forEach(function (s) {
-        if (nd[s] !== null) return;
-        var gp = ghostPos(i, s);
-        var ln = mk('line');
-        ln.setAttribute('x1', nd.x); ln.setAttribute('y1', nd.y);
-        ln.setAttribute('x2', gp.x); ln.setAttribute('y2', gp.y);
-        ln.setAttribute('stroke', 'rgba(179,92,0,0.2)');
-        ln.setAttribute('stroke-width', '1.5');
-        ln.setAttribute('stroke-dasharray', '4 3');
-        $svg.appendChild(ln);
+      var visited = visitedSet.has(i);
+      var g = mk('g');
+      g.setAttribute('data-node-idx', i);
+      g.style.cursor = 'pointer';
 
-        var g = mk('g');
-        g.setAttribute('data-ghost', '1');
-        g.setAttribute('data-parent', i);
-        g.setAttribute('data-side', s);
-        g.style.cursor = 'pointer';
+      var stroke = visited ? '#3d1f00' : '#9a6830';
 
-        var circ = mk('circle');
-        circ.setAttribute('cx', gp.x); circ.setAttribute('cy', gp.y);
-        circ.setAttribute('r', R - 2);
-        circ.setAttribute('fill', 'rgba(179,92,0,0.04)');
-        circ.setAttribute('stroke', 'rgba(179,92,0,0.35)');
-        circ.setAttribute('stroke-width', '1.5');
-        circ.setAttribute('stroke-dasharray', '5 3');
-
-        var txt = mk('text');
-        txt.setAttribute('x', gp.x); txt.setAttribute('y', gp.y + 5);
-        txt.setAttribute('text-anchor', 'middle');
-        txt.setAttribute('font-size', '14');
-        txt.setAttribute('font-family', 'Space Grotesk, sans-serif');
-        txt.setAttribute('fill', 'rgba(179,92,0,0.38)');
-        txt.setAttribute('pointer-events', 'none');
-        txt.textContent = '+';
-
-        g.appendChild(circ); g.appendChild(txt);
-        $svg.appendChild(g);
-      });
-    });
-
-    /* real nodes */
-    nodes.forEach(function (nd, i) {
-      var hl = hlSet && hlSet.has(i);
-      var g  = mk('g');
-      var c  = mk('circle');
-      c.setAttribute('cx', nd.x); c.setAttribute('cy', nd.y); c.setAttribute('r', R);
-      c.setAttribute('fill',         hl ? '#ffd600' : '#fff8e1');
-      c.setAttribute('stroke',       hl ? '#3d1f00' : '#9a6830');
-      c.setAttribute('stroke-width', '2.5');
+      if (nd.type === 'op') {
+        var d = R + 5;
+        var poly = mk('polygon');
+        poly.setAttribute('points',
+          (nd.x) + ',' + (nd.y - d) + ' ' +
+          (nd.x + d) + ',' + (nd.y) + ' ' +
+          (nd.x) + ',' + (nd.y + d) + ' ' +
+          (nd.x - d) + ',' + (nd.y));
+        poly.setAttribute('fill', visited ? '#ffd600' : '#ffe0b2');
+        poly.setAttribute('stroke', stroke);
+        poly.setAttribute('stroke-width', '2.5');
+        g.appendChild(poly);
+      } else {
+        var c = mk('circle');
+        c.setAttribute('cx', nd.x); c.setAttribute('cy', nd.y); c.setAttribute('r', R);
+        c.setAttribute('fill', visited ? '#ffd600' : '#fff8e1');
+        c.setAttribute('stroke', stroke);
+        c.setAttribute('stroke-width', '2.5');
+        g.appendChild(c);
+      }
 
       var t = mk('text');
       t.setAttribute('x', nd.x); t.setAttribute('y', nd.y + 5);
       t.setAttribute('text-anchor', 'middle');
-      t.setAttribute('font-size', '13');
+      t.setAttribute('font-size', '14');
       t.setAttribute('font-family', 'Space Grotesk, sans-serif');
       t.setAttribute('font-weight', '700');
-      t.setAttribute('fill', hl ? '#1a0a00' : '#3e2000');
+      t.setAttribute('fill', visited ? '#1a0a00' : '#3e2000');
       t.setAttribute('pointer-events', 'none');
-      t.textContent = nd.key;
+      t.textContent = nd.label;
+      g.appendChild(t);
 
-      g.appendChild(c); g.appendChild(t);
       $svg.appendChild(g);
     });
   }
 
-  /* ── Dots ───────────────────────────────────────────────────── */
-  function renderDots() {
-    $dots.innerHTML = '';
-    for (var i = 0; i < insertKeys.length; i++) {
-      var d = document.createElement('span');
-      d.className = 'dot' + (i < keyIdx ? ' done' : i === keyIdx ? ' current' : '');
-      $dots.appendChild(d);
+  /* ── Token / eval-log rendering ─────────────────────────────── */
+  function renderTokens(visitedSet) {
+    $tokens.innerHTML = '';
+    currentQ.tokens.forEach(function (tok) {
+      var span = document.createElement('span');
+      if (tok.nodeIdx === null) {
+        span.className = 'token-fixed';
+        span.textContent = tok.text;
+      } else if (visitedSet.has(tok.nodeIdx)) {
+        span.className = 'token-revealed';
+        span.textContent = tok.text;
+      } else {
+        span.className = 'token-pending';
+        span.textContent = '?';
+      }
+      $tokens.appendChild(span);
+    });
+  }
+
+  function renderEvalLog() {
+    var show = (activeMode === 'post');
+    $evalLbl.hidden = !show;
+    $evalLog.hidden = !show;
+    if (!show) { $evalLog.innerHTML = ''; return; }
+    $evalLog.innerHTML = '';
+    if (!currentQ.evalLog.length) {
+      var hint = document.createElement('p');
+      hint.className = 'eval-line eval-hint';
+      hint.textContent = 'Cada vez que visites un operador ya con sus dos operandos calculados, aquí aparecerá su resultado parcial.';
+      $evalLog.appendChild(hint);
+      return;
     }
+    currentQ.evalLog.forEach(function (line) {
+      var p = document.createElement('p');
+      p.className = 'eval-line';
+      p.innerHTML = line;
+      $evalLog.appendChild(p);
+    });
   }
 
-  /* ── Round generation ───────────────────────────────────────── */
-  function generateRound() {
-    nodes = [];
-    var initSize = rand(3, 5);
-    var pool = [];
-    for (var k = 10; k <= 90; k++) pool.push(k);
-    shuffle(pool);
-    for (var i = 0; i < initSize; i++) bstInsert(pool[i]);
-    insertKeys = pool.slice(initSize, initSize + 5);
+  /* ── Mode tabs ──────────────────────────────────────────────── */
+  function renderModeTabs() {
+    $tabs.innerHTML = '';
+    MODE_ORDER.forEach(function (m) {
+      var btn = document.createElement('button');
+      btn.className = 'mode-tab' + (activeMode === m ? ' active' : '');
+      btn.dataset.mode = m;
+      btn.setAttribute('role', 'tab');
+      btn.setAttribute('aria-selected', String(activeMode === m));
+      btn.textContent = MODE_INFO[m].tabLabel;
+      btn.addEventListener('click', function () {
+        if (activeMode === m) return;
+        activeMode = m;
+        startQuestion();
+      });
+      $tabs.appendChild(btn);
+    });
   }
 
-  /* ── Handle ghost click ─────────────────────────────────────── */
+  /* ── Question (= one traversal over the current tree) ───────── */
+  function buildQuestion() {
+    var trace = [];
+    if (activeMode === 'pre')  preorder(0, trace);
+    if (activeMode === 'in')   inorder(0, trace);
+    if (activeMode === 'post') postorder(0, trace);
+    var tokens = (activeMode === 'in') ? infixTokens(0) : tokensFromTrace(trace);
+    return { trace: trace, tokens: tokens, evalLog: [] };
+  }
+
+  function counterText() {
+    if (traceIdx === 0) return 'Haz clic en el primer nodo del recorrido (' + MODE_INFO[activeMode].order + ').';
+    return 'Nodo ' + traceIdx + ' de ' + currentQ.trace.length + ' visitados — sigue con el recorrido.';
+  }
+
+  function setCounter(txt) {
+    $counter.textContent = txt;
+    $counter.hidden = !txt;
+  }
+
+  function successText() {
+    var info = MODE_INFO[activeMode];
+    var str  = tokensToString(currentQ.tokens);
+    if (activeMode === 'post') {
+      return '✓ Recorrido completo — calculaste el resultado paso a paso: ' + nodes[0].value +
+             ' (de propina, esos mismos clics escriben su notación postfija: ' + str + ')';
+    }
+    return '✓ ' + info.result + ' completa: ' + str;
+  }
+
+  function startQuestion() {
+    currentQ = buildQuestion();
+    traceIdx = 0;
+    answered = false;
+    hadWrong = false;
+
+    var info = MODE_INFO[activeMode];
+    $panelLb.textContent = 'Árbol de expresión — clica el siguiente nodo (' + info.order + ')';
+    renderModeTabs();
+    $concept.textContent = info.concept;
+    $instr.innerHTML     = info.instr;
+    $resLbl.textContent  = info.result + ':';
+    setFb('', '');
+    setCounter(counterText());
+
+    renderTree(new Set());
+    renderTokens(new Set());
+    renderEvalLog();
+  }
+
+  /* ── Click handler ──────────────────────────────────────────── */
   $svg.addEventListener('click', function (e) {
-    if (locked || keyIdx >= insertKeys.length) return;
-    var g = e.target.closest('[data-ghost]');
+    if (answered) return;
+    var g = e.target.closest('[data-node-idx]');
     if (!g) return;
 
-    var clickedParent = parseInt(g.dataset.parent, 10);
-    var clickedSide   = g.dataset.side;
-    var key           = insertKeys[keyIdx];
-    var path          = insertPath(key);
-    var last          = path[path.length - 1];
+    var clicked = parseInt(g.dataset.nodeIdx, 10);
+    var correct = currentQ.trace[traceIdx];
 
-    if (clickedParent === last.nodeIdx && clickedSide === last.dir) {
-      /* ─── Correct ─── */
-      var wasFirst = attempts === 0;
-      attempts = 0;
-      gTotal++;
-      if (wasFirst) { gOk++; roundOk++; }
-      $scoreOk.textContent  = gOk;
-      $scoreAll.textContent = gTotal;
+    if (clicked === correct) {
+      traceIdx++;
+      var visited = new Set(currentQ.trace.slice(0, traceIdx));
 
-      var hlSet = new Set(path.map(function (s) { return s.nodeIdx; }));
-      renderTree(hlSet);
-      setFb('✓  ' + pathFeedback(key), 'ok');
-      locked = true;
+      if (activeMode === 'post' && nodes[clicked].type === 'op') {
+        var nd = nodes[clicked], l = nodes[nd.left], r = nodes[nd.right];
+        var line = l.value + ' ' + nd.label + ' ' + r.value + ' = ' + nd.value;
+        if (clicked === 0) line = '<strong>' + line + '  ·  resultado final: ' + nd.value + '</strong>';
+        currentQ.evalLog.push(line);
+      }
 
-      setTimeout(function () {
-        bstInsert(key);
-        computeLayout();
-        keyIdx++;
-        locked = false;
-        if (keyIdx >= insertKeys.length) {
-          showRoundEnd();
-        } else {
-          renderTree(null);
-          renderKey();
-        }
-      }, 900);
+      renderTree(visited);
+      renderTokens(visited);
+      renderEvalLog();
 
+      if (traceIdx >= currentQ.trace.length) {
+        answered = true;
+        gTotal++;
+        if (!hadWrong) gOk++;
+        $scoreOk.textContent  = gOk;
+        $scoreAll.textContent = gTotal;
+        setCounter('');
+        setFb(successText(), 'ok');
+        flashPanel('panel-flash-ok');
+        // the result can land below the fold (sticky panel + projector-height
+        // screens) — bring it fully into view so it doesn't look "cut off"
+        $btnNew.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        setCounter(counterText());
+        setFb('✓ Nodo correcto — sigue con el recorrido.', 'ok');
+      }
     } else {
-      /* ─── Wrong ─── */
-      attempts++;
-      setFb('✗  Ruta correcta: ' + pathFeedback(key), 'bad');
-      var qPanel = document.querySelector('.q-panel');
-      qPanel.classList.add('panel-flash-bad');
-      setTimeout(function () { qPanel.classList.remove('panel-flash-bad'); }, 650);
+      hadWrong = true;
+      var already = traceIdx > 0 && currentQ.trace.slice(0, traceIdx).indexOf(clicked) !== -1;
+      if (already) {
+        setFb('✗ Ese nodo ya lo habías visitado en este recorrido — toca seguir desde donde lo dejaste.', 'bad');
+      } else {
+        setFb('✗ Todavía no — recuerda que ' + RULE_HINT[activeMode], 'bad');
+      }
+      flashPanel('panel-flash-bad');
     }
   });
 
-  /* ── Helpers ────────────────────────────────────────────────── */
+  function flashPanel(cls) {
+    var qPanel = document.querySelector('.q-panel');
+    qPanel.classList.add(cls);
+    setTimeout(function () { qPanel.classList.remove(cls); }, 650);
+  }
+
   function setFb(txt, cls) {
     $fb.textContent = txt;
     $fb.className   = 'feedback' + (cls ? ' ' + cls : '');
   }
 
-  function renderKey() {
-    $keyVal.textContent = insertKeys[keyIdx];
-    $trace.textContent  = 'Clica el hueco (+) donde debe ir ' + insertKeys[keyIdx] + '.';
-    $fb.textContent     = '';
-    $fb.className       = 'feedback';
-    renderDots();
-  }
-
-  function showRoundEnd() {
-    $keyVal.textContent = '✓';
-    $trace.textContent  = 'Ronda completada.';
-    renderDots();
-    var pct = Math.round(100 * roundOk / insertKeys.length);
-    $res1.innerHTML = 'A la primera: <strong>' + roundOk + ' / ' + insertKeys.length + '</strong> (' + pct + '%)';
-    $res2.innerHTML = 'Claves insertadas: ' + insertKeys.join(', ');
-    $result.classList.add('visible');
-    $btn.hidden = false;
-  }
-
-  $btn.addEventListener('click', function () {
-    $btn.hidden = true;
-    $result.classList.remove('visible');
-    startRound();
-  });
-
-  function startRound() {
-    roundNum++;
-    roundOk  = 0;
-    keyIdx   = 0;
-    attempts = 0;
-    locked   = false;
-    $badge.textContent = 'Ronda ' + roundNum;
-    generateRound();
+  /* ── New tree ───────────────────────────────────────────────── */
+  function newTree() {
+    var tree = buildExpr(rand(2, 4)); // 2–4 operators → 5, 7 or 9 nodes
+    nodes = flatten(tree);
     computeLayout();
-    renderTree(null);
-    renderKey();
+    startQuestion();
   }
+
+  $btnNew.addEventListener('click', newTree);
 
   /* ── Boot ───────────────────────────────────────────────────── */
-  startRound();
+  newTree();
 
 }());
 </script>
