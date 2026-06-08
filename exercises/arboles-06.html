@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>06 · Inserta en el ABB — Árboles · PRA</title>
+  <title>06 · Busca, Max y Min — Árboles · PRA</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet" />
@@ -11,50 +11,19 @@
   <style>
     .q-panel { position: sticky; top: 1.25rem; }
 
-    .key-card {
-      background: rgba(179,92,0,0.06);
-      border: 1px solid rgba(179,92,0,0.2);
-      border-radius: 8px;
-      padding: 1.1rem 1.25rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.35rem;
-    }
-    .key-label {
-      font-size: 0.72rem;
-      color: #9e6a2a;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-    .key-value {
-      font-size: 3rem;
-      font-weight: 700;
-      line-height: 1;
-      color: var(--amber);
-      text-shadow: 0 0 20px rgba(179,92,0,0.25);
-    }
-
-    .progress-dots { display: flex; gap: 0.45rem; justify-content: center; }
-    .dot {
-      width: 0.7rem; height: 0.7rem;
-      border-radius: 50%;
-      border: 2px solid rgba(179,92,0,0.25);
-      background: transparent;
-      transition: background 0.2s, border-color 0.2s;
-    }
-    .dot.done    { background: var(--amber); border-color: var(--amber); }
-    .dot.current { border-color: var(--amber); background: rgba(179,92,0,0.15); }
-
-    .path-trace {
-      font-size: 0.76rem;
+    .trace-counter {
+      font-size: 0.78rem;
       color: #9e6a2a;
       background: rgba(179,92,0,0.05);
-      border-left: 3px solid var(--amber);
-      padding: 0.5rem 0.7rem;
+      border-left: 3px solid rgba(179,92,0,0.3);
+      padding: 0.45rem 0.7rem;
       border-radius: 0 4px 4px 0;
-      line-height: 1.65;
-      min-height: 2.6rem;
+    }
+
+    .q-progress {
+      font-size: 0.72rem;
+      color: #9e6a2a;
+      letter-spacing: 0.06em;
     }
 
     .round-result {
@@ -77,43 +46,35 @@
 
 <header class="ex-header">
   <a class="back-link" href="../index.html#arboles">← Árboles</a>
-  <h1 class="ex-title">06 — Inserta en el ABB</h1>
-  <p class="ex-desc">Haz clic en el hueco correcto del árbol para insertar cada clave según la propiedad del ABB.</p>
+  <h1 class="ex-title">06 — Busca, Max y Min</h1>
+  <p class="ex-desc">Traza las operaciones search, max y min sobre un ABB haciendo clic en los nodos que visita el algoritmo.</p>
 </header>
 
 <main class="ex-main">
 
   <section class="tree-panel" aria-label="Árbol binario de búsqueda">
-    <p class="panel-label">ABB — haz clic en un hueco (+)</p>
-    <svg id="tree-svg" viewBox="0 0 560 320" role="img" aria-label="Árbol binario de búsqueda"></svg>
+    <p class="panel-label">ABB — haz clic en el siguiente nodo del recorrido</p>
+    <svg id="tree-svg" viewBox="0 0 560 340" role="img" aria-label="Árbol binario de búsqueda"></svg>
   </section>
 
-  <section class="q-panel" aria-label="Clave e instrucciones">
-    <div class="round-badge" id="round-badge">Ronda 1</div>
-
-    <div class="key-card">
-      <span class="key-label">Clave a insertar</span>
-      <span class="key-value" id="key-value">—</span>
-    </div>
-
-    <div class="progress-dots" id="progress-dots" aria-label="Progreso"></div>
-
-    <p class="path-trace" id="path-trace">Clica el hueco (+) donde debe ir la clave.</p>
-
-    <p class="feedback" id="feedback" aria-live="polite"></p>
+  <section class="q-panel" aria-label="Pregunta">
+    <span class="q-concept" id="q-concept">—</span>
+    <p  class="q-text"     id="q-text"></p>
+    <p  class="trace-counter" id="trace-counter" aria-live="polite"></p>
+    <p  class="feedback"   id="feedback" aria-live="polite"></p>
+    <button class="btn btn-primary" id="btn-next" hidden>Siguiente →</button>
 
     <div class="round-result" id="round-result">
       <p class="result-line" id="res1"></p>
       <p class="result-line" id="res2"></p>
     </div>
-
-    <button class="btn btn-primary" id="btn-next" hidden>Nueva ronda →</button>
+    <button class="btn btn-primary" id="btn-new-round" hidden>Nueva ronda →</button>
   </section>
 
 </main>
 
 <footer class="score-bar" aria-label="Puntuación global">
-  Correctas a la primera: <span class="score-num" id="score-ok">0</span>
+  Preguntas correctas: <span class="score-num" id="score-ok">0</span>
   / <span id="score-total">0</span>
 </footer>
 
@@ -122,37 +83,38 @@
   'use strict';
 
   /* ── Constants ──────────────────────────────────────────────── */
-  var SVG_W  = 560;
-  var SVG_H  = 320;
-  var R      = 19;
+  var SVG_W   = 560;
+  var SVG_H   = 340;
+  var R       = 19;
   var LEVEL_H = 62;
-  var PAD    = 28;
-  var NS     = 'http://www.w3.org/2000/svg';
+  var PAD     = 28;
+  var NS      = 'http://www.w3.org/2000/svg';
 
   /* ── State ──────────────────────────────────────────────────── */
-  var nodes      = [];
-  var insertKeys = [];
-  var keyIdx     = 0;
-  var roundNum   = 0;
-  var roundOk    = 0;
-  var gOk        = 0;
-  var gTotal     = 0;
-  var attempts   = 0;
-  var locked     = false;
+  var nodes    = [];
+  var questions= [];
+  var qIdx     = 0;
+  var traceIdx = 0;
+  var answered  = false;
+  var hadWrong  = false;
+  var roundNum  = 0;
+  var roundOk   = 0;
+  var gOk       = 0;
+  var gTotal    = 0;
 
   /* ── DOM ────────────────────────────────────────────────────── */
-  var $svg     = document.getElementById('tree-svg');
-  var $badge   = document.getElementById('round-badge');
-  var $keyVal  = document.getElementById('key-value');
-  var $dots    = document.getElementById('progress-dots');
-  var $trace   = document.getElementById('path-trace');
-  var $fb      = document.getElementById('feedback');
-  var $result  = document.getElementById('round-result');
-  var $res1    = document.getElementById('res1');
-  var $res2    = document.getElementById('res2');
-  var $btn     = document.getElementById('btn-next');
-  var $scoreOk = document.getElementById('score-ok');
-  var $scoreAll= document.getElementById('score-total');
+  var $svg      = document.getElementById('tree-svg');
+  var $concept  = document.getElementById('q-concept');
+  var $text     = document.getElementById('q-text');
+  var $counter  = document.getElementById('trace-counter');
+  var $fb       = document.getElementById('feedback');
+  var $btnNext  = document.getElementById('btn-next');
+  var $result   = document.getElementById('round-result');
+  var $res1     = document.getElementById('res1');
+  var $res2     = document.getElementById('res2');
+  var $btnRound = document.getElementById('btn-new-round');
+  var $scoreOk  = document.getElementById('score-ok');
+  var $scoreAll = document.getElementById('score-total');
 
   /* ── Util ───────────────────────────────────────────────────── */
   function rand(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
@@ -162,43 +124,61 @@
     }
   }
 
-  /* ── BST operations ─────────────────────────────────────────── */
+  /* ── BST build ──────────────────────────────────────────────── */
   function bstInsert(key) {
     var node = { key: key, left: null, right: null, parent: null };
     if (nodes.length === 0) { nodes.push(node); return; }
     var idx = 0;
     while (true) {
       if (key < nodes[idx].key) {
-        if (nodes[idx].left === null) {
-          node.parent = idx; nodes[idx].left = nodes.length; nodes.push(node); return;
-        }
+        if (nodes[idx].left === null) { node.parent = idx; nodes[idx].left = nodes.length; nodes.push(node); return; }
         idx = nodes[idx].left;
       } else {
-        if (nodes[idx].right === null) {
-          node.parent = idx; nodes[idx].right = nodes.length; nodes.push(node); return;
-        }
+        if (nodes[idx].right === null) { node.parent = idx; nodes[idx].right = nodes.length; nodes.push(node); return; }
         idx = nodes[idx].right;
       }
     }
   }
 
-  function insertPath(key) {
+  /* ── Paths ──────────────────────────────────────────────────── */
+  function searchPath(key) {
     var path = [], idx = 0;
     while (idx !== null) {
-      var dir = key < nodes[idx].key ? 'left' : 'right';
-      path.push({ nodeIdx: idx, dir: dir });
-      if (nodes[idx][dir] === null) return path;
-      idx = nodes[idx][dir];
+      path.push(idx);
+      if (nodes[idx].key === key) return path;
+      idx = key < nodes[idx].key ? nodes[idx].left : nodes[idx].right;
     }
     return path;
   }
 
-  function pathFeedback(key) {
-    var path = insertPath(key);
-    return path.map(function (s) {
-      var nd = nodes[s.nodeIdx];
-      return key + (key < nd.key ? ' < ' : ' > ') + nd.key + ' → ' + (s.dir === 'left' ? 'izq.' : 'der.');
-    }).join('  ·  ');
+  function searchNotFoundPath(key) {
+    var path = [], idx = 0;
+    while (idx !== null) {
+      path.push(idx);
+      idx = key < nodes[idx].key ? nodes[idx].left : nodes[idx].right;
+    }
+    return path;
+  }
+
+  function maxPath() {
+    var idx = 0;
+    while (nodes[idx].right !== null) idx = nodes[idx].right;
+    return [idx];
+  }
+
+  function minPath() {
+    var idx = 0;
+    while (nodes[idx].left !== null) idx = nodes[idx].left;
+    return [idx];
+  }
+
+  function notFoundKey() {
+    var used = new Set(nodes.map(function (nd) { return nd.key; }));
+    for (var t = 0; t < 200; t++) {
+      var k = rand(5, 95);
+      if (!used.has(k)) return k;
+    }
+    return 99;
   }
 
   /* ── Layout ─────────────────────────────────────────────────── */
@@ -222,32 +202,27 @@
     assign(0, PAD, SVG_W - PAD, 0);
   }
 
-  function ghostPos(parentIdx, side) {
-    var nd = nodes[parentIdx];
-    return {
-      x: side === 'left' ? (nd.x0 + nd.x) / 2 : (nd.x + nd.x1) / 2,
-      y: nd.y + LEVEL_H
-    };
-  }
-
   /* ── SVG render ─────────────────────────────────────────────── */
   function mk(tag) { return document.createElementNS(NS, tag); }
 
-  function renderTree(hlSet) {
+  /*
+   * visitedSet: Set of node indices already clicked (gold fill)
+   * nextIdx   : index of the "correct next" node (amber ring)
+   */
+  function renderTree(visitedSet) {
     $svg.innerHTML = '';
 
-    /* update viewBox height to fit tree */
     var maxD = 0;
-    nodes.forEach(function (nd) { if (nd.depth > maxD) maxD = nd.depth; });
+    nodes.forEach(function (nd) { if ((nd.depth || 0) > maxD) maxD = nd.depth || 0; });
     var svgH = Math.max(SVG_H, (maxD + 2) * LEVEL_H + 20);
     $svg.setAttribute('viewBox', '0 0 ' + SVG_W + ' ' + svgH);
 
-    /* real edges */
+    /* edges */
     nodes.forEach(function (nd, i) {
       ['left', 'right'].forEach(function (s) {
         var ci = nd[s]; if (ci === null) return;
         var ch = nodes[ci];
-        var hl = hlSet && hlSet.has(i) && hlSet.has(ci);
+        var hl = visitedSet && visitedSet.has(i) && visitedSet.has(ci);
         var ln = mk('line');
         ln.setAttribute('x1', nd.x); ln.setAttribute('y1', nd.y);
         ln.setAttribute('x2', ch.x); ln.setAttribute('y2', ch.y);
@@ -257,55 +232,17 @@
       });
     });
 
-    /* ghost edges + ghost circles */
+    /* nodes */
     nodes.forEach(function (nd, i) {
-      ['left', 'right'].forEach(function (s) {
-        if (nd[s] !== null) return;
-        var gp = ghostPos(i, s);
-        var ln = mk('line');
-        ln.setAttribute('x1', nd.x); ln.setAttribute('y1', nd.y);
-        ln.setAttribute('x2', gp.x); ln.setAttribute('y2', gp.y);
-        ln.setAttribute('stroke', 'rgba(179,92,0,0.2)');
-        ln.setAttribute('stroke-width', '1.5');
-        ln.setAttribute('stroke-dasharray', '4 3');
-        $svg.appendChild(ln);
+      var visited = visitedSet && visitedSet.has(i);
+      var g = mk('g');
+      g.setAttribute('data-node-idx', i);
+      g.style.cursor = 'pointer';
 
-        var g = mk('g');
-        g.setAttribute('data-ghost', '1');
-        g.setAttribute('data-parent', i);
-        g.setAttribute('data-side', s);
-        g.style.cursor = 'pointer';
-
-        var circ = mk('circle');
-        circ.setAttribute('cx', gp.x); circ.setAttribute('cy', gp.y);
-        circ.setAttribute('r', R - 2);
-        circ.setAttribute('fill', 'rgba(179,92,0,0.04)');
-        circ.setAttribute('stroke', 'rgba(179,92,0,0.35)');
-        circ.setAttribute('stroke-width', '1.5');
-        circ.setAttribute('stroke-dasharray', '5 3');
-
-        var txt = mk('text');
-        txt.setAttribute('x', gp.x); txt.setAttribute('y', gp.y + 5);
-        txt.setAttribute('text-anchor', 'middle');
-        txt.setAttribute('font-size', '14');
-        txt.setAttribute('font-family', 'Space Grotesk, sans-serif');
-        txt.setAttribute('fill', 'rgba(179,92,0,0.38)');
-        txt.setAttribute('pointer-events', 'none');
-        txt.textContent = '+';
-
-        g.appendChild(circ); g.appendChild(txt);
-        $svg.appendChild(g);
-      });
-    });
-
-    /* real nodes */
-    nodes.forEach(function (nd, i) {
-      var hl = hlSet && hlSet.has(i);
-      var g  = mk('g');
-      var c  = mk('circle');
+      var c = mk('circle');
       c.setAttribute('cx', nd.x); c.setAttribute('cy', nd.y); c.setAttribute('r', R);
-      c.setAttribute('fill',         hl ? '#ffd600' : '#fff8e1');
-      c.setAttribute('stroke',       hl ? '#3d1f00' : '#9a6830');
+      c.setAttribute('fill',         visited ? '#ffd600' : '#fff8e1');
+      c.setAttribute('stroke',       visited ? '#3d1f00' : '#9a6830');
       c.setAttribute('stroke-width', '2.5');
 
       var t = mk('text');
@@ -314,7 +251,7 @@
       t.setAttribute('font-size', '13');
       t.setAttribute('font-family', 'Space Grotesk, sans-serif');
       t.setAttribute('font-weight', '700');
-      t.setAttribute('fill', hl ? '#1a0a00' : '#3e2000');
+      t.setAttribute('fill', visited ? '#1a0a00' : '#3e2000');
       t.setAttribute('pointer-events', 'none');
       t.textContent = nd.key;
 
@@ -323,74 +260,145 @@
     });
   }
 
-  /* ── Dots ───────────────────────────────────────────────────── */
-  function renderDots() {
-    $dots.innerHTML = '';
-    for (var i = 0; i < insertKeys.length; i++) {
-      var d = document.createElement('span');
-      d.className = 'dot' + (i < keyIdx ? ' done' : i === keyIdx ? ' current' : '');
-      $dots.appendChild(d);
-    }
+  /* ── Question generation ────────────────────────────────────── */
+  function generateQuestions() {
+    var treeKeys = nodes.map(function (nd) { return nd.key; });
+    shuffle(treeKeys);
+
+    var qs = [
+      { type: 'search', key: treeKeys[0], found: true,  trace: searchPath(treeKeys[0]) },
+      { type: 'search', key: treeKeys[1], found: true,  trace: searchPath(treeKeys[1]) },
+      { type: 'search', key: notFoundKey(), found: false, trace: [] },
+      { type: 'max', trace: maxPath() },
+      { type: 'min', trace: minPath() }
+    ];
+    /* fill not-found trace after key is set */
+    qs[2].trace = searchNotFoundPath(qs[2].key);
+
+    shuffle(qs);
+    return qs;
   }
 
-  /* ── Round generation ───────────────────────────────────────── */
-  function generateRound() {
-    nodes = [];
-    var initSize = rand(3, 5);
-    var pool = [];
-    for (var k = 10; k <= 90; k++) pool.push(k);
-    shuffle(pool);
-    for (var i = 0; i < initSize; i++) bstInsert(pool[i]);
-    insertKeys = pool.slice(initSize, initSize + 5);
+  /* ── Question display ───────────────────────────────────────── */
+  function conceptLabel(q) {
+    if (q.type === 'max') return 'MAX';
+    if (q.type === 'min') return 'MIN';
+    return 'SEARCH';
   }
 
-  /* ── Handle ghost click ─────────────────────────────────────── */
+  function questionText(q) {
+    if (q.type === 'search' && q.found)
+      return 'Traza <b>search(' + q.key + ')</b>. Haz clic en los nodos que visita el algoritmo hasta encontrar la clave.';
+    if (q.type === 'search' && !q.found)
+      return 'Traza <b>search(' + q.key + ')</b> — la clave <b>no está</b> en el árbol. Haz clic en cada nodo visitado antes de llegar a null.';
+    if (q.type === 'max')
+      return '¿Cuál es el <b>máximo</b> del ABB? Haz clic en él.';
+    return '¿Cuál es el <b>mínimo</b> del ABB? Haz clic en él.';
+  }
+
+  function counterText(q, idx) {
+    if (q.type === 'max' || q.type === 'min') return '';
+    if (idx === 0)
+      return 'Empieza por la raíz — haz clic en el nodo ' + nodes[q.trace[0]].key + '.';
+    return 'Nodo ' + (idx + 1) + ' de ' + q.trace.length + ' — siguiente: clave ' + nodes[q.trace[idx]].key;
+  }
+
+  function successText(q) {
+    if (q.type === 'search' && q.found)
+      return '✓ Encontrado: ' + q.key + ' en ' + q.trace.length + ' comparación' + (q.trace.length > 1 ? 'es.' : '.');
+    if (q.type === 'search' && !q.found)
+      return '✓ ' + q.key + ' no está en el árbol — ' + q.trace.length + ' comparación' + (q.trace.length > 1 ? 'es' : '') + ', llega a null.';
+    var result = nodes[q.trace[q.trace.length - 1]].key;
+    if (q.type === 'max')
+      return '✓ Máximo: ' + result + ' — siempre el nodo más a la derecha.';
+    return '✓ Mínimo: ' + result + ' — siempre el nodo más a la izquierda.';
+  }
+
+  /* ── Render question ────────────────────────────────────────── */
+  function renderQuestion() {
+    var q = questions[qIdx];
+    answered = false;
+    hadWrong = false;
+    traceIdx = 0;
+    $concept.textContent = conceptLabel(q);
+    $text.innerHTML      = questionText(q);
+    $counter.textContent = counterText(q, 0);
+    $fb.textContent      = '';
+    $fb.className        = 'feedback';
+    $btnNext.hidden      = true;
+    renderTree(new Set());
+  }
+
+  /* ── Click handler ──────────────────────────────────────────── */
   $svg.addEventListener('click', function (e) {
-    if (locked || keyIdx >= insertKeys.length) return;
-    var g = e.target.closest('[data-ghost]');
+    if (answered) return;
+    var g = e.target.closest('[data-node-idx]');
     if (!g) return;
 
-    var clickedParent = parseInt(g.dataset.parent, 10);
-    var clickedSide   = g.dataset.side;
-    var key           = insertKeys[keyIdx];
-    var path          = insertPath(key);
-    var last          = path[path.length - 1];
+    var clicked = parseInt(g.dataset.nodeIdx, 10);
+    var q       = questions[qIdx];
+    var correct = q.trace[traceIdx];
 
-    if (clickedParent === last.nodeIdx && clickedSide === last.dir) {
-      /* ─── Correct ─── */
-      var wasFirst = attempts === 0;
-      attempts = 0;
-      gTotal++;
-      if (wasFirst) { gOk++; roundOk++; }
-      $scoreOk.textContent  = gOk;
-      $scoreAll.textContent = gTotal;
-
-      var hlSet = new Set(path.map(function (s) { return s.nodeIdx; }));
-      renderTree(hlSet);
-      setFb('✓  ' + pathFeedback(key), 'ok');
-      locked = true;
-
-      setTimeout(function () {
-        bstInsert(key);
-        computeLayout();
-        keyIdx++;
-        locked = false;
-        if (keyIdx >= insertKeys.length) {
-          showRoundEnd();
+    if (clicked === correct) {
+      traceIdx++;
+      var visited = new Set(q.trace.slice(0, traceIdx));
+      if (traceIdx >= q.trace.length) {
+        /* trace complete */
+        answered = true;
+        gTotal++;
+        if (!hadWrong) { gOk++; roundOk++; }
+        $scoreOk.textContent  = gOk;
+        $scoreAll.textContent = gTotal;
+        renderTree(visited);
+        $counter.textContent = '';
+        setFb(successText(q), 'ok');
+        var qPanel = document.querySelector('.q-panel');
+        qPanel.classList.add('panel-flash-ok');
+        setTimeout(function () { qPanel.classList.remove('panel-flash-ok'); }, 650);
+        if (qIdx + 1 >= questions.length) {
+          $btnNext.hidden = true;
+          setTimeout(showRoundEnd, 700);
         } else {
-          renderTree(null);
-          renderKey();
+          $btnNext.hidden = false;
         }
-      }, 900);
-
+      } else {
+        renderTree(visited);
+        $counter.textContent = counterText(q, traceIdx);
+        setFb('✓ Nodo ' + nodes[correct].key + ' visitado. Continúa.', 'ok');
+      }
     } else {
-      /* ─── Wrong ─── */
-      attempts++;
-      setFb('✗  Ruta correcta: ' + pathFeedback(key), 'bad');
+      hadWrong = true;
+      var expKey = nodes[q.trace[traceIdx]].key;
+      var hint = q.type === 'max' ? 'Para max() ve siempre a la derecha. Siguiente: ' + expKey + '.' :
+                 q.type === 'min' ? 'Para min() ve siempre a la izquierda. Siguiente: ' + expKey + '.' :
+                 'El siguiente nodo correcto es ' + expKey + '.';
+      setFb('✗ ' + hint, 'bad');
       var qPanel = document.querySelector('.q-panel');
       qPanel.classList.add('panel-flash-bad');
       setTimeout(function () { qPanel.classList.remove('panel-flash-bad'); }, 650);
     }
+  });
+
+  /* ── Next question ──────────────────────────────────────────── */
+  $btnNext.addEventListener('click', function () {
+    qIdx++;
+    $btnNext.hidden = true;
+    renderQuestion();
+  });
+
+  /* ── Round end ──────────────────────────────────────────────── */
+  function showRoundEnd() {
+    var pct = Math.round(100 * roundOk / questions.length);
+    $res1.innerHTML = 'Correctas: <strong>' + roundOk + ' / ' + questions.length + '</strong> (' + pct + '%)';
+    $res2.innerHTML = 'Nodos en el árbol: ' + nodes.length;
+    $result.classList.add('visible');
+    $btnRound.hidden = false;
+  }
+
+  $btnRound.addEventListener('click', function () {
+    $result.classList.remove('visible');
+    $btnRound.hidden = true;
+    startRound();
   });
 
   /* ── Helpers ────────────────────────────────────────────────── */
@@ -399,42 +407,22 @@
     $fb.className   = 'feedback' + (cls ? ' ' + cls : '');
   }
 
-  function renderKey() {
-    $keyVal.textContent = insertKeys[keyIdx];
-    $trace.textContent  = 'Clica el hueco (+) donde debe ir ' + insertKeys[keyIdx] + '.';
-    $fb.textContent     = '';
-    $fb.className       = 'feedback';
-    renderDots();
-  }
-
-  function showRoundEnd() {
-    $keyVal.textContent = '✓';
-    $trace.textContent  = 'Ronda completada.';
-    renderDots();
-    var pct = Math.round(100 * roundOk / insertKeys.length);
-    $res1.innerHTML = 'A la primera: <strong>' + roundOk + ' / ' + insertKeys.length + '</strong> (' + pct + '%)';
-    $res2.innerHTML = 'Claves insertadas: ' + insertKeys.join(', ');
-    $result.classList.add('visible');
-    $btn.hidden = false;
-  }
-
-  $btn.addEventListener('click', function () {
-    $btn.hidden = true;
-    $result.classList.remove('visible');
-    startRound();
-  });
-
+  /* ── Start round ────────────────────────────────────────────── */
   function startRound() {
+    nodes = [];
     roundNum++;
-    roundOk  = 0;
-    keyIdx   = 0;
-    attempts = 0;
-    locked   = false;
-    $badge.textContent = 'Ronda ' + roundNum;
-    generateRound();
+    roundOk = 0;
+    qIdx    = 0;
+
+    var pool = [];
+    for (var k = 10; k <= 90; k++) pool.push(k);
+    shuffle(pool);
+    var size = rand(7, 9);
+    for (var i = 0; i < size; i++) bstInsert(pool[i]);
     computeLayout();
-    renderTree(null);
-    renderKey();
+
+    questions = generateQuestions();
+    renderQuestion();
   }
 
   /* ── Boot ───────────────────────────────────────────────────── */
