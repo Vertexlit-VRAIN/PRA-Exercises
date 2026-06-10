@@ -262,7 +262,7 @@
   }
 
   /* ── Question generation ──────────────────────────────────── */
-  var TYPES = ['path-length', 'valid-path', 'has-cycle', 'has-loop'];
+  var TYPES = ['path-length', 'valid-path', 'has-cycle', 'has-loop', 'degree'];
 
   function generateQuestion(g) {
     var type  = TYPES[rand(0, TYPES.length - 1)];
@@ -371,6 +371,26 @@
           isYesNo:     true,
           revealNodes: cycleIds,
           revealEdges: []
+        };
+      }
+
+      case 'degree': {
+        var v       = rand(0, nodes.length - 1);
+        var isOut   = Math.random() < 0.5;
+        var relEdges = edges.filter(function (e) {
+          return isOut ? e.from === v : e.to === v;
+        });
+        var degree  = relEdges.length;
+        return {
+          type:    'degree',
+          concept: isOut ? 'Grado de salida' : 'Grado de entrada',
+          text:    '¿Cuál es el <b>grado de ' + (isOut ? 'salida' : 'entrada') + '</b> del vértice ' + nodes[v].label + '?',
+          def:     'El grado de salida de un vértice es el número de aristas que salen de él. El grado de entrada es el número de aristas que llegan a él. Un bucle cuenta para ambos.',
+          correct: degree,
+          opts:    makeOptions(degree, 0, degree + 4),
+          hlNodes: new Set([v]),
+          hlEdges: relEdges,
+          isYesNo: false
         };
       }
 
