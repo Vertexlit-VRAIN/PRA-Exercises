@@ -29,7 +29,7 @@
 <header class="ex-header">
   <a class="back-link" href="../index.html#grafos">← Grafos</a>
   <h1 class="ex-title">06 — TRAZA EL DFS</h1>
-  <p class="ex-desc">Sigue el recorrido en profundidad paso a paso. Decide qué nodo visita DFS a continuación y observa cómo evolucionan CLOSED y PATH.</p>
+  <p class="ex-desc">Sigue el recorrido en profundidad paso a paso. Decide qué nodo visita DFS a continuación y observa cómo evolucionan VISITED y PATH.</p>
 </header>
 
 <main class="ex-main">
@@ -50,7 +50,7 @@
       </div>
       <div class="legend-item">
         <div class="legend-dot ld-visited"></div>
-        <span class="legend-text">visitado (CLOSED)</span>
+        <span class="legend-text">visitado (VISITED)</span>
       </div>
       <div class="legend-item">
         <div class="legend-dot ld-unseen"></div>
@@ -68,8 +68,8 @@
   <section class="q-panel" aria-label="Pregunta">
     <div class="dfs-state" id="dfs-state">
       <div class="state-row">
-        <span class="state-label">CLOSED</span>
-        <div class="state-chips" id="closed-chips"><span class="chip-empty">{ }</span></div>
+        <span class="state-label">VISITED</span>
+        <div class="state-chips" id="visited-chips"><span class="chip-empty">{ }</span></div>
       </div>
       <div class="state-row">
         <span class="state-label">PATH</span>
@@ -123,55 +123,55 @@
   /* Hardcoded 9-step trace matching the slide DFS (adj order 1→[4,2], 4→[6,3,5]) */
   var DEF_STEPS = [
     {
-      sb:{closed:[1],            path:[1],       cur:1, te:[]},
+      sb:{visited:[1],            path:[1],       cur:1, te:[]},
       concept:'DFS — Exploración',
       text:'¿Cuál es el <b>primer vecino</b> que DFS visita desde el nodo <b>1</b>?',
       opts:['4','2','6'],  correct:'4'
     },
     {
-      sb:{closed:[1,4],          path:[1,4],     cur:4, te:['1,4']},
+      sb:{visited:[1,4],          path:[1,4],     cur:4, te:['1,4']},
       concept:'DFS — Exploración',
       text:'¿Cuál es el <b>primer vecino no visitado</b> de <b>4</b>?',
       opts:['6','3','5'],  correct:'6'
     },
     {
-      sb:{closed:[1,4,6],        path:[1,4,6],   cur:6, te:['1,4','4,6']},
+      sb:{visited:[1,4,6],        path:[1,4,6],   cur:6, te:['1,4','4,6']},
       concept:'DFS — Exploración',
       text:'El nodo <b>6</b> tiene un único vecino no visitado. ¿Cuál es?',
       opts:['7','3','5'],  correct:'7'
     },
     {
-      sb:{closed:[1,4,6,7],      path:[1,4,6,7], cur:7, te:['1,4','4,6','6,7']},
+      sb:{visited:[1,4,6,7],      path:[1,4,6,7], cur:7, te:['1,4','4,6','6,7']},
       concept:'DFS — Retroceso',
       text:'<b>7</b> no tiene vecinos. DFS retrocede. ¿A qué nodo <b>vuelve primero</b>?',
       opts:['6','4','1'],  correct:'6'
     },
     {
-      sb:{closed:[1,4,6,7],      path:[1,4],     cur:4, te:['1,4','4,6','6,7']},
+      sb:{visited:[1,4,6,7],      path:[1,4],     cur:4, te:['1,4','4,6','6,7']},
       concept:'DFS — Exploración',
       text:'DFS ha retrocedido hasta <b>4</b>. ¿Cuál es el <b>siguiente vecino no visitado</b> de <b>4</b>?',
       opts:['3','5','2'],  correct:'3'
     },
     {
-      sb:{closed:[1,4,6,7,3],    path:[1,4,3],   cur:3, te:['1,4','4,6','6,7','4,3']},
+      sb:{visited:[1,4,6,7,3],    path:[1,4,3],   cur:3, te:['1,4','4,6','6,7','4,3']},
       concept:'DFS — Exploración',
       text:'¿A qué vecino va DFS desde el nodo <b>3</b>?',
       opts:['5','2','6'],  correct:'5'
     },
     {
-      sb:{closed:[1,4,6,7,3,5],  path:[1,4,3,5], cur:5, te:['1,4','4,6','6,7','4,3','3,5']},
+      sb:{visited:[1,4,6,7,3,5],  path:[1,4,3,5], cur:5, te:['1,4','4,6','6,7','4,3','3,5']},
       concept:'DFS — Estado',
-      text:'El único vecino de <b>5</b> (el nodo 7) ya está en CLOSED. ¿Cuántos nodos hay en CLOSED ahora?',
+      text:'El único vecino de <b>5</b> (el nodo 7) ya está en VISITED. ¿Cuántos nodos hay en VISITED ahora?',
       opts:['6','5','7'],  correct:'6'
     },
     {
-      sb:{closed:[1,4,6,7,3,5],  path:[1],       cur:1, te:['1,4','4,6','6,7','4,3','3,5']},
+      sb:{visited:[1,4,6,7,3,5],  path:[1],       cur:1, te:['1,4','4,6','6,7','4,3','3,5']},
       concept:'DFS — Exploración',
       text:'DFS ha retrocedido hasta <b>1</b>. ¿Cuál es el <b>siguiente vecino no visitado</b> de <b>1</b>?',
       opts:['2','4','3'],  correct:'2'
     },
     {
-      sb:{closed:[1,4,6,7,3,5,2],path:[1,2],     cur:2, te:['1,4','4,6','6,7','4,3','3,5','1,2']},
+      sb:{visited:[1,4,6,7,3,5,2],path:[1,2],     cur:2, te:['1,4','4,6','6,7','4,3','3,5','1,2']},
       concept:'DFS — Orden de visita',
       text:'¡DFS completado! ¿Cuál fue el <b>orden de visita</b> de los nodos?',
       opts:['1→4→6→7→3→5→2','1→2→4→6→3→5→7','1→4→3→5→6→7→2'],
@@ -233,15 +233,15 @@
   }
 
   function buildSteps(adjM, startId, nodeList) {
-    var closed=[], path=[], treeEdges=[], vo=[], qs=[];
+    var visited=[], path=[], treeEdges=[], vo=[], qs=[];
 
     function dfs(u){
-      path.push(u); closed.push(u); vo.push(u);
+      path.push(u); visited.push(u); vo.push(u);
       var nbrs=adjM[u]||[];
       for(var i=0;i<nbrs.length;i++){
         var v=nbrs[i];
-        if(closed.indexOf(v)===-1){
-          var unvisited=nbrs.slice(i).filter(function(w){ return closed.indexOf(w)===-1; });
+        if(visited.indexOf(v)===-1){
+          var unvisited=nbrs.slice(i).filter(function(w){ return visited.indexOf(w)===-1; });
           var correct=v;
           var distractors=[];
           for(var j=1;j<unvisited.length&&distractors.length<2;j++) distractors.push(unvisited[j]);
@@ -249,7 +249,7 @@
           nodeList.forEach(function(nd){ if(nd.id!==correct&&distractors.indexOf(nd.id)===-1&&distractors.length<2) distractors.push(nd.id); });
 
           qs.push({
-            sb:{closed:closed.slice(),path:path.slice(),cur:u,te:treeEdges.slice()},
+            sb:{visited:visited.slice(),path:path.slice(),cur:u,te:treeEdges.slice()},
             concept:'DFS — Exploración',
             text: unvisited.length===1
               ? 'El único vecino no visitado de <b>'+u+'</b> es… ¿cuál?'
@@ -276,7 +276,7 @@
       for(var _b=0;_b<20&&(w2.join(',')===vo_str||w2.join(',')===w1.join(','));_b++) w2=wrongOrder(vo);
       var correct=vo.join('→');
       qs.push({
-        sb:{closed:closed.slice(),path:[],cur:null,te:treeEdges.slice()},
+        sb:{visited:visited.slice(),path:[],cur:null,te:treeEdges.slice()},
         concept:'DFS — Orden de visita',
         text:'DFS completado. ¿Cuál fue el <b>orden de visita</b>?',
         opts:shuffle([correct,w1.join('→'),w2.join('→')]),
@@ -305,7 +305,7 @@
     defs.appendChild(mkMarker('arr-t','#1a237e'));
     svg.appendChild(defs);
 
-    var closed=sb?sb.closed:[];
+    var visited=sb?sb.visited:[];
     var path=sb?sb.path:[];
     var cur=sb?sb.cur:null;
     var teSet=sb?new Set(sb.te):new Set();
@@ -351,13 +351,13 @@
     });
 
     nodes.forEach(function(nd){
-      var inClosed=closed.indexOf(nd.id)!==-1;
+      var inVisited=visited.indexOf(nd.id)!==-1;
       var isCur=nd.id===cur;
       var inPath=path.indexOf(nd.id)!==-1;
 
       var fill,stroke,textFill,sw;
       if(isCur)         { fill='#f9a825'; stroke='#e65100'; textFill='#4a2c00'; sw='3.5'; }
-      else if(inClosed) { fill='#43a047'; stroke='#1b5e20'; textFill='#fff';    sw='2.5'; }
+      else if(inVisited) { fill='#43a047'; stroke='#1b5e20'; textFill='#fff';    sw='2.5'; }
       else if(inPath)   { fill='#fffde7'; stroke='#f9a825'; textFill='#e65100'; sw='2.5'; }
       else              { fill='#e8eaf6'; stroke='#1a237e'; textFill='#1a237e'; sw='2.5'; }
 
@@ -400,14 +400,14 @@
 
   /* ── State chips ───────────────────────────────────────────── */
   function renderState(sb) {
-    var cc=document.getElementById('closed-chips');
+    var cc=document.getElementById('visited-chips');
     var pc=document.getElementById('path-chips');
-    var closed=sb?sb.closed:[];
+    var visited=sb?sb.visited:[];
     var path=sb?sb.path:[];
 
-    cc.innerHTML=closed.length===0
+    cc.innerHTML=visited.length===0
       ? '<span class="chip-empty">{ }</span>'
-      : closed.map(function(id){ return '<span class="chip-closed">'+id+'</span>'; }).join(' ');
+      : visited.map(function(id){ return '<span class="chip-visited">'+id+'</span>'; }).join(' ');
 
     if(path.length===0){
       pc.innerHTML='<span class="chip-empty">[ ]</span>';
