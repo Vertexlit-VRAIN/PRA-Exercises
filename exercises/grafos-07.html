@@ -59,7 +59,7 @@
       </div>
       <div class="legend-item">
         <div class="legend-dot ld-visited"></div>
-        <span class="legend-text">visitado (CLOSED)</span>
+        <span class="legend-text">visitado (VISITED)</span>
       </div>
       <div class="legend-item">
         <div class="legend-dot ld-unseen"></div>
@@ -77,8 +77,8 @@
   <section class="q-panel" aria-label="Pregunta">
     <div class="bfs-state" id="bfs-state">
       <div class="state-row">
-        <span class="state-label">CLOSED</span>
-        <div class="state-chips" id="closed-chips"><span class="chip-empty">{ }</span></div>
+        <span class="state-label">VISITED</span>
+        <div class="state-chips" id="visited-chips"><span class="chip-empty">{ }</span></div>
       </div>
       <div class="state-row">
         <span class="state-label">OPEN</span>
@@ -141,72 +141,72 @@
   /* ── 14-step hardcoded BFS trace ────────────────────────────── */
   var DEF_STEPS = [
     /* 1 */
-    { sb:{open:[1],        closed:[],              cur:null, te:TE0},
+    { sb:{open:[1],        visited:[],              cur:null, te:TE0},
       concept:'BFS — Extracción',
       text:'OPEN contiene el nodo inicial. ¿Qué vértice <b>extrae BFS</b> de la cola?',
       opts:['1','4','2'],  correct:'1' },
     /* 2 */
-    { sb:{open:[],         closed:[1],             cur:1,    te:TE0},
+    { sb:{open:[],         visited:[1],             cur:1,    te:TE0},
       concept:'BFS — Inserción',
       text:'BFS procesa el nodo <b>1</b>. ¿Qué vecinos se <b>añaden a OPEN</b> (en el orden de la lista)?',
       opts:['4, 2','2, 4','4, 2, 5'],  correct:'4, 2' },
     /* 3 */
-    { sb:{open:[4,2],      closed:[1],             cur:null, te:TE12},
+    { sb:{open:[4,2],      visited:[1],             cur:null, te:TE12},
       concept:'BFS — Extracción',
       text:'OPEN = [4, 2]. BFS usa una <b>cola FIFO</b>: extrae siempre el primero. ¿Qué vértice extrae ahora?',
       opts:['4','2','1'],  correct:'4' },
     /* 4 */
-    { sb:{open:[2],        closed:[1,4],           cur:4,    te:TE12},
+    { sb:{open:[2],        visited:[1,4],           cur:4,    te:TE12},
       concept:'BFS — Inserción',
-      text:'BFS procesa el nodo <b>4</b>. Sus vecinos son [6, 3, 5]. ¿Cuáles <b>no están ya en OPEN ni CLOSED</b> y se añaden?',
+      text:'BFS procesa el nodo <b>4</b>. Sus vecinos son [6, 3, 5]. ¿Cuáles <b>no están ya en OPEN ni VISITED</b> y se añaden?',
       opts:['6, 3, 5','6, 3, 5, 2','3, 5'],  correct:'6, 3, 5' },
     /* 5 */
-    { sb:{open:[2,6,3,5],  closed:[1,4],           cur:null, te:TE45},
+    { sb:{open:[2,6,3,5],  visited:[1,4],           cur:null, te:TE45},
       concept:'BFS — Extracción',
       text:'OPEN = [2, 6, 3, 5]. ¿Qué vértice extrae BFS de la cola?',
       opts:['2','6','3'],  correct:'2' },
     /* 6 */
-    { sb:{open:[6,3,5],    closed:[1,4,2],         cur:2,    te:TE45},
+    { sb:{open:[6,3,5],    visited:[1,4,2],         cur:2,    te:TE45},
       concept:'BFS — Sin vecinos nuevos',
       text:'BFS procesa el nodo <b>2</b>. Su vecino 5 <b>ya está en OPEN</b>. ¿Cuántos vecinos nuevos se añaden a OPEN?',
       opts:['Ninguno','1','2'],  correct:'Ninguno' },
     /* 7 */
-    { sb:{open:[6,3,5],    closed:[1,4,2],         cur:null, te:TE45},
+    { sb:{open:[6,3,5],    visited:[1,4,2],         cur:null, te:TE45},
       concept:'BFS — Extracción',
       text:'OPEN = [6, 3, 5]. ¿Qué vértice extrae BFS de la cola?',
       opts:['6','3','5'],  correct:'6' },
     /* 8 */
-    { sb:{open:[3,5],      closed:[1,4,2,6],       cur:6,    te:TE45},
+    { sb:{open:[3,5],      visited:[1,4,2,6],       cur:6,    te:TE45},
       concept:'BFS — Inserción',
       text:'BFS procesa el nodo <b>6</b>. ¿Qué vecino se <b>añade a OPEN</b>?',
       opts:['7','3','5'],  correct:'7' },
     /* 9 */
-    { sb:{open:[3,5,7],    closed:[1,4,2,6],       cur:null, te:TE67},
+    { sb:{open:[3,5,7],    visited:[1,4,2,6],       cur:null, te:TE67},
       concept:'BFS — Extracción',
       text:'OPEN = [3, 5, 7]. ¿Qué vértice extrae BFS de la cola?',
       opts:['3','5','7'],  correct:'3' },
     /* 10 */
-    { sb:{open:[5,7],      closed:[1,4,2,6,3],     cur:3,    te:TE67},
+    { sb:{open:[5,7],      visited:[1,4,2,6,3],     cur:3,    te:TE67},
       concept:'BFS — Sin vecinos nuevos',
       text:'BFS procesa el nodo <b>3</b>. Su vecino 5 <b>ya está en OPEN</b>. ¿Cuántos vecinos nuevos se añaden?',
       opts:['Ninguno','1','2'],  correct:'Ninguno' },
     /* 11 */
-    { sb:{open:[5,7],      closed:[1,4,2,6,3],     cur:null, te:TE67},
+    { sb:{open:[5,7],      visited:[1,4,2,6,3],     cur:null, te:TE67},
       concept:'BFS — Extracción',
       text:'OPEN = [5, 7]. ¿Qué vértice extrae BFS de la cola?',
       opts:['5','7','3'],  correct:'5' },
     /* 12 */
-    { sb:{open:[7],        closed:[1,4,2,6,3,5],   cur:5,    te:TE67},
+    { sb:{open:[7],        visited:[1,4,2,6,3,5],   cur:5,    te:TE67},
       concept:'BFS — Sin vecinos nuevos',
       text:'BFS procesa el nodo <b>5</b>. Su vecino 7 <b>ya está en OPEN</b>. ¿Cuántos vecinos nuevos se añaden?',
       opts:['Ninguno','1','2'],  correct:'Ninguno' },
     /* 13 */
-    { sb:{open:[7],        closed:[1,4,2,6,3,5],   cur:null, te:TE67},
+    { sb:{open:[7],        visited:[1,4,2,6,3,5],   cur:null, te:TE67},
       concept:'BFS — Extracción',
       text:'Solo queda un nodo en OPEN. ¿Qué vértice extrae BFS?',
       opts:['7','5','3'],  correct:'7' },
     /* 14 */
-    { sb:{open:[],         closed:[1,4,2,6,3,5,7], cur:null, te:TE67},
+    { sb:{open:[],         visited:[1,4,2,6,3,5,7], cur:null, te:TE67},
       concept:'BFS — Orden de visita',
       text:'¡BFS completado! ¿Cuál fue el <b>orden de visita</b> de los nodos?',
       opts:['1→4→2→6→3→5→7','1→2→4→3→5→6→7','1→4→6→7→3→5→2'],
@@ -266,7 +266,7 @@
 
   /* ── BFS step builder ─────────────────────────────────────── */
   function buildSteps(adjM, startId, nodeList) {
-    var closed=[], open=[startId], visited=[], treeEdges=[], qs=[];
+    var visited=[], open=[startId], treeEdges=[], qs=[];
 
     while(open.length > 0) {
       var u = open[0];
@@ -279,7 +279,7 @@
           wrongDeq.push(String(nd.id));
       });
       qs.push({
-        sb:{open:open.slice(),closed:closed.slice(),cur:null,te:treeEdges.slice()},
+        sb:{open:open.slice(),visited:visited.slice(),cur:null,te:treeEdges.slice()},
         concept:'BFS — Extracción',
         text:'¿Qué vértice <b>extrae BFS</b> de la cola OPEN?',
         opts:shuffle([String(u)].concat(wrongDeq.slice(0,2))),
@@ -287,18 +287,17 @@
       });
 
       open.shift();
-      closed.push(u);
       visited.push(u);
 
       var nbrs=adjM[u]||[];
-      var toAdd=nbrs.filter(function(v){ return closed.indexOf(v)===-1&&open.indexOf(v)===-1; });
-      var blocked=nbrs.filter(function(v){ return open.indexOf(v)!==-1||closed.indexOf(v)!==-1; });
+      var toAdd=nbrs.filter(function(v){ return visited.indexOf(v)===-1&&open.indexOf(v)===-1; });
+      var blocked=nbrs.filter(function(v){ return open.indexOf(v)!==-1||visited.indexOf(v)!==-1; });
 
       if(toAdd.length > 0) {
         var correctStr=toAdd.join(', ');
         var wrongs=[];
 
-        /* Wrong: include an already-queued/closed neighbor */
+        /* Wrong: include an already-queued/visited neighbor */
         if(blocked.length > 0) wrongs.push(toAdd.concat([blocked[0]]).join(', '));
 
         /* Wrong: shuffled order (only useful if length > 1) */
@@ -324,7 +323,7 @@
         });
 
         qs.push({
-          sb:{open:open.slice(),closed:closed.slice(),cur:u,te:treeEdges.slice()},
+          sb:{open:open.slice(),visited:visited.slice(),cur:u,te:treeEdges.slice()},
           concept:'BFS — Inserción',
           text:'¿Qué vecinos de <b>'+u+'</b> se <b>añaden a OPEN</b>?',
           opts:shuffle([correctStr,wrongs[0]||'ninguno',wrongs[1]||String(u+1)]),
@@ -335,9 +334,9 @@
 
       } else if(nbrs.length > 0) {
         qs.push({
-          sb:{open:open.slice(),closed:closed.slice(),cur:u,te:treeEdges.slice()},
+          sb:{open:open.slice(),visited:visited.slice(),cur:u,te:treeEdges.slice()},
           concept:'BFS — Sin vecinos nuevos',
-          text:'Todos los vecinos de <b>'+u+'</b> ya están en OPEN o CLOSED. ¿Cuántos vecinos nuevos se añaden?',
+          text:'Todos los vecinos de <b>'+u+'</b> ya están en OPEN o VISITED. ¿Cuántos vecinos nuevos se añaden?',
           opts:shuffle(['Ninguno','1','2']),
           correct:'Ninguno'
         });
@@ -353,7 +352,7 @@
       var w2=wrongOrder(visited).join('→');
       for(var _b=0;_b<20&&(w2===vs||w2===w1);_b++) w2=wrongOrder(visited).join('→');
       qs.push({
-        sb:{open:[],closed:closed.slice(),cur:null,te:treeEdges.slice()},
+        sb:{open:[],visited:visited.slice(),cur:null,te:treeEdges.slice()},
         concept:'BFS — Orden de visita',
         text:'BFS completado. ¿Cuál fue el <b>orden de visita</b>?',
         opts:shuffle([vs,w1,w2]),
@@ -383,7 +382,7 @@
     defs.appendChild(mkMarker('arr-t','#1a237e'));
     svg.appendChild(defs);
 
-    var closed=sb?sb.closed:[];
+    var visited=sb?sb.visited:[];
     var openQ=sb?sb.open:[];
     var cur=sb?sb.cur:null;
     var teSet=sb?new Set(sb.te):new Set();
@@ -429,13 +428,13 @@
     });
 
     nodes.forEach(function(nd){
-      var inClosed=closed.indexOf(nd.id)!==-1;
+      var inVisited=visited.indexOf(nd.id)!==-1;
       var isCur=nd.id===cur;
       var inOpen=openQ.indexOf(nd.id)!==-1;
 
       var fill,stroke,textFill,sw;
       if(isCur)         { fill='#f9a825'; stroke='#e65100'; textFill='#4a2c00'; sw='3.5'; }
-      else if(inClosed) { fill='#43a047'; stroke='#1b5e20'; textFill='#fff';    sw='2.5'; }
+      else if(inVisited) { fill='#43a047'; stroke='#1b5e20'; textFill='#fff';    sw='2.5'; }
       else if(inOpen)   { fill='#00bcd4'; stroke='#006064'; textFill='#fff';    sw='2.5'; }
       else              { fill='#e8eaf6'; stroke='#1a237e'; textFill='#1a237e'; sw='2.5'; }
 
@@ -476,16 +475,16 @@
     el.innerHTML=html;
   }
 
-  /* ── State chips (CLOSED + OPEN queue) ────────────────────── */
+  /* ── State chips (VISITED + OPEN queue) ────────────────────── */
   function renderState(sb) {
-    var cc=document.getElementById('closed-chips');
+    var cc=document.getElementById('visited-chips');
     var oc=document.getElementById('open-chips');
-    var closed=sb?sb.closed:[];
+    var visited=sb?sb.visited:[];
     var openQ=sb?sb.open:[];
 
-    cc.innerHTML=closed.length===0
+    cc.innerHTML=visited.length===0
       ? '<span class="chip-empty">{ }</span>'
-      : closed.map(function(id){ return '<span class="chip-closed">'+id+'</span>'; }).join(' ');
+      : visited.map(function(id){ return '<span class="chip-visited">'+id+'</span>'; }).join(' ');
 
     oc.innerHTML=openQ.length===0
       ? '<span class="chip-empty">[ ]</span>'
