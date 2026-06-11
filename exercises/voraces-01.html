@@ -205,16 +205,32 @@
     }
 
     .feedback {
-      font-size: 0.9rem;
-      line-height: 1.5;
+      font-size: 0.95rem;
+      line-height: 1.6;
       border-radius: 8px;
-      padding: 0.6rem 0.85rem;
+      padding: 0.8rem 1rem;
       min-height: 2.8rem;
       display: none;
     }
 
-    .feedback.ok  { display: block; background: #f1fbf1; color: #2e7d32; border: 1px solid #c8e6c9; }
-    .feedback.bad { display: block; background: #fff5f5; color: #c62828; border: 1px solid #ffcdd2; }
+    .feedback.ok  { display: block; background: #f1fbf1; color: #2e7d32; border: 1px solid #c8e6c9; border-left: 4px solid #4caf50; }
+    .feedback.bad { display: block; background: #fff5f5; color: #c62828; border: 1px solid #ffcdd2; border-left: 4px solid #e53935; }
+
+    .next-btn {
+      align-self: flex-start;
+      padding: 0.5rem 1.2rem;
+      border-radius: 100px;
+      border: none;
+      background: var(--crimson);
+      color: #fff;
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: none;
+    }
+
+    .next-btn:hover { background: var(--crimson-dark); }
 
     /* ── Score strip ─────────────────────────────────────────────── */
     .score-strip {
@@ -423,6 +439,7 @@
         <div class="step-counter">Paso <span id="step-cur">1</span></div>
         <p class="question-text" id="question-text"></p>
         <p class="feedback" id="feedback"></p>
+        <button class="next-btn" id="btn-next">Siguiente →</button>
 
       </div>
 
@@ -472,6 +489,7 @@
 
     var currentDiff = 'easy';
     var coins, W, x, total, answered;
+    var pendingAdvance = null;
     var roundNum = 0, gOk = 0, gTotal = 0;
 
     // ── Greedy helper ────────────────────────────────────────────
@@ -516,6 +534,7 @@
       x        = coins.map(function () { return 0; });
       total    = 0;
       answered = false;
+      pendingAdvance = null;
       roundNum++;
 
       document.getElementById('round-badge').textContent = 'Ronda ' + roundNum;
@@ -598,6 +617,8 @@
       var fb = document.getElementById('feedback');
       fb.className   = 'feedback';
       fb.textContent = '';
+
+      document.getElementById('btn-next').style.display = 'none';
     }
 
     function setCoinStates(correctIdx, clickedIdx) {
@@ -645,7 +666,7 @@
         setCoinStates(correct, null);
         updateScore();
 
-        setTimeout(function () {
+        pendingAdvance = function () {
           answered = false;
           if (total >= W) {
             showDone();
@@ -654,7 +675,8 @@
             enableCoins();
             renderQuestion();
           }
-        }, 900);
+        };
+        document.getElementById('btn-next').style.display = 'inline-block';
 
       } else {
         fb.className = 'feedback bad';
@@ -669,13 +691,14 @@
         setCoinStates(correct, idx);
         updateScore();
 
-        setTimeout(function () {
+        pendingAdvance = function () {
           answered = false;
           enableCoins();
           var fb2 = document.getElementById('feedback');
           fb2.className   = 'feedback';
           fb2.textContent = '';
-        }, 1400);
+        };
+        document.getElementById('btn-next').style.display = 'inline-block';
       }
     }
 
@@ -695,11 +718,21 @@
         .forEach(function (b) { b.disabled = true; });
 
       document.getElementById('feedback').className   = 'feedback';
+      document.getElementById('btn-next').style.display = 'none';
       document.getElementById('question-text').textContent = '— completado —';
       document.getElementById('step-cur').textContent = totalCoins;
     }
 
     // ── Init ─────────────────────────────────────────────────────
+    document.getElementById('btn-next').addEventListener('click', function () {
+      document.getElementById('btn-next').style.display = 'none';
+      if (pendingAdvance) {
+        var fn = pendingAdvance;
+        pendingAdvance = null;
+        fn();
+      }
+    });
+
     document.getElementById('new-round-btn').addEventListener('click', generate);
 
     document.querySelectorAll('.diff-btn').forEach(function (btn) {
