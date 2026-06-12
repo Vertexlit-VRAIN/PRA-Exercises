@@ -782,6 +782,19 @@
   var scoreOk    = 0;
   var scoreTotal = 0;
   var waitingNext = false;
+  var shuffledOptions  = [];
+  var shuffledCorrect  = 0;
+
+  /* ─── Mezcla las opciones de una pregunta y recalcula correctIdx ──── */
+  function shuffleQuestion(q) {
+    var order = q.options.map(function (_, i) { return i; });
+    for (var i = order.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+    }
+    shuffledOptions = order.map(function (i) { return q.options[i]; });
+    shuffledCorrect = order.indexOf(q.correctIdx);
+  }
 
   /* ─── Renderiza el panel izquierdo ───────────────────────────────── */
   function renderRecPanel() {
@@ -814,9 +827,11 @@
       'Pregunta ' + (qIdx + 1) + ' de ' + c.questions.length;
     document.getElementById('question-text').innerHTML = q.text;
 
+    shuffleQuestion(q);
+
     var choicesEl = document.getElementById('choices');
     choicesEl.innerHTML = '';
-    q.options.forEach(function (opt, idx) {
+    shuffledOptions.forEach(function (opt, idx) {
       var btn = document.createElement('button');
       btn.className = 'choice-btn';
       btn.innerHTML = opt;
@@ -844,7 +859,7 @@
     document.getElementById('score-total').textContent = scoreTotal;
     btns.forEach(function (b) { b.disabled = true; });
 
-    if (idx === q.correctIdx) {
+    if (idx === shuffledCorrect) {
       scoreOk++;
       document.getElementById('score-ok').textContent = scoreOk;
       btns[idx].classList.add('is-correct');
@@ -853,7 +868,7 @@
       fb.style.display = 'block';
     } else {
       btns[idx].classList.add('is-wrong');
-      btns[q.correctIdx].classList.add('is-correct');
+      btns[shuffledCorrect].classList.add('is-correct');
       fb.className = 'feedback-box bad';
       fb.innerHTML = q.feedbackBad;
       fb.style.display = 'block';
