@@ -101,6 +101,7 @@
     <p class="path-trace" id="path-trace">Clica el hueco (+) donde debe ir la clave.</p>
 
     <p class="feedback" id="feedback" aria-live="polite"></p>
+    <button class="btn btn-primary" id="btn-next-key" hidden>Siguiente →</button>
 
     <div class="round-result" id="round-result">
       <p class="result-line" id="res1"></p>
@@ -139,6 +140,7 @@
   var gTotal     = 0;
   var attempts   = 0;
   var locked     = false;
+  var pendingAdvance = null;
 
   /* ── DOM ────────────────────────────────────────────────────── */
   var $svg     = document.getElementById('tree-svg');
@@ -151,6 +153,7 @@
   var $res1    = document.getElementById('res1');
   var $res2    = document.getElementById('res2');
   var $btn     = document.getElementById('btn-next');
+  var $btnKey  = document.getElementById('btn-next-key');
   var $scoreOk = document.getElementById('score-ok');
   var $scoreAll= document.getElementById('score-total');
 
@@ -370,7 +373,7 @@
       setFb('✓  ' + pathFeedback(key), 'ok');
       locked = true;
 
-      setTimeout(function () {
+      pendingAdvance = function () {
         bstInsert(key);
         computeLayout();
         keyIdx++;
@@ -381,7 +384,8 @@
           renderTree(null);
           renderKey();
         }
-      }, 900);
+      };
+      $btnKey.hidden = false;
 
     } else {
       /* ─── Wrong ─── */
@@ -404,8 +408,18 @@
     $trace.textContent  = 'Clica el hueco (+) donde debe ir ' + insertKeys[keyIdx] + '.';
     $fb.textContent     = '';
     $fb.className       = 'feedback';
+    $btnKey.hidden      = true;
     renderDots();
   }
+
+  $btnKey.addEventListener('click', function () {
+    $btnKey.hidden = true;
+    if (pendingAdvance) {
+      var fn = pendingAdvance;
+      pendingAdvance = null;
+      fn();
+    }
+  });
 
   function showRoundEnd() {
     $keyVal.textContent = '✓';
@@ -430,6 +444,8 @@
     keyIdx   = 0;
     attempts = 0;
     locked   = false;
+    pendingAdvance = null;
+    $btnKey.hidden = true;
     $badge.textContent = 'Ronda ' + roundNum;
     generateRound();
     computeLayout();

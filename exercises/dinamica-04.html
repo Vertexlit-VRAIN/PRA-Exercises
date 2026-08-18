@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Reconstrucción de la Solución DP | PRA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="algoritmos.css">
   <style>
     /* ── Layout ───────────────────────────────────────────────────────── */
@@ -257,6 +260,7 @@
   var solX = [];       // vector solución en construcción
   var scoreOk = 0, scoreTotal = 0, roundNum = 1;
   var waitingNext = false;
+  var pendingAdvance = null;
 
   /* ── Helpers ───────────────────────────────────────────────────────── */
   function sub(n) {
@@ -548,8 +552,14 @@
       fb.innerHTML = '¡Correcto! &nbsp;<small>' + getFeedbackText(s, correct) + '</small>';
       fb.style.display = 'block';
 
-      stepPos++;
-      setTimeout(function() { renderTable(); markPath(); showStep(); }, 1000);
+      waitingNext = true;
+      pendingAdvance = function () {
+        stepPos++;
+        renderTable();
+        markPath();
+        showStep();
+      };
+      document.getElementById('btn-next').style.display = 'inline-block';
 
     } else {
       if (chosen === 'yes') btnYes.classList.add('is-wrong');
@@ -562,6 +572,7 @@
       fb.style.display = 'block';
 
       waitingNext = true;
+      pendingAdvance = advanceAfterError;
       document.getElementById('btn-next').style.display = 'inline-block';
     }
   }
@@ -642,6 +653,7 @@
     computeSteps();
     stepPos = 0;
     waitingNext = false;
+    pendingAdvance = null;
 
     document.getElementById('done-banner').hidden = true;
     document.getElementById('question-area').hidden = true;
@@ -674,7 +686,13 @@
   document.getElementById('btn-nueva').addEventListener('click', function() { roundNum++; generate(); });
   document.getElementById('btn-yes').addEventListener('click', function() { handleAnswer('yes'); });
   document.getElementById('btn-no').addEventListener('click',  function() { handleAnswer('no'); });
-  document.getElementById('btn-next').addEventListener('click', advanceAfterError);
+  document.getElementById('btn-next').addEventListener('click', function() {
+    if (pendingAdvance) {
+      var fn = pendingAdvance;
+      pendingAdvance = null;
+      fn();
+    }
+  });
   document.getElementById('btn-done-again').addEventListener('click', function() { roundNum++; generate(); });
 
   /* ── Arranque ─────────────────────────────────────────────────────── */

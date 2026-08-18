@@ -156,6 +156,7 @@
     </div>
 
     <p class="feedback" id="feedback" aria-live="polite"></p>
+    <button class="btn btn-primary" id="btn-next-phase" hidden>Siguiente →</button>
 
     <div class="round-result" id="round-result">
       <p class="result-line" id="res1"></p>
@@ -197,6 +198,7 @@
   var roundNum   = 0;
   var gOk        = 0;
   var gTotal     = 0;
+  var pendingAdvance = null;
 
   /* ── DOM ────────────────────────────────────────────────────── */
   var $svg       = document.getElementById('tree-svg');
@@ -208,6 +210,7 @@
   var $res1      = document.getElementById('res1');
   var $res2      = document.getElementById('res2');
   var $btnRound  = document.getElementById('btn-new-round');
+  var $btnNext   = document.getElementById('btn-next-phase');
   var $scoreOk   = document.getElementById('score-ok');
   var $scoreAll  = document.getElementById('score-total');
 
@@ -410,6 +413,8 @@
     phase = p;
     hideAllPhases();
     setFb('', '');
+    pendingAdvance = null;
+    $btnNext.hidden = true;
 
     if (p === 1) {
       show('area-p1');
@@ -490,12 +495,6 @@
     if (chosen === delCase) {
       btn.classList.add('ok');
       setFb('✓ Correcto — caso ' + caseLabel(delCase) + '.', 'ok');
-      setTimeout(function () {
-        setFb('', '');
-        if (delCase === 'leaf')          startPhase('2-leaf');
-        else if (delCase === 'one-child') startPhase('2-one');
-        else                             startPhase('2a');
-      }, 700);
     } else {
       allCorrect = false;
       btn.classList.add('bad');
@@ -503,13 +502,14 @@
         if (b.dataset.case === delCase) b.classList.add('ok');
       });
       setFb('✗ El caso correcto es ' + caseLabel(delCase) + '. Avanzamos a la siguiente fase.', 'bad');
-      setTimeout(function () {
-        setFb('', '');
-        if (delCase === 'leaf')          startPhase('2-leaf');
-        else if (delCase === 'one-child') startPhase('2-one');
-        else                             startPhase('2a');
-      }, 1200);
     }
+
+    pendingAdvance = function () {
+      if (delCase === 'leaf')          startPhase('2-leaf');
+      else if (delCase === 'one-child') startPhase('2-one');
+      else                             startPhase('2a');
+    };
+    $btnNext.hidden = false;
   });
 
   function caseLabel(c) {
@@ -539,12 +539,13 @@
         setFb('✓ Correcto — ' + nodes[clicked].key + ' sube a la posición de ' + nodes[targetIdx].key + '.', 'ok');
         applyOneChildDeletion();
         computeLayout();
-        setTimeout(function () {
+        pendingAdvance = function () {
           renderTree('normal');
           $tLabel.textContent = 'ABB tras eliminar';
           hideAllPhases();
           finishRound(true);
-        }, 700);
+        };
+        $btnNext.hidden = false;
       } else if (clicked !== targetIdx) {
         allCorrect = false;
         setFb('✗ Ese no es el hijo directo de ' + nodes[targetIdx].key + '. Inténtalo de nuevo.', 'bad');
@@ -556,12 +557,12 @@
         if (rightSub.has(clicked)) {
           if (clicked === succIdx) {
             setFb('✓ Correcto — ' + nodes[clicked].key + ' es el mínimo del subárbol derecho.', 'ok');
-            setTimeout(function () { setFb('', ''); startPhase('2b'); }, 700);
           } else {
             allCorrect = false;
             setFb('✗ No es el mínimo del subárbol derecho. El nodo correcto es ' + nodes[succIdx].key + '.', 'bad');
-            setTimeout(function () { setFb('', ''); startPhase('2b'); }, 1200);
           }
+          pendingAdvance = function () { startPhase('2b'); };
+          $btnNext.hidden = false;
         }
       }
 
@@ -571,12 +572,12 @@
         if (leftSub.has(clicked)) {
           if (clicked === predIdx) {
             setFb('✓ Correcto — ' + nodes[clicked].key + ' es el máximo del subárbol izquierdo.', 'ok');
-            setTimeout(function () { setFb('', ''); startPhase('2c'); }, 700);
           } else {
             allCorrect = false;
             setFb('✗ No es el máximo del subárbol izquierdo. El nodo correcto es ' + nodes[predIdx].key + '.', 'bad');
-            setTimeout(function () { setFb('', ''); startPhase('2c'); }, 1200);
           }
+          pendingAdvance = function () { startPhase('2c'); };
+          $btnNext.hidden = false;
         }
       }
     }
@@ -606,12 +607,13 @@
     applyTwoChildrenDeletion(repIdx);
     computeLayout();
 
-    setTimeout(function () {
+    pendingAdvance = function () {
       renderTree('normal');
       $tLabel.textContent = 'ABB tras eliminar';
       hideAllPhases();
       finishRound(false); // false = don't override allCorrect
-    }, 900);
+    };
+    $btnNext.hidden = false;
   }
 
   /* ── Finish round ───────────────────────────────────────────── */
@@ -629,6 +631,16 @@
     $btnRound.hidden = false;
   }
 
+  /* ── Manual phase advance ──────────────────────────────────────── */
+  $btnNext.addEventListener('click', function () {
+    $btnNext.hidden = true;
+    if (pendingAdvance) {
+      var fn = pendingAdvance;
+      pendingAdvance = null;
+      fn();
+    }
+  });
+
   /* ── New round ──────────────────────────────────────────────── */
   $btnRound.addEventListener('click', function () {
     $result.classList.remove('visible');
@@ -641,6 +653,8 @@
     nodes = []; rootIdx = 0;
     roundNum++;
     allCorrect = true;
+    pendingAdvance = null;
+    $btnNext.hidden = true;
     $badge.textContent = 'Ronda ' + roundNum;
 
     var pool = [];

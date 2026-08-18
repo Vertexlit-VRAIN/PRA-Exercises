@@ -98,6 +98,22 @@
     .feedback.ok  { display: block; background: #f1fbf1; color: #2e7d32; border: 1px solid #c8e6c9; }
     .feedback.bad { display: block; background: #fff5f5; color: #c62828; border: 1px solid #ffcdd2; }
 
+    .next-btn {
+      align-self: flex-start;
+      padding: 0.5rem 1.2rem;
+      border-radius: 100px;
+      border: none;
+      background: var(--crimson);
+      color: #fff;
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: none;
+    }
+
+    .next-btn:hover { background: var(--crimson-dark); }
+
     /* ── Problem display ─────────────────────────────────────────── */
     .problem-title {
       font-size: 1.35rem;
@@ -323,7 +339,7 @@
 <body class="voraces">
 
 <header class="ex-header">
-  <a class="back-link" href="../index.html#algoritmos">← Algoritmos Voraces</a>
+  <a class="back-link" href="../index.html#voraces">← Algoritmos Voraces</a>
   <h1 class="ex-title">03 — Generalización del Algoritmo Voraz</h1>
   <p class="ex-desc">
     Dado un problema, identifica los cuatro componentes del esquema voraz general:
@@ -388,6 +404,7 @@
       </div>
 
       <p class="feedback" id="feedback"></p>
+      <button class="next-btn" id="btn-next">Siguiente →</button>
 
     </div>
 
@@ -582,6 +599,7 @@
   var roundNum      = 0;
   var gOk           = 0;
   var gTotal        = 0;
+  var wrongCards    = [];
 
   /* ── Helpers ─────────────────────────────────────────────────── */
   function shuffleArray(arr) {
@@ -619,11 +637,13 @@
     solved        = {};
     answered      = {};
     solvedCount   = 0;
+    wrongCards    = [];
     roundNum++;
 
     setActiveBtn(currentProb.id);
     document.getElementById('round-badge').textContent = 'Ronda ' + roundNum;
     document.getElementById('done-banner').hidden = true;
+    document.getElementById('btn-next').style.display = 'none';
 
     renderLeftPanel();
     renderCards();
@@ -727,11 +747,8 @@
 
       updateScore();
 
-      setTimeout(function () {
-        answered[cardIdx] = false;
-        card.classList.remove('is-wrong');
-        clearFeedback();
-      }, 1400);
+      wrongCards.push(cardIdx);
+      document.getElementById('btn-next').style.display = 'inline-block';
     }
   }
 
@@ -776,6 +793,17 @@
   }
 
   /* ── Init ────────────────────────────────────────────────────── */
+  document.getElementById('btn-next').addEventListener('click', function () {
+    wrongCards.forEach(function (idx) {
+      answered[idx] = false;
+      var c = document.getElementById('card-' + idx);
+      if (c) c.classList.remove('is-wrong');
+    });
+    wrongCards = [];
+    document.getElementById('btn-next').style.display = 'none';
+    clearFeedback();
+  });
+
   document.getElementById('new-round-btn').addEventListener('click', function () {
     generate(null);
   });

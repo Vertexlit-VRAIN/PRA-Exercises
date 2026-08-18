@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Cambio de Monedas — Tabla DP | PRA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="algoritmos.css">
   <style>
     /* ── Layout específico de este ejercicio ─────────────────────────── */
@@ -368,6 +371,7 @@
   var scoreTotal = 0;
   var roundNum = 1;
   var waitingNext = false;  // esperando click en "Siguiente"
+  var pendingAdvance = null;
 
   /* ── Helpers ───────────────────────────────────────────────────────── */
   function sub(n) {
@@ -683,12 +687,14 @@
       fb.innerHTML = '¡Correcto! &nbsp;<small>' + getRecExpanded(i, j) + '</small>';
       fb.style.display = 'block';
 
-      fillPos++;
-      setTimeout(function() {
+      waitingNext = true;
+      pendingAdvance = function () {
+        fillPos++;
         clearDeps();
         renderTable();
         showCell();
-      }, 1000);
+      };
+      document.getElementById('btn-next').style.display = 'inline-block';
 
     } else {
       // INCORRECTO
@@ -712,6 +718,7 @@
       fb.style.display = 'block';
 
       waitingNext = true;
+      pendingAdvance = advanceAfterError;
       var nextBtn = document.getElementById('btn-next');
       nextBtn.style.display = 'inline-block';
     }
@@ -762,6 +769,7 @@
     buildFillOrder();
     fillPos = 0;
     waitingNext = false;
+    pendingAdvance = null;
 
     document.getElementById('done-banner').hidden = true;
     document.getElementById('question-area').hidden = true;
@@ -799,7 +807,11 @@
   });
 
   document.getElementById('btn-next').addEventListener('click', function() {
-    advanceAfterError();
+    if (pendingAdvance) {
+      var fn = pendingAdvance;
+      pendingAdvance = null;
+      fn();
+    }
   });
 
   document.getElementById('btn-done-again').addEventListener('click', function() {

@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mochila 0/1 — Tabla DP | PRA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="algoritmos.css">
   <style>
     /* ── Layout ───────────────────────────────────────────────────────── */
@@ -295,6 +298,7 @@
   var scoreTotal = 0;
   var roundNum = 1;
   var waitingNext = false;
+  var pendingAdvance = null;
 
   /* ── Helpers ───────────────────────────────────────────────────────── */
   function sub(n) {
@@ -553,8 +557,14 @@
       fb.innerHTML = '¡Correcto! &nbsp;<small>' + getRecExpanded(i, j) + '</small>';
       fb.style.display = 'block';
 
-      fillPos++;
-      setTimeout(function() { clearDeps(); renderTable(); showCell(); }, 1000);
+      waitingNext = true;
+      pendingAdvance = function () {
+        fillPos++;
+        clearDeps();
+        renderTable();
+        showCell();
+      };
+      document.getElementById('btn-next').style.display = 'inline-block';
 
     } else {
       btns.forEach(function(b) {
@@ -574,6 +584,7 @@
       fb.style.display = 'block';
 
       waitingNext = true;
+      pendingAdvance = advanceAfterError;
       document.getElementById('btn-next').style.display = 'inline-block';
     }
   }
@@ -627,6 +638,7 @@
     buildFillOrder();
     fillPos = 0;
     waitingNext = false;
+    pendingAdvance = null;
 
     document.getElementById('done-banner').hidden = true;
     document.getElementById('question-area').hidden = true;
@@ -657,7 +669,13 @@
   });
 
   document.getElementById('btn-nueva').addEventListener('click', function() { roundNum++; generate(); });
-  document.getElementById('btn-next').addEventListener('click', advanceAfterError);
+  document.getElementById('btn-next').addEventListener('click', function() {
+    if (pendingAdvance) {
+      var fn = pendingAdvance;
+      pendingAdvance = null;
+      fn();
+    }
+  });
   document.getElementById('btn-done-again').addEventListener('click', function() { roundNum++; generate(); });
 
   /* ── Arranque ─────────────────────────────────────────────────────── */
