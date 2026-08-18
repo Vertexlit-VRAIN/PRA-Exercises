@@ -26,6 +26,8 @@ Sin build tools ni dependencias npm. Tres archivos raíz, listo para GitHub Page
 | Tablas Hash | Matrix / terminal | Verde `#005c13` | Share Tech Mono |
 | Árboles | Donkey Kong jungle | Ámbar `#b35c00` | Press Start 2P |
 | Grafos | Blueprint / constelaciones | Índigo `#1a237e` | Orbitron |
+| Voraces | Ajedrez / decisión óptima | Carmesí `#c62828` | Space Grotesk |
+| P. Dinámica | Tabla de subproblemas | Teal `#004d40` | Space Grotesk |
 
 ## Añadir ejercicios
 
