@@ -361,6 +361,11 @@
     rootInfo.innerHTML = 'Raíz en posición: <strong>' + nodeArr[0].pos + '</strong>';
     right.appendChild(rootInfo);
 
+    var rootNote = document.createElement('p');
+    rootNote.className = 'instr-text';
+    rootNote.innerHTML = 'La raíz se guarda donde convenga: nada en la tabla la señala como tal, por eso su posición se indica aparte.';
+    right.appendChild(rootNote);
+
     var instr = document.createElement('p');
     instr.className = 'instr-text';
     instr.innerHTML = 'Completa la tabla: para cada nodo selecciona la posición de su <strong>primer hijo</strong> (izq) y su <strong>siguiente hermano</strong> (der). Usa <strong>/</strong> si no existe.';
@@ -562,6 +567,11 @@
     rootInfo.className = 'root-info';
     rootInfo.innerHTML = 'Raíz en posición: <strong>' + nodeArr[0].pos + '</strong>';
     right.appendChild(rootInfo);
+
+    var rootNote = document.createElement('p');
+    rootNote.className = 'instr-text';
+    rootNote.innerHTML = 'La raíz se guarda donde convenga: nada en la tabla la señala como tal, por eso su posición se indica aparte.';
+    right.appendChild(rootNote);
 
     var instr = document.createElement('p');
     instr.className = 'instr-text';
