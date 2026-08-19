@@ -303,16 +303,18 @@
       g.appendChild(t);
 
       if (showBadge) {
-        var bx = nd.x + 8, by = nd.y - R - 2;
+        var bw = 26, bh = 18;
+        var bx = nd.x + R * 0.5, by = nd.y + R * 0.3;
         var br = document.createElementNS(NS, 'rect');
         br.setAttribute('x', bx); br.setAttribute('y', by);
-        br.setAttribute('width', '18'); br.setAttribute('height', '12');
-        br.setAttribute('rx', '3'); br.setAttribute('fill', '#b35c00');
+        br.setAttribute('width', bw); br.setAttribute('height', bh);
+        br.setAttribute('rx', '4'); br.setAttribute('fill', '#b35c00');
+        br.setAttribute('stroke', '#fff'); br.setAttribute('stroke-width', '1.2');
         g.appendChild(br);
         var bt = document.createElementNS(NS, 'text');
-        bt.setAttribute('x', bx + 9); bt.setAttribute('y', by + 9);
+        bt.setAttribute('x', bx + bw / 2); bt.setAttribute('y', by + bh / 2 + 4);
         bt.setAttribute('text-anchor', 'middle');
-        bt.setAttribute('font-size', '8');
+        bt.setAttribute('font-size', '13');
         bt.setAttribute('font-family', 'Space Grotesk, sans-serif');
         bt.setAttribute('font-weight', '700');
         bt.setAttribute('fill', '#fff');

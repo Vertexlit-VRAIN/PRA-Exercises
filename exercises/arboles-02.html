@@ -232,16 +232,19 @@
       t.textContent = nd.value;
       g.appendChild(c); g.appendChild(t);
 
-      var bx = nd.x + R * 0.72, by = nd.y + R * 0.72;
-      var bc = document.createElementNS(NS, 'circle');
-      bc.setAttribute('cx', bx); bc.setAttribute('cy', by); bc.setAttribute('r', 7.5);
-      bc.setAttribute('fill', '#fffdf5'); bc.setAttribute('stroke', '#c99a54'); bc.setAttribute('stroke-width', '1.2');
+      var bw = 26, bh = 18;
+      var bx = nd.x + R * 0.5, by = nd.y + R * 0.3;
+      var bc = document.createElementNS(NS, 'rect');
+      bc.setAttribute('x', bx); bc.setAttribute('y', by);
+      bc.setAttribute('width', bw); bc.setAttribute('height', bh);
+      bc.setAttribute('rx', '4'); bc.setAttribute('fill', '#b35c00');
+      bc.setAttribute('stroke', '#fff'); bc.setAttribute('stroke-width', '1.2');
       bc.setAttribute('pointer-events', 'none');
       var it = document.createElementNS(NS, 'text');
-      it.setAttribute('x', bx); it.setAttribute('y', by + 3);
-      it.setAttribute('text-anchor', 'middle'); it.setAttribute('font-size', '9');
+      it.setAttribute('x', bx + bw / 2); it.setAttribute('y', by + bh / 2 + 4);
+      it.setAttribute('text-anchor', 'middle'); it.setAttribute('font-size', '13');
       it.setAttribute('font-family', 'Space Grotesk, sans-serif'); it.setAttribute('font-weight', '700');
-      it.setAttribute('fill', '#8a5a1e'); it.setAttribute('pointer-events', 'none');
+      it.setAttribute('fill', '#fff'); it.setAttribute('pointer-events', 'none');
       it.textContent = nd.id;
       g.appendChild(bc); g.appendChild(it);
 
