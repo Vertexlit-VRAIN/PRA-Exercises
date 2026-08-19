@@ -48,6 +48,14 @@
       flex-shrink: 0;
     }
     .index-num { font-weight: 700; font-size: 1rem; color: var(--amber); line-height: 1; }
+    .index-value {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--amber-dark);
+      opacity: 0.65;
+      letter-spacing: 0.02em;
+      line-height: 1;
+    }
     .root-badge {
       font-family: var(--font-ui);
       font-size: 0.6rem;
@@ -93,9 +101,9 @@
 
   <section class="tree-panel" aria-label="Árbol y nodos">
     <p class="panel-label">Árbol generado</p>
-    <svg id="tree-svg" viewBox="0 0 560 300" role="img" aria-label="Árbol aleatorio con nodos numerados"></svg>
+    <svg id="tree-svg" viewBox="0 0 560 300" role="img" aria-label="Árbol aleatorio: cada nodo muestra su valor y, en la esquina, su índice"></svg>
     <div class="pool-area" aria-label="Pool de nodos">
-      <p class="panel-label">Nodos — arrástralos a su fila</p>
+      <p class="panel-label">Nodos (valor) — arrástralos a la fila de índice de su padre</p>
       <div class="chips-container" id="chips-container" role="list" aria-label="Nodos disponibles"></div>
     </div>
     <button class="btn btn-outline" id="btn-new-tree">△ Nuevo árbol</button>
@@ -104,8 +112,10 @@
   <section class="array-panel" aria-label="Array Lista de Hijos">
     <p class="panel-label">Lista de Hijos — array</p>
     <p class="instr-text">
-      Fila <em>i</em> contiene los hijos directos del nodo <em>i</em>.
-      Arrastra cada nodo a la fila de su padre. Las hojas quedan con <strong>/</strong>.
+      Cada nodo tiene un <strong>índice</strong> (su posición en el array, el número pequeño junto al nodo)
+      y un <strong>valor</strong> que almacena (la letra dentro del círculo).
+      La fila de índice <em>i</em> contiene los hijos directos del nodo con ese índice.
+      Arrastra cada nodo —identificado por su valor— a la fila de índice de su padre. Las hojas quedan con <strong>/</strong>.
     </p>
     <div class="array-table" id="array-table" role="list"></div>
     <div class="action-row">
@@ -157,11 +167,11 @@
 
   function generateTree() {
     N = rand(7, 9);
-    var nodes = [], labels = [], i, k;
-    for (i = 0; i < N; i++) nodes.push({ id: i, label: 0, parent: null, children: [], x: 0, y: 0 });
-    for (k = 1; k <= N; k++) labels.push(k);
-    shuffle(labels);
-    for (i = 0; i < N; i++) nodes[i].label = labels[i];
+    var nodes = [], letters = [], i, k;
+    for (i = 0; i < N; i++) nodes.push({ id: i, value: '', parent: null, children: [], x: 0, y: 0 });
+    for (k = 0; k < N; k++) letters.push(String.fromCharCode(65 + k));
+    shuffle(letters);
+    for (i = 0; i < N; i++) nodes[i].value = letters[i];
 
     var eligible = [0];
     for (i = 1; i < N; i++) {
@@ -210,7 +220,7 @@
       g.setAttribute('data-node-id', nd.id);
       g.setAttribute('tabindex', '0');
       g.setAttribute('role', 'button');
-      g.setAttribute('aria-label', 'Nodo ' + nd.label);
+      g.setAttribute('aria-label', 'Nodo de valor ' + nd.value + ', índice ' + nd.id);
       var c = document.createElementNS(NS, 'circle');
       c.setAttribute('cx', nd.x); c.setAttribute('cy', nd.y); c.setAttribute('r', R);
       c.setAttribute('fill', '#fff8e1'); c.setAttribute('stroke', '#9a6830'); c.setAttribute('stroke-width', '2.5');
@@ -219,8 +229,23 @@
       t.setAttribute('text-anchor', 'middle'); t.setAttribute('font-size', '14');
       t.setAttribute('font-family', 'Space Grotesk, sans-serif'); t.setAttribute('font-weight', '700');
       t.setAttribute('fill', '#3e2000'); t.setAttribute('pointer-events', 'none');
-      t.textContent = nd.label;
-      g.appendChild(c); g.appendChild(t); svg.appendChild(g);
+      t.textContent = nd.value;
+      g.appendChild(c); g.appendChild(t);
+
+      var bx = nd.x + R * 0.72, by = nd.y + R * 0.72;
+      var bc = document.createElementNS(NS, 'circle');
+      bc.setAttribute('cx', bx); bc.setAttribute('cy', by); bc.setAttribute('r', 7.5);
+      bc.setAttribute('fill', '#fffdf5'); bc.setAttribute('stroke', '#c99a54'); bc.setAttribute('stroke-width', '1.2');
+      bc.setAttribute('pointer-events', 'none');
+      var it = document.createElementNS(NS, 'text');
+      it.setAttribute('x', bx); it.setAttribute('y', by + 3);
+      it.setAttribute('text-anchor', 'middle'); it.setAttribute('font-size', '9');
+      it.setAttribute('font-family', 'Space Grotesk, sans-serif'); it.setAttribute('font-weight', '700');
+      it.setAttribute('fill', '#8a5a1e'); it.setAttribute('pointer-events', 'none');
+      it.textContent = nd.id;
+      g.appendChild(bc); g.appendChild(it);
+
+      svg.appendChild(g);
     });
   }
 
@@ -236,16 +261,16 @@
     c.innerHTML = '';
     tree.forEach(function(nd) {
       if (nd.parent === null || placements[nd.id] !== null) return;
-      c.appendChild(makeChip(nd.id, nd.label));
+      c.appendChild(makeChip(nd.id, nd.value));
     });
   }
 
-  function makeChip(id, label) {
+  function makeChip(id, value) {
     var chip = document.createElement('div');
     chip.className = 'chip';
     chip.setAttribute('draggable', 'true');
     chip.setAttribute('data-node-id', id);
-    chip.textContent = label;
+    chip.textContent = value;
     return chip;
   }
 
@@ -253,8 +278,7 @@
   function renderArray() {
     var table = document.getElementById('array-table');
     table.innerHTML = '';
-    var sorted = tree.slice().sort(function(a, b) { return a.label - b.label; });
-    sorted.forEach(function(node) {
+    tree.forEach(function(node) {
       var row = document.createElement('div');
       row.className = 'array-row';
       row.id = 'row-' + node.id;
@@ -264,8 +288,12 @@
       idx.className = 'row-index';
       var num = document.createElement('span');
       num.className = 'index-num';
-      num.textContent = node.label;
+      num.textContent = node.id;
       idx.appendChild(num);
+      var valLbl = document.createElement('span');
+      valLbl.className = 'index-value';
+      valLbl.textContent = node.value;
+      idx.appendChild(valLbl);
       if (node.parent === null) {
         var badge = document.createElement('span');
         badge.className = 'root-badge';
@@ -298,7 +326,7 @@
       var arr = document.createElement('span');
       arr.className = 'll-arrow'; arr.textContent = '→';
       el.appendChild(arr);
-      var chip = makeChip(chipNode.id, chipNode.label);
+      var chip = makeChip(chipNode.id, chipNode.value);
       chip.classList.add('chip-placed');
       el.appendChild(chip);
     });
