@@ -18,8 +18,8 @@
     .parent-array-tbl { border-collapse: collapse; min-width: 100%; }
     .parent-array-tbl th,
     .parent-array-tbl td {
-      width: 2.6rem;
-      min-width: 2.2rem;
+      width: 3rem;
+      min-width: 2.6rem;
       text-align: center;
       border: 1.5px solid rgba(179,92,0,0.2);
       padding: 0.3rem 0.2rem;
@@ -42,16 +42,23 @@
 
     /* Select (Mode 1) */
     .par-select {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      box-sizing: border-box;
       width: 100%;
       border: 1.5px solid rgba(179,92,0,0.3);
       border-radius: 4px;
-      background: #fff;
+      background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath fill='%23b35c00' d='M1 1l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 0.35rem center;
+      background-size: 0.55rem;
       color: var(--text);
       font-family: 'Space Grotesk', system-ui, sans-serif;
       font-size: 0.82rem;
       font-weight: 700;
-      padding: 0.15rem 0.1rem;
+      line-height: 1.4;
+      padding: 0.25rem 1.05rem 0.25rem 0.3rem;
       text-align: center;
+      text-align-last: center;
       cursor: pointer;
       transition: border-color 0.12s;
     }
