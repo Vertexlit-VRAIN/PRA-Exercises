@@ -121,6 +121,17 @@
     return max;
   }
 
+  function subtreeHeight(nodes, id) {
+    var node = nodes[id];
+    if (!node.children.length) return 0;
+    var max = 0;
+    node.children.forEach(function (c) {
+      var h = subtreeHeight(nodes, c) + 1;
+      if (h > max) max = h;
+    });
+    return max;
+  }
+
   function leaves(nodes) {
     return nodes.filter(function (n) { return n.children.length === 0; });
   }
@@ -146,18 +157,6 @@
     cur = b;
     while (!anc.has(cur)) cur = nodes[cur].parent;
     return cur;
-  }
-
-  function pathBetween(nodes, a, b) {
-    var L   = lca(nodes, a, b);
-    var up  = [];
-    var cur = a;
-    while (cur !== L) { up.push(cur); cur = nodes[cur].parent; }
-    up.push(L);
-    cur = b;
-    var down = [];
-    while (cur !== L) { down.push(cur); cur = nodes[cur].parent; }
-    return up.concat(down);
   }
 
   function dist(nodes, a, b) {
@@ -222,33 +221,28 @@
   }
 
   /* ── SVG render ───────────────────────────────────────────── */
-  function renderTree(nodes, hl, hlEdges) {
-    hl      = hl || [];
-    hlEdges = hlEdges !== false;
-    var svg  = document.getElementById('tree-svg');
+  function renderTree(nodes) {
+    var svg = document.getElementById('tree-svg');
     svg.innerHTML = '';
-    var hSet = new Set(hl);
 
     nodes.forEach(function (nd) {
       if (nd.parent === null) return;
-      var par      = nodes[nd.parent];
-      var isHLedge = hlEdges && hSet.has(nd.id) && hSet.has(nd.parent);
-      var line     = document.createElementNS(NS, 'line');
+      var par  = nodes[nd.parent];
+      var line = document.createElementNS(NS, 'line');
       line.setAttribute('x1', par.x); line.setAttribute('y1', par.y);
       line.setAttribute('x2', nd.x);  line.setAttribute('y2', nd.y);
-      line.setAttribute('stroke',       isHLedge ? '#ffd600' : '#c5a86e');
-      line.setAttribute('stroke-width', isHLedge ? '4' : '2');
+      line.setAttribute('stroke',       '#c5a86e');
+      line.setAttribute('stroke-width', '2');
       svg.appendChild(line);
     });
 
     nodes.forEach(function (nd) {
-      var isH  = hSet.has(nd.id);
       var g    = document.createElementNS(NS, 'g');
       var circ = document.createElementNS(NS, 'circle');
       circ.setAttribute('cx', nd.x);  circ.setAttribute('cy', nd.y);
       circ.setAttribute('r', R);
-      circ.setAttribute('fill',         isH ? '#ffd600' : '#fff8e1');
-      circ.setAttribute('stroke',       isH ? '#0a1e10' : '#9a6830');
+      circ.setAttribute('fill',         '#fff8e1');
+      circ.setAttribute('stroke',       '#9a6830');
       circ.setAttribute('stroke-width', '2.5');
 
       var txt = document.createElementNS(NS, 'text');
@@ -257,7 +251,7 @@
       txt.setAttribute('font-size',      '14');
       txt.setAttribute('font-family',    'Space Grotesk, sans-serif');
       txt.setAttribute('font-weight',    '700');
-      txt.setAttribute('fill',           isH ? '#fff' : '#3e2000');
+      txt.setAttribute('fill',           '#3e2000');
       txt.setAttribute('pointer-events', 'none');
       txt.textContent = nd.label;
 
@@ -320,15 +314,20 @@
 
     switch (type) {
 
-      case 'height':
+      case 'height': {
+        var root = nodes[rand(0, nodes.length - 1)];
+        var sh   = subtreeHeight(nodes, root.id);
+        var text = root.parent === null
+          ? '¿Cuál es la <b>altura</b> del árbol completo (subárbol con raíz en <b>' + root.label + '</b>)?'
+          : '¿Cuál es la <b>altura</b> del subárbol cuya raíz es el nodo <b>' + root.label + '</b>?';
         return {
           concept: 'Altura',
-          text:    '¿Cuál es la <b>altura</b> del árbol?',
-          def:     'Número de aristas en el camino más largo desde la raíz hasta una hoja. La altura de un árbol de un solo nodo es 0.',
-          correct: h,
-          hl:      [],
-          opts:    makeOptions(h, 0, h + 3)
+          text:    text,
+          def:     'Número de aristas en el camino más largo desde la raíz del subárbol indicado hasta la hoja más lejana dentro de ese subárbol. La altura de un nodo hoja es 0.',
+          correct: sh,
+          opts:    makeOptions(sh, 0, Math.max(sh + 3, h))
         };
+      }
 
       case 'depth': {
         var nd = nodes[rand(0, nodes.length - 1)];
@@ -338,7 +337,6 @@
           text:    '¿Cuál es la <b>profundidad</b> del nodo <b>' + nd.label + '</b>?',
           def:     'Número de aristas desde la raíz hasta el nodo. La raíz tiene profundidad 0.',
           correct: d,
-          hl:      [nd.id],
           opts:    makeOptions(d, 0, h + 1)
         };
       }
@@ -348,9 +346,8 @@
         return {
           concept: 'Hojas',
           text:    '¿Cuántos nodos <b>hoja</b> tiene el árbol?',
-          def:     'Un nodo es hoja si no tiene hijos. Los nodos hoja están resaltados en el árbol.',
+          def:     'Un nodo es hoja si no tiene hijos.',
           correct: ls.length,
-          hl:      ls.map(function (n) { return n.id; }),
           opts:    makeOptions(ls.length, 1, nodes.length)
         };
       }
@@ -361,9 +358,8 @@
         return {
           concept: 'Grado',
           text:    '¿Cuál es el <b>grado</b> del nodo <b>' + nd.label + '</b>?',
-          def:     'El grado de un nodo es su número de hijos directos. El nodo y sus hijos están resaltados.',
+          def:     'El grado de un nodo es su número de hijos directos.',
           correct: deg,
-          hl:      [nd.id].concat(nd.children),
           opts:    makeOptions(deg, 0, 4)
         };
       }
@@ -372,14 +368,12 @@
         var a = rand(0, nodes.length - 1);
         var b;
         do { b = rand(0, nodes.length - 1); } while (b === a);
-        var d    = dist(nodes, a, b);
-        var path = pathBetween(nodes, a, b);
+        var d = dist(nodes, a, b);
         return {
           concept: 'Distancia',
           text:    '¿Cuál es la <b>distancia</b> entre <b>' + nodes[a].label + '</b> y <b>' + nodes[b].label + '</b>?',
-          def:     'Número de aristas en el camino que une los dos nodos. El camino completo está resaltado.',
+          def:     'Número de aristas en el camino que une los dos nodos.',
           correct: d,
-          hl:      path,
           opts:    makeOptions(d, 1, Math.max(d + 3, h + 2))
         };
       }
@@ -393,8 +387,6 @@
                    bf.degrees.join('+') + ') / ' + bf.count + ' ≈ ' + bf.value.toFixed(2) + '.',
           correct: bf.value,
           decimal: true,
-          hl:      bf.internal,
-          hlEdges: false,
           opts:    makeDecimalOptions(bf.value, bf.sum, bf.count, nodes.length)
         };
       }
@@ -472,7 +464,7 @@
     tree     = generateTree();
     computeLayout(tree);
     currentQ = generateQuestion(tree);
-    renderTree(tree, currentQ.hl, currentQ.hlEdges);
+    renderTree(tree);
     renderQuestion(currentQ);
   });
 
@@ -480,7 +472,7 @@
     tree     = generateTree();
     computeLayout(tree);
     currentQ = generateQuestion(tree);
-    renderTree(tree, currentQ.hl, currentQ.hlEdges);
+    renderTree(tree);
     renderQuestion(currentQ);
   });
 
@@ -488,7 +480,7 @@
   tree     = generateTree();
   computeLayout(tree);
   currentQ = generateQuestion(tree);
-  renderTree(tree, currentQ.hl, currentQ.hlEdges);
+  renderTree(tree);
   renderQuestion(currentQ);
 
 }());
