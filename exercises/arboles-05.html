@@ -133,21 +133,21 @@
       tabLabel: 'Preorden → Prefija',
       concept:  'PREORDEN',
       order:    'raíz → izquierda → derecha',
-      instr:    'El <b>preorden</b> visita primero la <b>raíz</b> y después sus subárboles: nombra la operación <b>antes</b> de conocer sus operandos — como si le dictaras la receta a alguien que todavía no sabe los números («multiplica esto: primero…, segundo…»). Anotando los nodos en ese orden obtienes la <b>notación prefija</b>, la que usan internamente Lisp y muchas calculadoras — y no necesita paréntesis para ser inequívoca.',
+      instr:    'El <b>preorden</b> visita primero la <b>raíz</b> y después sus subárboles: nombra la operación antes de conocer sus operandos. Da como resultado la <b>notación prefija</b>.',
       result:   'Notación prefija'
     },
     in: {
       tabLabel: 'Inorden → Infija',
       concept:  'INORDEN',
       order:    'izquierda → raíz → derecha',
-      instr:    'El <b>inorden</b> visita primero el subárbol izquierdo, después la <b>raíz</b> y por último el derecho. Anotando los nodos en este orden — con un paréntesis al entrar y salir de cada operador — obtienes la <b>notación infija</b>: la forma habitual en que escribimos las expresiones.',
+      instr:    'El <b>inorden</b> visita primero el subárbol izquierdo, después la <b>raíz</b> y por último el derecho. Da como resultado la <b>notación infija</b>, la forma habitual de escribir expresiones.',
       result:   'Notación infija'
     },
     post: {
       tabLabel: 'Postorden → Postfija',
       concept:  'POSTORDEN',
       order:    'izquierda → derecha → raíz',
-      instr:    'El <b>postorden</b> visita los dos subárboles antes que la <b>raíz</b>: cuando llegas a un operador ya conoces el valor de sus dos operandos, así que puedes <b>calcularlo en el acto</b>. Por eso este recorrido te deja <b>evaluar la expresión de abajo hacia arriba</b>, operación a operación — y, de propina, el orden en que anotas los nodos coincide con la <b>notación postfija (RPN)</b> que usan algunas calculadoras científicas.',
+      instr:    'El <b>postorden</b> visita los dos subárboles antes que la <b>raíz</b>: cuando llegas a un operador ya conoces sus dos operandos, así que puedes <b>calcularlo en el acto</b>. Es lo que te permite evaluar la expresión de abajo hacia arriba.',
       result:   'Notación postfija'
     }
   };
