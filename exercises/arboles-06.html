@@ -161,15 +161,20 @@
   }
 
   function maxPath() {
-    var idx = 0;
-    while (nodes[idx].right !== null) idx = nodes[idx].right;
-    return [idx];
+    var idx = 0, path = [idx];
+    while (nodes[idx].right !== null) { idx = nodes[idx].right; path.push(idx); }
+    return path;
   }
 
   function minPath() {
-    var idx = 0;
-    while (nodes[idx].left !== null) idx = nodes[idx].left;
-    return [idx];
+    var idx = 0, path = [idx];
+    while (nodes[idx].left !== null) { idx = nodes[idx].left; path.push(idx); }
+    return path;
+  }
+
+  function treeHeight(idx) {
+    if (idx === null) return 0;
+    return 1 + Math.max(treeHeight(nodes[idx].left), treeHeight(nodes[idx].right));
   }
 
   function notFoundKey() {
@@ -292,15 +297,16 @@
     if (q.type === 'search' && !q.found)
       return 'Traza <b>search(' + q.key + ')</b> — la clave <b>no está</b> en el árbol. Haz clic en cada nodo visitado antes de llegar a null.';
     if (q.type === 'max')
-      return '¿Cuál es el <b>máximo</b> del ABB? Haz clic en él.';
-    return '¿Cuál es el <b>mínimo</b> del ABB? Haz clic en él.';
+      return 'Traza <b>max()</b>: parte de la raíz y ve avanzando al hijo derecho hasta que no quede ninguno más.';
+    return 'Traza <b>min()</b>: parte de la raíz y ve avanzando al hijo izquierdo hasta que no quede ninguno más.';
   }
 
   function counterText(q, idx) {
-    if (q.type === 'max' || q.type === 'min') return '';
-    if (idx === 0)
-      return 'Empieza por la raíz — haz clic en el nodo ' + nodes[q.trace[0]].key + '.';
-    return 'Nodo ' + (idx + 1) + ' de ' + q.trace.length + ' — siguiente: clave ' + nodes[q.trace[idx]].key;
+    if (idx === 0) {
+      if (q.type === 'search') return 'Empieza por la raíz — compara ' + q.key + ' con ella y decide a qué hijo bajar.';
+      return 'Empieza por la raíz.';
+    }
+    return 'Comparación ' + (idx + 1) + ' — sigue trazando.';
   }
 
   function successText(q) {
@@ -309,9 +315,10 @@
     if (q.type === 'search' && !q.found)
       return '✓ ' + q.key + ' no está en el árbol — ' + q.trace.length + ' comparación' + (q.trace.length > 1 ? 'es' : '') + ', llega a null.';
     var result = nodes[q.trace[q.trace.length - 1]].key;
+    var steps  = q.trace.length - 1;
     if (q.type === 'max')
-      return '✓ Máximo: ' + result + ' — siempre el nodo más a la derecha.';
-    return '✓ Mínimo: ' + result + ' — siempre el nodo más a la izquierda.';
+      return '✓ Máximo: ' + result + ' — ' + steps + ' paso' + (steps === 1 ? '' : 's') + ' a la derecha desde la raíz.';
+    return '✓ Mínimo: ' + result + ' — ' + steps + ' paso' + (steps === 1 ? '' : 's') + ' a la izquierda desde la raíz.';
   }
 
   /* ── Render question ────────────────────────────────────────── */
@@ -368,10 +375,17 @@
       }
     } else {
       hadWrong = true;
-      var expKey = nodes[q.trace[traceIdx]].key;
-      var hint = q.type === 'max' ? 'Para max() ve siempre a la derecha. Siguiente: ' + expKey + '.' :
-                 q.type === 'min' ? 'Para min() ve siempre a la izquierda. Siguiente: ' + expKey + '.' :
-                 'El siguiente nodo correcto es ' + expKey + '.';
+      var hint;
+      if (traceIdx === 0) {
+        hint = 'Siempre se empieza por la raíz.';
+      } else if (q.type === 'max') {
+        hint = 'Para max() ve siempre al hijo derecho, hasta que no quede ninguno.';
+      } else if (q.type === 'min') {
+        hint = 'Para min() ve siempre al hijo izquierdo, hasta que no quede ninguno.';
+      } else {
+        var curKey = nodes[q.trace[traceIdx - 1]].key;
+        hint = q.key + (q.key < curKey ? ' < ' : ' > ') + curKey + ' → baja al hijo ' + (q.key < curKey ? 'izquierdo.' : 'derecho.');
+      }
       setFb('✗ ' + hint, 'bad');
       var qPanel = document.querySelector('.q-panel');
       qPanel.classList.add('panel-flash-bad');
@@ -388,9 +402,13 @@
 
   /* ── Round end ──────────────────────────────────────────────── */
   function showRoundEnd() {
-    var pct = Math.round(100 * roundOk / questions.length);
+    var pct   = Math.round(100 * roundOk / questions.length);
+    var h     = treeHeight(0);
+    var hMin  = Math.ceil(Math.log2(nodes.length + 1));
     $res1.innerHTML = 'Correctas: <strong>' + roundOk + ' / ' + questions.length + '</strong> (' + pct + '%)';
-    $res2.innerHTML = 'Nodos en el árbol: ' + nodes.length;
+    $res2.innerHTML = 'Nodos: ' + nodes.length + ' · Altura del árbol: <strong>' + h + '</strong>' +
+      (h > hMin ? ' (el mínimo posible con ' + nodes.length + ' nodos sería ' + hMin + ' — este árbol no está del todo equilibrado, por eso algunas búsquedas cuestan más pasos)'
+                : ' — es la altura mínima posible con ' + nodes.length + ' nodos, así que ninguna búsqueda puede costar menos pasos que estos');
     $result.classList.add('visible');
     $btnRound.hidden = false;
   }
