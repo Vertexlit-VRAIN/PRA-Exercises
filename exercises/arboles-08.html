@@ -155,6 +155,16 @@
       <div class="choices" style="margin-top:.5rem;grid-template-columns:1fr;" id="p2c-choices" role="group"></div>
     </div>
 
+    <!-- Phase 2d (two children — the substitute is itself a known case) -->
+    <div id="area-p2d" hidden>
+      <span class="phase-badge">Fase 2d — El sustituto también es un caso conocido</span>
+      <p class="instr-text" id="p2d-instr" style="margin-top:.5rem"></p>
+      <div class="choices" style="margin-top:.5rem" id="p2d-choices" role="group">
+        <button class="choice-btn" data-case="leaf">Hoja</button>
+        <button class="choice-btn" data-case="one-child">Un hijo</button>
+      </div>
+    </div>
+
     <p class="feedback" id="feedback" aria-live="polite"></p>
     <button class="btn btn-primary" id="btn-next-phase" hidden>Siguiente →</button>
 
@@ -191,9 +201,12 @@
   var delCase    = null;  // 'leaf' | 'one-child' | 'two-children'
   var succIdx    = -1;
   var predIdx    = -1;
+  var repIdx     = -1;    // winning substitute (succIdx or predIdx) once phase 2c decides
   var stepsSucc  = 0;
   var stepsPred  = 0;
-  var phase      = 1;     // 1 | '2a' | '2b' | '2c' | 'done'
+  var deletedKey = null;  // key of the node being removed, captured before any mutation
+  var lastRepHadChild = null;
+  var phase      = 1;     // 1 | '2a' | '2b' | '2c' | '2d' | 'done'
   var allCorrect = true;
   var roundNum   = 0;
   var gOk        = 0;
@@ -280,13 +293,15 @@
   function mk(tag) { return document.createElementNS(NS, tag); }
 
   /*
-   * mode: 'normal' | 'target-select' | 'right-subtree' | 'left-subtree' | 'result'
+   * mode: 'normal' | 'target-select' | 'right-subtree' | 'left-subtree' | 'substitution' | 'result'
    * Highlighted sets are computed from mode + targetIdx
    */
   function renderTree(mode) {
     $svg.innerHTML = '';
     var rightSub = (mode === 'right-subtree' && targetIdx >= 0) ? getSubtree(nodes[targetIdx].right) : null;
     var leftSub  = (mode === 'left-subtree'  && targetIdx >= 0) ? getSubtree(nodes[targetIdx].left)  : null;
+    var isSub       = mode === 'substitution' && repIdx >= 0;
+    var subRepChild = isSub ? (nodes[repIdx].left !== null ? nodes[repIdx].left : nodes[repIdx].right) : null;
 
     var maxD = 0;
     nodes.forEach(function (nd) { if (!nd.deleted && (nd.depth || 0) > maxD) maxD = nd.depth; });
@@ -311,13 +326,19 @@
     /* nodes */
     nodes.forEach(function (nd, i) {
       if (nd.deleted) return;
-      var isTarget  = i === targetIdx;
-      var inRight   = rightSub && rightSub.has(i);
-      var inLeft    = leftSub  && leftSub.has(i);
+      var isTarget   = i === targetIdx;
+      var inRight    = rightSub && rightSub.has(i);
+      var inLeft     = leftSub  && leftSub.has(i);
+      var isRep      = isSub && i === repIdx;
+      var isRepChild = isSub && i === subRepChild;
 
       var fill, stroke, strokeW;
       if (isTarget) {
         fill = '#ffcdd2'; stroke = '#c62828'; strokeW = '3';
+      } else if (isRep) {
+        fill = '#ffe0b2'; stroke = '#b35c00'; strokeW = '3';
+      } else if (isRepChild) {
+        fill = '#c8e6c9'; stroke = '#2e7d32'; strokeW = '2.5';
       } else if (inRight) {
         fill = '#e3f2fd'; stroke = '#1565c0'; strokeW = '2.5';
       } else if (inLeft) {
@@ -328,7 +349,7 @@
 
       var g = mk('g');
       g.setAttribute('data-node-idx', i);
-      g.style.cursor = (mode !== 'normal' && mode !== 'target-select' && !isTarget) ? 'pointer' : 'default';
+      g.style.cursor = (mode !== 'normal' && mode !== 'target-select' && mode !== 'substitution' && !isTarget) ? 'pointer' : 'default';
 
       var c = mk('circle');
       c.setAttribute('cx', nd.x); c.setAttribute('cy', nd.y); c.setAttribute('r', R);
@@ -369,6 +390,16 @@
     return i;
   }
 
+  /* whether the substitute that phase 2c would pick (the more efficient of
+     successor/predecessor) itself has a child to relink */
+  function repHasChild(idx) {
+    var s = findSuccessor(idx), p = findPredecessor(idx);
+    var stepsS = nodes[s].depth - nodes[idx].depth;
+    var stepsP = nodes[p].depth - nodes[idx].depth;
+    var rep = (stepsS <= stepsP) ? s : p;
+    return nodes[rep].left !== null || nodes[rep].right !== null;
+  }
+
   /* ── Apply deletion ─────────────────────────────────────────── */
   function applyLeafDeletion() {
     var par = nodes[targetIdx].parent;
@@ -406,7 +437,7 @@
 
   /* ── Phase transition ───────────────────────────────────────── */
   function hideAllPhases() {
-    ['area-p1','area-p2-leaf','area-p2-one','area-p2a','area-p2b','area-p2c'].forEach(hide);
+    ['area-p1','area-p2-leaf','area-p2-one','area-p2a','area-p2b','area-p2c','area-p2d'].forEach(hide);
   }
 
   function startPhase(p) {
@@ -482,6 +513,20 @@
         btn.addEventListener('click', function () { handleP2cChoice(opt.id, correctOpt); });
         $choices.appendChild(btn);
       });
+
+    } else if (p === '2d') {
+      show('area-p2d');
+      renderTree('substitution');
+      $tLabel.textContent = 'ABB — ' + nodes[repIdx].key + ' va a sustituir a ' + nodes[targetIdx].key;
+
+      document.querySelectorAll('#p2d-choices .choice-btn').forEach(function (btn) {
+        btn.disabled = false;
+        btn.className = 'choice-btn';
+      });
+
+      document.getElementById('p2d-instr').innerHTML =
+        'Para que <b>' + nodes[repIdx].key + '</b> pueda subir a la posición de <b>' + nodes[targetIdx].key +
+        '</b>, primero hay que quitarlo de su sitio actual. ¿Qué caso es eliminar a ' + nodes[repIdx].key + ' de su posición original?';
     }
   }
 
@@ -602,19 +647,50 @@
       setFb('✗ ' + msg, 'bad');
     }
 
-    /* apply deletion with the MORE EFFICIENT candidate (or succ if tied) */
-    var repIdx = (stepsSucc <= stepsPred) ? succIdx : predIdx;
-    applyTwoChildrenDeletion(repIdx);
-    computeLayout();
+    /* the MORE EFFICIENT candidate (or succ if tied) will be the substitute */
+    repIdx = (stepsSucc <= stepsPred) ? succIdx : predIdx;
+
+    pendingAdvance = function () { startPhase('2d'); };
+    $btnNext.hidden = false;
+  }
+
+  /* ── Phase 2d handler ───────────────────────────────────────── */
+  document.getElementById('p2d-choices').addEventListener('click', function (e) {
+    var btn = e.target.closest('.choice-btn');
+    if (!btn || btn.disabled) return;
+    var chosen = btn.dataset.case;
+    document.querySelectorAll('#p2d-choices .choice-btn').forEach(function (b) { b.disabled = true; });
+
+    var repChildIdx = nodes[repIdx].left !== null ? nodes[repIdx].left : nodes[repIdx].right;
+    var repCase = repChildIdx !== null ? 'one-child' : 'leaf';
+
+    if (chosen === repCase) {
+      btn.classList.add('ok');
+      var okMsg = repCase === 'leaf'
+        ? '✓ Correcto — es el caso "hoja": ' + nodes[repIdx].key + ' no tiene hijos, no queda ningún hueco que tapar.'
+        : '✓ Correcto — es el caso "un hijo": ' + nodes[repChildIdx].key + ' ocupa el hueco de ' + nodes[repIdx].key + '.';
+      setFb(okMsg + ' Por eso el caso "dos hijos" siempre se reduce a uno de los otros dos.', 'ok');
+    } else {
+      allCorrect = false;
+      btn.classList.add('bad');
+      document.querySelectorAll('#p2d-choices .choice-btn').forEach(function (b) {
+        if (b.dataset.case === repCase) b.classList.add('ok');
+      });
+      setFb('✗ El caso correcto es ' + caseLabel(repCase) + '. Por eso el caso "dos hijos" siempre se reduce a uno de los otros dos.', 'bad');
+    }
 
     pendingAdvance = function () {
+      var newKey  = nodes[repIdx].key;
+      var subKind = (repIdx === succIdx) ? 'sucesor' : 'predecesor';
+      applyTwoChildrenDeletion(repIdx);
+      computeLayout();
       renderTree('normal');
-      $tLabel.textContent = 'ABB tras eliminar';
+      $tLabel.textContent = 'ABB tras eliminar — ' + newKey + ' (' + subKind + ') sustituye a ' + deletedKey;
       hideAllPhases();
       finishRound(false); // false = don't override allCorrect
     };
     $btnNext.hidden = false;
-  }
+  });
 
   /* ── Finish round ───────────────────────────────────────────── */
   function finishRound(forceOk) {
@@ -626,7 +702,14 @@
 
     $res1.innerHTML = allCorrect ? '✓ Ronda perfecta — todas las fases correctas a la primera.' :
                                    'Ronda completada con algún fallo — repasa los pasos incorrectos.';
-    $res2.innerHTML = 'Nodo eliminado: <strong>' + nodes[targetIdx].key + '</strong> · caso: ' + caseLabel(delCase);
+
+    var res2 = 'Nodo eliminado: <strong>' + deletedKey + '</strong> · caso: ' + caseLabel(delCase);
+    if (delCase === 'two-children') {
+      var repChildIdx = nodes[repIdx].left !== null ? nodes[repIdx].left : nodes[repIdx].right;
+      var repCase = repChildIdx !== null ? 'one-child' : 'leaf';
+      res2 += ' · sustituto: <strong>' + nodes[repIdx].key + '</strong> (' + caseLabel(repCase) + ')';
+    }
+    $res2.innerHTML = res2;
     $result.classList.add('visible');
     $btnRound.hidden = false;
   }
@@ -668,10 +751,15 @@
     var candidates = [];
     for (var j = 0; j < nodes.length; j++) candidates.push(j);
     shuffle(candidates);
-    /* try to find a two-children node first */
+    /* try to find a two-children node first, alternating whether its
+       eventual substitute has a child to relink, so both sub-cases of
+       phase 2d (leaf substitute vs. one-child substitute) show up over rounds */
     targetIdx = -1;
-    for (var c = 0; c < candidates.length; c++) {
-      if (deletionCase(candidates[c]) === 'two-children') { targetIdx = candidates[c]; break; }
+    var twoChildCandidates = candidates.filter(function (idx) { return deletionCase(idx) === 'two-children'; });
+    if (twoChildCandidates.length > 0) {
+      var wantChild = !lastRepHadChild;
+      var match = twoChildCandidates.find(function (idx) { return repHasChild(idx) === wantChild; });
+      targetIdx = (match !== undefined) ? match : twoChildCandidates[0];
     }
     /* 40% of the time pick any node (to see leaf/one-child cases too) */
     if (targetIdx < 0 || rand(0, 9) < 4) {
@@ -680,12 +768,15 @@
 
     delCase = deletionCase(targetIdx);
     $delKey.textContent = nodes[targetIdx].key;
+    deletedKey = nodes[targetIdx].key;
+    repIdx = -1;
 
     if (delCase === 'two-children') {
       succIdx   = findSuccessor(targetIdx);
       predIdx   = findPredecessor(targetIdx);
       stepsSucc = nodes[succIdx].depth - nodes[targetIdx].depth;
       stepsPred = nodes[predIdx].depth - nodes[targetIdx].depth;
+      lastRepHadChild = repHasChild(targetIdx);
     }
 
     $result.classList.remove('visible');
