@@ -54,15 +54,15 @@
 <header class="ex-header">
   <a class="back-link" href="../index.html#grafos">← Grafos</a>
   <h1 class="ex-title">01 — CONCEPTOS BÁSICOS</h1>
-  <p class="ex-desc">Identifica caminos, su longitud, ciclos, bucles y grados en grafos dirigidos y no dirigidos generados aleatoriamente.</p>
+  <p class="ex-desc">Identifica caminos, su longitud, ciclos y bucles en grafos dirigidos generados aleatoriamente.</p>
 </header>
 
 <main class="ex-main">
 
   <section class="graph-panel" aria-label="Grafo">
-    <p class="panel-label" id="graph-label">Grafo dirigido</p>
+    <p class="panel-label">Grafo dirigido</p>
     <svg id="graph-svg" class="graph-svg" viewBox="0 0 560 340"
-         role="img" aria-label="Grafo aleatorio"></svg>
+         role="img" aria-label="Grafo aleatorio dirigido"></svg>
     <button class="btn btn-outline" id="btn-new-graph">✦ Nuevo grafo</button>
   </section>
 
@@ -109,9 +109,8 @@
 
   /* ── Graph generation ─────────────────────────────────────── */
   function generateGraph() {
-    var n        = rand(4, 6);
-    var directed = Math.random() < 0.5;
-    var nodes    = [];
+    var n = rand(4, 6);
+    var nodes = [];
     for (var i = 0; i < n; i++) {
       nodes.push({ id: i, label: String(i + 1), x: 0, y: 0 });
     }
@@ -125,11 +124,6 @@
       nodes[i].y = cy + lr * Math.sin(angle);
     }
 
-    /* Edge dedup key: undirected treats (a,b) and (b,a) as the same edge */
-    function edgeKey(a, b) {
-      return directed ? (a + ',' + b) : (Math.min(a, b) + ',' + Math.max(a, b));
-    }
-
     /* Random spanning-tree base: always goes from earlier to later in shuffle order */
     var edges  = [];
     var added  = new Set();
@@ -138,15 +132,15 @@
       var from = order[rand(0, i - 1)];
       var to   = order[i];
       edges.push({ from: from, to: to });
-      added.add(edgeKey(from, to));
+      added.add(from + ',' + to);
     }
 
-    /* 1–2 extra random edges (can create cycles) */
+    /* 1–2 extra random directed edges (can create cycles) */
     var extra = rand(1, 2), attempts = 0;
     while (extra > 0 && attempts < 60) {
       var from = rand(0, n - 1);
       var to   = rand(0, n - 1);
-      var key  = edgeKey(from, to);
+      var key  = from + ',' + to;
       if (from !== to && !added.has(key)) {
         edges.push({ from: from, to: to });
         added.add(key);
@@ -161,7 +155,7 @@
       edges.push({ from: v, to: v });
     }
 
-    return { nodes: nodes, edges: edges, directed: directed };
+    return { nodes: nodes, edges: edges };
   }
 
   /* ── Graph algorithms ─────────────────────────────────────── */
@@ -172,134 +166,72 @@
     return false;
   }
 
-  /* Neighbors reachable from u by traversing one edge — self-loops excluded
-     (handled separately by hasLoop). For undirected graphs, edges can be
-     walked in either direction. */
-  function getOutNeighbors(edges, u, directed) {
-    var result = [];
-    edges.forEach(function (e) {
-      if (e.from === e.to) return;
-      if (e.from === u) result.push(e.to);
-      else if (!directed && e.to === u) result.push(e.from);
-    });
-    return result;
-  }
-
-  function hasCycle(nodes, edges, directed) {
+  function hasCycle(nodes, edges) {
     if (hasLoop(edges)) return true;
-    var n = nodes.length;
+    var n     = nodes.length;
+    var WHITE = 0, GRAY = 1, BLACK = 2;
+    var color = [];
+    for (var i = 0; i < n; i++) color.push(WHITE);
 
-    if (directed) {
-      var WHITE = 0, GRAY = 1, BLACK = 2;
-      var color = [];
-      for (var i = 0; i < n; i++) color.push(WHITE);
-
-      var dfs = function (u) {
-        color[u] = GRAY;
-        var nexts = getOutNeighbors(edges, u, true);
-        for (var i = 0; i < nexts.length; i++) {
-          var v = nexts[i];
-          if (color[v] === GRAY) return true;
-          if (color[v] === WHITE && dfs(v)) return true;
-        }
-        color[u] = BLACK;
-        return false;
-      };
-
-      for (var i = 0; i < n; i++) {
-        if (color[i] === WHITE && dfs(i)) return true;
+    function dfs(u) {
+      color[u] = GRAY;
+      var nexts = edges.filter(function (e) { return e.from === u; });
+      for (var i = 0; i < nexts.length; i++) {
+        var v = nexts[i].to;
+        if (color[v] === GRAY) return true;
+        if (color[v] === WHITE && dfs(v)) return true;
       }
+      color[u] = BLACK;
       return false;
     }
 
-    /* Undirected: a back-edge to any already-visited vertex other than the
-       immediate parent means a cycle. */
-    var visited = [];
-    for (var i = 0; i < n; i++) visited.push(false);
-
-    var dfsU = function (u, parent) {
-      visited[u] = true;
-      var nexts = getOutNeighbors(edges, u, false);
-      for (var i = 0; i < nexts.length; i++) {
-        var v = nexts[i];
-        if (!visited[v]) { if (dfsU(v, u)) return true; }
-        else if (v !== parent) return true;
-      }
-      return false;
-    };
-
     for (var i = 0; i < n; i++) {
-      if (!visited[i] && dfsU(i, -1)) return true;
+      if (color[i] === WHITE && dfs(i)) return true;
     }
     return false;
   }
 
-  function findCycleNodes(nodes, edges, directed) {
-    /* Self-loop is the trivial case */
+  function findCycleNodes(nodes, edges) {
+    /* Prefer revealing a non-trivial cycle over a self-loop, since it's
+       more instructive — fall back to the loop only if it's the sole cycle. */
+    var real = findNonLoopCycleNodes(nodes, edges);
+    if (real.length) return real;
     for (var i = 0; i < edges.length; i++) {
       if (edges[i].from === edges[i].to) return [edges[i].from];
     }
-
-    var n = nodes.length;
-
-    if (directed) {
-      var WHITE = 0, GRAY = 1, BLACK = 2;
-      var color  = [], parent = [];
-      for (var i = 0; i < n; i++) { color.push(WHITE); parent.push(-1); }
-      var cStart = -1, cEnd = -1;
-
-      var dfs = function (u) {
-        color[u] = GRAY;
-        var nexts = getOutNeighbors(edges, u, true);
-        for (var i = 0; i < nexts.length; i++) {
-          var v = nexts[i];
-          if (color[v] === GRAY && cStart === -1) { cStart = v; cEnd = u; return true; }
-          if (color[v] === WHITE) { parent[v] = u; if (dfs(v)) return true; }
-        }
-        color[u] = BLACK;
-        return false;
-      };
-
-      for (var i = 0; i < n; i++) {
-        if (color[i] === WHITE) { parent[i] = -1; if (dfs(i)) break; }
-      }
-
-      if (cStart === -1) return [];
-      var cycle = [cStart], cur = cEnd;
-      while (cur !== cStart) { cycle.push(cur); cur = parent[cur]; }
-      return cycle;
-    }
-
-    /* Undirected */
-    var visited = [], parentU = [];
-    for (var i = 0; i < n; i++) { visited.push(false); parentU.push(-1); }
-    var cycleNodes = null;
-
-    var dfsU = function (u, par) {
-      visited[u] = true;
-      parentU[u] = par;
-      var nexts = getOutNeighbors(edges, u, false);
-      for (var i = 0; i < nexts.length; i++) {
-        var v = nexts[i];
-        if (!visited[v]) {
-          if (dfsU(v, u)) return true;
-        } else if (v !== par && cycleNodes === null) {
-          cycleNodes = [v];
-          var cur = u;
-          while (cur !== v) { cycleNodes.push(cur); cur = parentU[cur]; }
-          return true;
-        }
-      }
-      return false;
-    };
-
-    for (var i = 0; i < n; i++) {
-      if (!visited[i] && dfsU(i, -1)) break;
-    }
-    return cycleNodes || [];
+    return [];
   }
 
-  function findPath(nodes, edges, startId, minLen, maxLen, directed) {
+  function findNonLoopCycleNodes(nodes, edges) {
+    var n      = nodes.length;
+    var WHITE  = 0, GRAY = 1, BLACK = 2;
+    var color  = [], parent = [];
+    for (var i = 0; i < n; i++) { color.push(WHITE); parent.push(-1); }
+    var cStart = -1, cEnd = -1;
+
+    function dfs(u) {
+      color[u] = GRAY;
+      var nexts = edges.filter(function (e) { return e.from === u && e.to !== u; });
+      for (var i = 0; i < nexts.length; i++) {
+        var v = nexts[i].to;
+        if (color[v] === GRAY && cStart === -1) { cStart = v; cEnd = u; return true; }
+        if (color[v] === WHITE) { parent[v] = u; if (dfs(v)) return true; }
+      }
+      color[u] = BLACK;
+      return false;
+    }
+
+    for (var i = 0; i < n; i++) {
+      if (color[i] === WHITE) { parent[i] = -1; if (dfs(i)) break; }
+    }
+
+    if (cStart === -1) return [];
+    var cycle = [cStart], cur = cEnd;
+    while (cur !== cStart) { cycle.push(cur); cur = parent[cur]; }
+    return cycle;
+  }
+
+  function findPath(nodes, edges, startId, minLen, maxLen) {
     var queue = [[startId]];
     while (queue.length > 0) {
       var path = queue.shift();
@@ -307,9 +239,9 @@
       var len  = path.length - 1;
       if (len >= minLen && len <= maxLen) return path;
       if (len < maxLen) {
-        var nexts = getOutNeighbors(edges, last, directed);
+        var nexts = edges.filter(function (e) { return e.from === last && e.to !== last; });
         for (var i = 0; i < nexts.length; i++) {
-          var v = nexts[i];
+          var v = nexts[i].to;
           if (path.indexOf(v) === -1) queue.push(path.concat([v]));
         }
       }
@@ -339,9 +271,8 @@
   var TYPES = ['path-length', 'valid-path', 'has-cycle', 'has-loop', 'degree'];
 
   function generateQuestion(g) {
-    var type     = TYPES[rand(0, TYPES.length - 1)];
-    var nodes    = g.nodes, edges = g.edges;
-    var directed = g.directed;
+    var type  = TYPES[rand(0, TYPES.length - 1)];
+    var nodes = g.nodes, edges = g.edges;
 
     switch (type) {
 
@@ -349,7 +280,7 @@
         var starts = shuffle(nodes.map(function (nd) { return nd.id; }));
         var path   = null;
         for (var i = 0; i < starts.length && !path; i++) {
-          path = findPath(nodes, edges, starts[i], 2, 4, directed);
+          path = findPath(nodes, edges, starts[i], 2, 4);
         }
         if (!path) {
           var nonLoop = edges.filter(function (e) { return e.from !== e.to; });
@@ -380,7 +311,7 @@
         var starts = shuffle(nodes.map(function (nd) { return nd.id; }));
         var path   = null;
         for (var i = 0; i < starts.length && !path; i++) {
-          path = findPath(nodes, edges, starts[i], 2, 3, directed);
+          path = findPath(nodes, edges, starts[i], 2, 3);
         }
         if (!path) return generateQuestion(g);
 
@@ -398,7 +329,9 @@
           /* Replace last node with one not reachable from predecessor */
           var base  = path.slice(0, -1);
           var prev  = base[base.length - 1];
-          var succs = getOutNeighbors(edges, prev, directed);
+          var succs = edges
+            .filter(function (e) { return e.from === prev && e.to !== prev; })
+            .map(function (e) { return e.to; });
           var nonSuccs = nodes
             .map(function (nd) { return nd.id; })
             .filter(function (id) { return id !== prev && succs.indexOf(id) === -1 && base.indexOf(id) === -1; });
@@ -420,9 +353,7 @@
           type:    'valid-path',
           concept: 'Camino',
           text:    '¿Es la secuencia [' + labels.join(', ') + '] un <b>camino válido</b> en el grafo?',
-          def:     directed
-            ? 'Un camino válido requiere que exista una arista dirigida entre cada par de vértices consecutivos de la secuencia.'
-            : 'Un camino válido requiere que exista una arista entre cada par de vértices consecutivos de la secuencia.',
+          def:     'Un camino válido requiere que exista una arista dirigida entre cada par de vértices consecutivos de la secuencia.',
           correct: isValid ? 'Sí' : 'No',
           opts:    ['Sí', 'No'],
           hlNodes: hlNodes,
@@ -432,8 +363,8 @@
       }
 
       case 'has-cycle': {
-        var cycle    = hasCycle(nodes, edges, directed);
-        var cycleIds = cycle ? findCycleNodes(nodes, edges, directed) : [];
+        var cycle    = hasCycle(nodes, edges);
+        var cycleIds = cycle ? findCycleNodes(nodes, edges) : [];
         return {
           type:        'has-cycle',
           concept:     'Ciclo',
@@ -450,25 +381,7 @@
       }
 
       case 'degree': {
-        var v = rand(0, nodes.length - 1);
-
-        if (!directed) {
-          var relEdges = edges.filter(function (e) { return e.from === v || e.to === v; });
-          var degree = 0;
-          relEdges.forEach(function (e) { degree += (e.from === v && e.to === v) ? 2 : 1; });
-          return {
-            type:    'degree',
-            concept: 'Grado',
-            text:    '¿Cuál es el <b>grado</b> del vértice ' + nodes[v].label + '?',
-            def:     'El grado de un vértice en un grafo no dirigido es el número de aristas incidentes a él. Un bucle cuenta dos veces.',
-            correct: degree,
-            opts:    makeOptions(degree, 0, degree + 4),
-            hlNodes: new Set([v]),
-            hlEdges: relEdges,
-            isYesNo: false
-          };
-        }
-
+        var v       = rand(0, nodes.length - 1);
         var isOut   = Math.random() < 0.5;
         var relEdges = edges.filter(function (e) {
           return isOut ? e.from === v : e.to === v;
@@ -515,10 +428,6 @@
     var svg = document.getElementById('graph-svg');
     svg.innerHTML = '';
 
-    var labelText = g.directed ? 'Grafo dirigido' : 'Grafo no dirigido';
-    document.getElementById('graph-label').textContent = labelText;
-    svg.setAttribute('aria-label', labelText + ' aleatorio');
-
     var nodes     = g.nodes, edges = g.edges;
     var hlNodes   = (q && q.hlNodes) ? q.hlNodes : new Set();
     var hlEdgeSet = new Set();
@@ -547,13 +456,11 @@
     svg.appendChild(defs);
 
     /* Edges */
-    var directed = !!g.directed;
     edges.forEach(function (e) {
-      var isHL   = hlEdgeSet.has(e.from + ',' + e.to) ||
-        (!directed && hlEdgeSet.has(e.to + ',' + e.from));
+      var isHL   = hlEdgeSet.has(e.from + ',' + e.to);
       var stroke = isHL ? '#7cb9ff' : '#3949ab';
       var sw     = isHL ? '3' : '2';
-      var marker = directed ? (isHL ? 'url(#arr-hl)' : 'url(#arr)') : '';
+      var marker = isHL ? 'url(#arr-hl)' : 'url(#arr)';
 
       if (e.from === e.to) {
         /* Self-loop: cubic bezier arch above the node */
@@ -567,7 +474,7 @@
         path.setAttribute('fill', 'none');
         path.setAttribute('stroke', stroke);
         path.setAttribute('stroke-width', sw);
-        if (marker) path.setAttribute('marker-end', marker);
+        path.setAttribute('marker-end', marker);
         svg.appendChild(path);
         return;
       }
@@ -604,17 +511,17 @@
         arc.setAttribute('fill',         'none');
         arc.setAttribute('stroke',       stroke);
         arc.setAttribute('stroke-width', sw);
-        if (marker) arc.setAttribute('marker-end', marker);
+        arc.setAttribute('marker-end',   marker);
         svg.appendChild(arc);
       } else {
         var line = document.createElementNS(NS, 'line');
         line.setAttribute('x1', fn.x + ux * (R + 2));
         line.setAttribute('y1', fn.y + uy * (R + 2));
-        line.setAttribute('x2', tn.x - ux * (R + (directed ? 7 : 2)));
-        line.setAttribute('y2', tn.y - uy * (R + (directed ? 7 : 2)));
+        line.setAttribute('x2', tn.x - ux * (R + 7));
+        line.setAttribute('y2', tn.y - uy * (R + 7));
         line.setAttribute('stroke',       stroke);
         line.setAttribute('stroke-width', sw);
-        if (marker) line.setAttribute('marker-end', marker);
+        line.setAttribute('marker-end',   marker);
         svg.appendChild(line);
       }
     });
