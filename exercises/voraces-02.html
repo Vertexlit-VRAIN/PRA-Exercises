@@ -65,11 +65,16 @@
     .new-round-btn:hover { background: var(--crimson); color: #fff; }
 
     /* ── Layout ─────────────────────────────────────────────────── */
-    .two-col {
+    .three-col {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 9.5rem 1fr 1fr;
       gap: 1.5rem;
       align-items: start;
+    }
+
+    .backpack-panel {
+      display: flex;
+      justify-content: center;
     }
 
     /* ── State panel (left) ──────────────────────────────────────── */
@@ -179,6 +184,61 @@
     }
 
     .x-comma { color: #bbb; align-self: flex-end; margin-bottom: 0.15rem; }
+
+    /* ── Backpack fill visual ────────────────────────────────────── */
+    .backpack-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .backpack-cap-top,
+    .backpack-cap-bottom {
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: #aaa;
+    }
+
+    .backpack {
+      position: relative;
+      width: 8.5rem;
+    }
+
+    .backpack-flap {
+      height: 1.2rem;
+      margin: 0 1rem;
+      background: #fff;
+      border: 2px solid rgba(198, 40, 40, 0.35);
+      border-bottom: none;
+      border-radius: 12px 12px 2px 2px;
+    }
+
+    .backpack-body {
+      position: relative;
+      height: 12rem;
+      border: 2px solid rgba(198, 40, 40, 0.35);
+      border-radius: 8px;
+      background: #fff;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column-reverse;
+    }
+
+    .backpack-segment {
+      width: 100%;
+      flex-shrink: 0;
+      height: 0%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.75rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.45);
+      transition: height 0.4s ease-out;
+    }
 
     /* ── Question area ───────────────────────────────────────────── */
     .step-counter {
@@ -365,6 +425,30 @@
     .pseudo-box .cmt { color: #6c7086; }
     .pseudo-box .hl  { background: rgba(198, 40, 40, 0.28); border-radius: 3px; padding: 0 0.2em; }
 
+    /* ── Loot rain ──────────────────────────────────────────────── */
+    .loot-rain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 999;
+    }
+
+    .rain-gem {
+      position: absolute;
+      top: -3rem;
+      clip-path: polygon(50% 0%, 100% 35%, 80% 100%, 20% 100%, 0% 35%);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4), 0 2px 6px rgba(0, 0, 0, 0.25);
+      animation-name: gem-fall;
+      animation-timing-function: linear;
+      animation-fill-mode: forwards;
+    }
+
+    @keyframes gem-fall {
+      from { transform: translateY(0) rotate(0deg); }
+      to   { transform: translateY(115vh) rotate(360deg); }
+    }
+
     /* ── Done banner ─────────────────────────────────────────────── */
     .done-banner {
       margin-top: 1.5rem;
@@ -396,8 +480,13 @@
     }
 
     /* ── Responsive ──────────────────────────────────────────────── */
+    @media (max-width: 900px) {
+      .three-col { grid-template-columns: 1fr 1fr; }
+      .backpack-panel { grid-column: 1 / -1; }
+    }
+
     @media (max-width: 640px) {
-      .two-col { grid-template-columns: 1fr; }
+      .three-col { grid-template-columns: 1fr; }
       .controls-bar { flex-direction: column; align-items: flex-start; }
       .item-btn td { font-size: 0.85rem; padding: 0.5rem 0.35rem; }
     }
@@ -426,7 +515,19 @@
     <button class="new-round-btn" id="new-round-btn">Nueva ronda →</button>
   </div>
 
-  <div class="two-col">
+  <div class="three-col">
+
+    <!-- ── Mochila (fill visual) ── -->
+    <div class="backpack-panel">
+      <div class="backpack-wrap">
+        <span class="backpack-cap-top">W&nbsp;=&nbsp;<span id="bp-cap">—</span></span>
+        <div class="backpack">
+          <div class="backpack-flap"></div>
+          <div class="backpack-body" id="backpack-body"></div>
+        </div>
+        <span class="backpack-cap-bottom">0</span>
+      </div>
+    </div>
 
     <!-- ── Estado / Pregunta ── -->
     <div class="state-panel q-panel">
@@ -506,7 +607,9 @@
       </div>
     </div>
 
-  </div><!-- two-col -->
+  </div><!-- three-col -->
+
+  <div class="loot-rain" id="loot-rain" aria-hidden="true"></div>
 
   <div class="done-banner" id="done-banner" hidden>
     <div class="done-title">✓ ¡Mochila completada!</div>
@@ -548,6 +651,66 @@
   var items, W, usedWeight, accValue, answered, stepCount;
   var pendingAdvance = null;
   var roundNum = 0, gOk = 0, gTotal = 0;
+
+  var PALETTE = ['#c62828', '#ef6c00', '#f9a825', '#2e7d32', '#00838f', '#5e35b1'];
+  var rainTimer = null;
+
+  // ── Loot rain ────────────────────────────────────────────────
+  function spawnRainGem() {
+    var container = document.getElementById('loot-rain');
+    var gem   = document.createElement('span');
+    var color = PALETTE[Math.floor(Math.random() * PALETTE.length)];
+    var size  = 0.9 + Math.random() * 0.9; // rem
+    var dur   = 2.2 + Math.random() * 2.2; // s
+
+    gem.className = 'rain-gem';
+    gem.style.left       = (Math.random() * 100) + 'vw';
+    gem.style.width      = size + 'rem';
+    gem.style.height     = size + 'rem';
+    gem.style.background =
+      'linear-gradient(135deg, rgba(255,255,255,0.65), rgba(255,255,255,0) 45%), ' + color;
+    gem.style.animationDuration = dur + 's';
+
+    gem.addEventListener('animationend', function () {
+      gem.remove();
+    });
+
+    container.appendChild(gem);
+  }
+
+  function startLootRain() {
+    if (rainTimer) return;
+    spawnRainGem();
+    rainTimer = setInterval(spawnRainGem, 160);
+  }
+
+  function stopLootRain() {
+    if (rainTimer) {
+      clearInterval(rainTimer);
+      rainTimer = null;
+    }
+    document.getElementById('loot-rain').innerHTML = '';
+  }
+
+  // ── Backpack fill visual ────────────────────────────────────────
+  function resetBackpack() {
+    document.getElementById('bp-cap').textContent = W;
+    document.getElementById('backpack-body').innerHTML = '';
+  }
+
+  function addBackpackSegment(idx, it) {
+    var body = document.getElementById('backpack-body');
+    var seg  = document.createElement('div');
+    seg.className = 'backpack-segment';
+    seg.style.background = PALETTE[idx % PALETTE.length];
+    seg.textContent = (idx + 1);
+    body.appendChild(seg);
+
+    var pct = (it.x * it.w / W) * 100;
+    requestAnimationFrame(function () {
+      seg.style.height = pct + '%';
+    });
+  }
 
   function subscript(n) {
     var s = ['₀','₁','₂','₃','₄','₅','₆','₇','₈','₉'];
@@ -607,6 +770,8 @@
     document.getElementById('round-badge').textContent = 'Ronda ' + roundNum;
     document.getElementById('done-banner').hidden = true;
 
+    stopLootRain();
+    resetBackpack();
     renderState();
     renderItems();
     renderQuestion();
@@ -737,6 +902,8 @@
         usedWeight  = W;
       }
 
+      addBackpackSegment(idx, it);
+
       var isFrac = it.x < 1;
       fb.className = 'feedback ok';
       fb.innerHTML = '✓ Objeto ' + (idx + 1) + ' (v/w = ' + fmtRatio(it.ratio) + ') — mayor ratio disponible'
@@ -794,6 +961,7 @@
     document.getElementById('done-stats').textContent =
       'Peso total: ' + pesoFmt + ' kg  ·  Valor total: ' + valFmt + '  — solución óptima greedy';
     document.getElementById('done-banner').hidden = false;
+    startLootRain();
 
     document.getElementById('item-tbody').querySelectorAll('.item-btn')
       .forEach(function(tr) { tr.setAttribute('disabled', ''); });
