@@ -372,6 +372,38 @@
       margin-bottom: 0;
     }
 
+    /* ── Coin rain ──────────────────────────────────────────────── */
+    .coin-rain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 999;
+    }
+
+    .rain-coin {
+      position: absolute;
+      top: -4rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ffe082, #ffb300);
+      border: 2px solid #ff8f00;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-ui);
+      font-weight: 700;
+      color: #7a4a00;
+      animation-name: coin-fall;
+      animation-timing-function: linear;
+      animation-fill-mode: forwards;
+    }
+
+    @keyframes coin-fall {
+      from { transform: translateY(0) rotate(0deg); }
+      to   { transform: translateY(115vh) rotate(360deg); }
+    }
+
     /* ── Responsive ──────────────────────────────────────────────── */
     @media (max-width: 640px) {
       .two-col     { grid-template-columns: 1fr; }
@@ -465,6 +497,9 @@
 
     </div><!-- two-col -->
 
+    <!-- ── Lluvia de monedas ── -->
+    <div class="coin-rain" id="coin-rain" aria-hidden="true"></div>
+
     <!-- ── Banner de completado — ancho completo, fuera de las columnas ── -->
     <div class="done-banner" id="done-banner" hidden>
       <div class="done-title">✓ ¡Completado!</div>
@@ -491,6 +526,44 @@
     var coins, W, x, total, answered;
     var pendingAdvance = null;
     var roundNum = 0, gOk = 0, gTotal = 0;
+    var rainTimer = null;
+
+    // ── Coin rain ────────────────────────────────────────────────
+    function spawnRainCoin() {
+      var container = document.getElementById('coin-rain');
+      var coin  = document.createElement('span');
+      var value = coins[Math.floor(Math.random() * coins.length)];
+      var size  = 2 + Math.random() * 1.6; // rem
+      var dur   = 2.4 + Math.random() * 2.2; // s
+
+      coin.className = 'rain-coin';
+      coin.textContent = value;
+      coin.style.left           = (Math.random() * 100) + 'vw';
+      coin.style.width          = size + 'rem';
+      coin.style.height         = size + 'rem';
+      coin.style.fontSize       = (size * 0.32) + 'rem';
+      coin.style.animationDuration = dur + 's';
+
+      coin.addEventListener('animationend', function () {
+        coin.remove();
+      });
+
+      container.appendChild(coin);
+    }
+
+    function startCoinRain() {
+      if (rainTimer) return;
+      spawnRainCoin();
+      rainTimer = setInterval(spawnRainCoin, 180);
+    }
+
+    function stopCoinRain() {
+      if (rainTimer) {
+        clearInterval(rainTimer);
+        rainTimer = null;
+      }
+      document.getElementById('coin-rain').innerHTML = '';
+    }
 
     // ── Greedy helper ────────────────────────────────────────────
     function bestCoin(remaining) {
@@ -537,6 +610,7 @@
       pendingAdvance = null;
       roundNum++;
 
+      stopCoinRain();
       document.getElementById('round-badge').textContent = 'Ronda ' + roundNum;
       document.getElementById('done-banner').hidden = true;
 
@@ -713,6 +787,7 @@
       document.getElementById('done-total-coins').textContent =
         'Monedas usadas: ' + totalCoins + ' — solución óptima greedy';
       document.getElementById('done-banner').hidden = false;
+      startCoinRain();
 
       document.getElementById('coin-grid').querySelectorAll('.coin-btn')
         .forEach(function (b) { b.disabled = true; });
