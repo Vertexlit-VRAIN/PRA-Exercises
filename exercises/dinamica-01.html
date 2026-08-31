@@ -238,6 +238,25 @@
       display: block;
       margin-bottom: 0.35rem;
     }
+    .prob-type-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 0.22rem 0.75rem;
+      border-radius: 100px;
+      margin-bottom: 0.6rem;
+    }
+    .prob-type-badge.opt-min,
+    .prob-type-badge.opt-max {
+      background: var(--teal-lt);
+      color: var(--teal-dark);
+    }
+    .prob-type-badge.count {
+      background: #fff3cd;
+      color: #7a4800;
+    }
   </style>
 </head>
 <body>
@@ -256,8 +275,8 @@
   <div class="prob-bar">
     <button class="prob-btn is-active" data-prob="coins">♟ Cambio de Monedas</button>
     <button class="prob-btn" data-prob="knapsack">⊞ Mochila 0/1</button>
-    <button class="prob-btn" data-prob="escalera">△ Escalera</button>
     <button class="prob-btn" data-prob="lcs">∩ LCS</button>
+    <button class="prob-btn" data-prob="escalera">△ Escalera</button>
   </div>
 
   <div class="prob-desc" id="prob-desc"></div>
@@ -316,6 +335,7 @@
       title: 'Cambio de Monedas',
       lhsLabel: 'C[i, j] =',
       descHtml: '<span class="prob-desc-title">Problema</span>'
+        + '<span class="prob-type-badge opt-min">Optimización · mínimo</span><br>'
         + 'Disponemos de <strong>n tipos de moneda</strong> con valores w<sub>1</sub>, w<sub>2</sub>, …, w<sub>n</sub> '
         + '(cada tipo es <strong>ilimitado</strong>) y un <strong>importe objetivo W</strong>. '
         + 'Queremos cubrir exactamente ese importe usando el <strong>mínimo número de monedas</strong>. '
@@ -464,6 +484,7 @@
       title: 'Mochila 0/1',
       lhsLabel: 'V[i, j] =',
       descHtml: '<span class="prob-desc-title">Problema</span>'
+        + '<span class="prob-type-badge opt-max">Optimización · máximo</span><br>'
         + 'Tenemos <strong>n objetos</strong>, cada uno con un peso w<sub>i</sub> y un valor v<sub>i</sub>, '
         + 'y una mochila de <strong>capacidad W</strong>. Cada objeto puede cogerse <strong>como máximo una vez</strong> (0 o 1). '
         + 'Queremos <strong>maximizar el valor total</strong> sin superar la capacidad. '
@@ -600,84 +621,15 @@
       ]
     },
 
-    escalera: {
-      title: 'Subida de Escalera',
-      lhsLabel: 'E[j] =',
-      descHtml: '<span class="prob-desc-title">Problema</span>'
-        + 'Tenemos una escalera de <strong>n peldaños</strong>. En cada movimiento podemos subir '
-        + '<strong>1 o 2 peldaños</strong>. ¿De cuántas <strong>maneras distintas</strong> podemos llegar al peldaño n? '
-        + '<br>La tabla E[j] guarda el número de formas de llegar al peldaño j. '
-        + 'A diferencia de los problemas anteriores, aquí <strong>contamos caminos</strong>, no optimizamos un coste.',
-      cases: [
-        {
-          condLabel: 'si j = 0',
-          pendingVal: '░░░',
-          resultHtml: '1',
-          contextHtml: 'Caso base: el peldaño de salida. ¿De cuántas formas puedes "estar" en él antes de dar ningún paso?',
-          questions: [
-            {
-              text: '¿De cuántas maneras puedes estar en el peldaño 0 sin haber dado ningún paso?',
-              options: ['1 manera (no moverse)', '0 maneras', '2 maneras', '∞'],
-              correctIdx: 0,
-              feedbackOk: 'Exacto: hay 1 forma de estar en el origen — no moverse. Este 1 es el caso base que hace arrancar la recurrencia.',
-              feedbackBad: 'Hay exactamente 1 forma de estar en el peldaño 0: no moverse. Sin este caso base la recurrencia no tiene de dónde partir.'
-            }
-          ]
-        },
-        {
-          condLabel: 'si j = 1',
-          pendingVal: '░░░',
-          resultHtml: '1',
-          contextHtml: 'Desde el peldaño 0, solo hay un movimiento posible para llegar al peldaño 1.',
-          questions: [
-            {
-              text: '¿De cuántas maneras distintas puedes llegar al peldaño 1 desde el peldaño 0?',
-              options: ['1 manera (un paso de tamaño 1)', '2 maneras', '0 maneras', 'E[0] + E[−1]'],
-              correctIdx: 0,
-              feedbackOk: 'Correcto: la única forma es dar 1 paso de tamaño 1. El peldaño −1 no existe, así que no hay segunda opción.',
-              feedbackBad: 'No puedes llegar en 2 pasos porque el peldaño −1 no existe. La única forma es 1 paso directo. E[1] = 1.'
-            }
-          ]
-        },
-        {
-          condLabel: 'si j ≥ 2',
-          pendingVal: '░░░',
-          resultHtml: 'E[j−1] + E[j−2]',
-          contextHtml: 'Puedes subir 1 o 2 peldaños por movimiento. Razona desde dónde puedes haber llegado al peldaño j.',
-          questions: [
-            {
-              text: 'Si das un paso de tamaño 1 y llegas al peldaño j, ¿desde qué peldaño venías?',
-              options: ['Del peldaño j−1', 'Del peldaño j−2', 'Del peldaño j+1', 'Del peldaño 0'],
-              correctIdx: 0,
-              feedbackOk: 'Correcto: si das 1 paso y llegas a j, necesariamente venías del peldaño j−1.',
-              feedbackBad: 'Si das exactamente 1 paso y llegas a j, venías del peldaño j−1 (j−1+1 = j).'
-            },
-            {
-              text: 'Si das un salto de tamaño 2 y llegas al peldaño j, ¿desde qué peldaño venías?',
-              options: ['Del peldaño j−2', 'Del peldaño j−1', 'Del peldaño j+2', 'Del peldaño 1'],
-              correctIdx: 0,
-              feedbackOk: 'Exacto: si das un salto de 2 pasos y llegas a j, venías del peldaño j−2.',
-              feedbackBad: 'Si das exactamente 2 pasos y llegas a j, venías del peldaño j−2 (j−2+2 = j).'
-            },
-            {
-              text: 'Los caminos que llegan desde j−1 y los que llegan desde j−2 son completamente distintos (disjuntos). ¿Cómo obtienes el total de formas de llegar a j?',
-              options: ['Sumando E[j−1] + E[j−2]', 'max(E[j−1], E[j−2])', 'min(E[j−1], E[j−2])', 'E[j−1] × E[j−2]'],
-              correctIdx: 0,
-              feedbackOk: '¡Perfecto! Caminos disjuntos → regla de la adición. Aquí contamos caminos, no optimizamos: la respuesta es la suma.',
-              feedbackBad: 'Los caminos no se solapan, así que el total se obtiene sumando (regla de la adición). No es min ni max porque no optimizamos: contamos.'
-            }
-          ]
-        }
-      ]
-    },
-
     lcs: {
       title: 'Subsecuencia Común Más Larga',
       lhsLabel: 'L[i, j] =',
       descHtml: '<span class="prob-desc-title">Problema</span>'
+        + '<span class="prob-type-badge opt-max">Optimización · máximo</span><br>'
         + 'Dadas dos secuencias <strong>X</strong> e <strong>Y</strong> (p.ej. cadenas de texto o listas), '
         + 'una <em>subsecuencia</em> es cualquier subconjunto de elementos que mantiene el orden relativo '
-        + 'pero no tiene que ser contiguo. Queremos la <strong>longitud de la subsecuencia común más larga</strong> (LCS). '
+        + 'pero no tiene que ser contiguo. Igual que en la mochila maximizábamos el valor, aquí queremos '
+        + '<strong>maximizar la longitud de la subsecuencia común</strong> (LCS). '
         + '<br>Ejemplo: X = ABCBDAB, Y = BDCAB → LCS = BCAB (longitud 4). '
         + '<br>La tabla L[i,j] guarda la longitud de la LCS de los primeros i elementos de X y los primeros j de Y.',
       cases: [
@@ -771,6 +723,80 @@
               correctIdx: 0,
               feedbackOk: '¡Perfecto! El objetivo es la MÁS LARGA → tomamos el máximo de las dos alternativas.',
               feedbackBad: 'El objetivo es MÁS LARGA → máximo. Usamos max( L[i−1,j], L[i,j−1] ).'
+            }
+          ]
+        }
+      ]
+    },
+
+    escalera: {
+      title: 'Subida de Escalera',
+      lhsLabel: 'E[j] =',
+      descHtml: '<span class="prob-desc-title">Problema</span>'
+        + '<span class="prob-type-badge count">Conteo · suma</span><br>'
+        + 'Tenemos una escalera de <strong>n peldaños</strong>. En cada movimiento podemos subir '
+        + '<strong>1 o 2 peldaños</strong>. ¿De cuántas <strong>maneras distintas</strong> podemos llegar al peldaño n? '
+        + '<br>La tabla E[j] guarda el número de formas de llegar al peldaño j. '
+        + 'Cambio de paradigma respecto a los tres problemas anteriores: aquí <strong>contamos caminos</strong>, '
+        + 'no optimizamos ningún coste ni valor — por eso la recurrencia combina alternativas '
+        + '<strong>sumando</strong>, en vez de con min o max.',
+      cases: [
+        {
+          condLabel: 'si j = 0',
+          pendingVal: '░░░',
+          resultHtml: '1',
+          contextHtml: 'Caso base: el peldaño de salida. ¿De cuántas formas puedes "estar" en él antes de dar ningún paso?',
+          questions: [
+            {
+              text: '¿De cuántas maneras puedes estar en el peldaño 0 sin haber dado ningún paso?',
+              options: ['1 manera (no moverse)', '0 maneras', '2 maneras', '∞'],
+              correctIdx: 0,
+              feedbackOk: 'Exacto: hay 1 forma de estar en el origen — no moverse. Este 1 es el caso base que hace arrancar la recurrencia.',
+              feedbackBad: 'Hay exactamente 1 forma de estar en el peldaño 0: no moverse. Sin este caso base la recurrencia no tiene de dónde partir.'
+            }
+          ]
+        },
+        {
+          condLabel: 'si j = 1',
+          pendingVal: '░░░',
+          resultHtml: '1',
+          contextHtml: 'Desde el peldaño 0, solo hay un movimiento posible para llegar al peldaño 1.',
+          questions: [
+            {
+              text: '¿De cuántas maneras distintas puedes llegar al peldaño 1 desde el peldaño 0?',
+              options: ['1 manera (un paso de tamaño 1)', '2 maneras', '0 maneras', 'E[0] + E[−1]'],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: la única forma es dar 1 paso de tamaño 1. El peldaño −1 no existe, así que no hay segunda opción.',
+              feedbackBad: 'No puedes llegar en 2 pasos porque el peldaño −1 no existe. La única forma es 1 paso directo. E[1] = 1.'
+            }
+          ]
+        },
+        {
+          condLabel: 'si j ≥ 2',
+          pendingVal: '░░░',
+          resultHtml: 'E[j−1] + E[j−2]',
+          contextHtml: 'Puedes subir 1 o 2 peldaños por movimiento. Razona desde dónde puedes haber llegado al peldaño j.',
+          questions: [
+            {
+              text: 'Si das un paso de tamaño 1 y llegas al peldaño j, ¿desde qué peldaño venías?',
+              options: ['Del peldaño j−1', 'Del peldaño j−2', 'Del peldaño j+1', 'Del peldaño 0'],
+              correctIdx: 0,
+              feedbackOk: 'Correcto: si das 1 paso y llegas a j, necesariamente venías del peldaño j−1.',
+              feedbackBad: 'Si das exactamente 1 paso y llegas a j, venías del peldaño j−1 (j−1+1 = j).'
+            },
+            {
+              text: 'Si das un salto de tamaño 2 y llegas al peldaño j, ¿desde qué peldaño venías?',
+              options: ['Del peldaño j−2', 'Del peldaño j−1', 'Del peldaño j+2', 'Del peldaño 1'],
+              correctIdx: 0,
+              feedbackOk: 'Exacto: si das un salto de 2 pasos y llegas a j, venías del peldaño j−2.',
+              feedbackBad: 'Si das exactamente 2 pasos y llegas a j, venías del peldaño j−2 (j−2+2 = j).'
+            },
+            {
+              text: 'Los caminos que llegan desde j−1 y los que llegan desde j−2 son completamente distintos (disjuntos). ¿Cómo obtienes el total de formas de llegar a j?',
+              options: ['Sumando E[j−1] + E[j−2]', 'max(E[j−1], E[j−2])', 'min(E[j−1], E[j−2])', 'E[j−1] × E[j−2]'],
+              correctIdx: 0,
+              feedbackOk: '¡Perfecto! Caminos disjuntos → regla de la adición. Aquí contamos caminos, no optimizamos: la respuesta es la suma.',
+              feedbackBad: 'Los caminos no se solapan, así que el total se obtiene sumando (regla de la adición). No es min ni max porque no optimizamos: contamos.'
             }
           ]
         }
@@ -950,7 +976,7 @@
     startProblem(currentProbKey);
   });
 
-  var PROB_ORDER = ['coins', 'knapsack', 'escalera', 'lcs'];
+  var PROB_ORDER = ['coins', 'knapsack', 'lcs', 'escalera'];
 
   document.getElementById('btn-other').addEventListener('click', function () {
     var idx   = PROB_ORDER.indexOf(currentProbKey);
